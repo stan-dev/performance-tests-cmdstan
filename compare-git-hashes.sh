@@ -29,7 +29,7 @@ set -e -x
 clean_checkout "$1"
 ./runPerformanceTests.py -j8 --runj 5 --overwrite-golds $4 $3
 
-for i in cmdstan/performance.*; do
+for i in performance.*; do
     mv $i "${1}_${i}"
 done
 
