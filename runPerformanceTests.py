@@ -13,7 +13,7 @@ from multiprocessing.pool import ThreadPool
 from time import time
 import xml.etree.ElementTree as ET
 
-GOLD_OUTPUT_DIR = "tests/golds/"
+GOLD_OUTPUT_DIR = "golds/"
 
 def find_files(pattern, dirs):
     res = []
@@ -56,7 +56,8 @@ def shexec(command):
     return returncode
 
 def make(targets, j=8):
-    shexec("make -j{} ".format(j) + " ".join(targets))
+    shexec("cd cmdstan; make -j{} {}"
+           .format(j, " ".join("../" + t for t in targets)))
 
 model_name_re = re.compile(".*/[A-z_][^/]+\.stan$")
 
@@ -145,7 +146,8 @@ def parse_summary(f):
 
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, cmdstan_args):
     fails, errors = [], []
-    gold = os.path.join(GOLD_OUTPUT_DIR, exe.replace("/", "_") + ".gold")
+    gold = os.path.join(GOLD_OUTPUT_DIR,
+                        exe.replace("../", "").replace("/", "_") + ".gold")
     tmp = gold + ".tmp"
     try:
         total_time = 0
