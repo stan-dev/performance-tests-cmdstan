@@ -47,12 +47,19 @@ def time_step(name, fn, *args, **kwargs):
     end = time()
     return end-start, res
 
+class FailedCommand(Exception):
+    def __init__(self, returncode, command):
+        self.returncode = returncode
+        self.command = command
+        Exception(self, "return code '{}' from command '{}'!"
+                  .format(returncode, command))
+
+
 def shexec(command):
     print(command)
     returncode = subprocess.call(command, shell=True)
     if returncode != 0:
-        raise Exception("return code '{}' from command '{}'!"
-                        .format(returncode, command))
+        raise FailedCommand(returncode, command)
     return returncode
 
 def make(targets, j=8):
@@ -144,19 +151,52 @@ def parse_summary(f):
         d[param] = (float(avg), float(stdev))
     return d
 
-def run(exe, data, overwrite, check_golds, check_golds_exact, runs, cmdstan_args):
+def run_model(exe, method, data, tmp, runs):
+    data_str = data and "data file={}".format(data)
+    total_time = 0
+    for i in range(runs):
+        start = time()
+        try:
+            shexec("{} method={} {} random seed=1234 output file={}"
+                .format(exe, method, data_str, tmp))
+        except FailedCommand as e:
+            if e.returncode == 78:
+                shexec("{} method=sample algorithm='fixed_param' random seed=1234 output file={}"
+                        .format(exe, tmp))
+            else:
+                raise e
+        end = time()
+        total_time += end-start
+    return total_time
+
+def run_golds(gold, tmp, summary, check_golds_exact):
+    gold_summary = {}
+    with open(gold) as gf:
+        gold_summary = parse_summary(gf)
+
+    fails = []
+    for k, (mean, stdev) in gold_summary.items():
+        if stdev < 0.00001: #XXX Uh...
+            continue
+        err = abs(summary[k][0] - mean)
+        if check_golds_exact and err > check_golds_exact:
+            print("FAIL: {} param {} |{} - {}| not within {}"
+                    .format(gold, k, summary[k][0], mean, check_golds_exact))
+            fails.append((k, mean, stdev, summary[k][0]))
+        elif err > 0.0001 and (err / stdev) > 0.5:
+            print("FAIL: {} param {} not within ({} - {}) / {} < 0.5"
+                    .format(gold, k, summary[k][0], mean, stdev))
+            fails.append((k, mean, stdev, summary[k][0]))
+    return fails
+
+
+def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
     fails, errors = [], []
     gold = os.path.join(GOLD_OUTPUT_DIR,
                         exe.replace("../", "").replace("/", "_") + ".gold")
     tmp = gold + ".tmp"
     try:
-        total_time = 0
-        for i in range(runs):
-            start = time()
-            shexec("{} {} data file={} random seed=1234 output file={}"
-                   .format(exe, cmdstan_args, data, tmp))
-            end = time()
-            total_time += end-start
+        total_time = run_model(exe, method, data, tmp, runs)
     except Exception as e:
         print("Encountered exception while running {}:".format(exe))
         print(e)
@@ -168,22 +208,8 @@ def run(exe, data, overwrite, check_golds, check_golds_exact, runs, cmdstan_args
     if overwrite:
         shexec("mv {} {}".format(tmp, gold))
     elif check_golds or check_golds_exact:
-        gold_summary = {}
-        with open(gold) as gf:
-            gold_summary = parse_summary(gf)
+        fails = run_golds(gold, tmp, summary, check_golds_exact)
 
-        for k, (mean, stdev) in gold_summary.items():
-            if stdev < 0.00001: #XXX Uh...
-                continue
-            err = abs(summary[k][0] - mean)
-            if check_golds_exact and err > check_golds_exact:
-                print("FAIL: {} param {} |{} - {}| not within {}"
-                      .format(gold, k, summary[k][0], mean, check_golds_exact))
-                fails.append((k, mean, stdev, summary[k][0]))
-            elif err > 0.0001 and (err / stdev) > 0.5:
-                print("FAIL: {} param {} not within ({} - {}) / {} < 0.5"
-                      .format(gold, k, summary[k][0], mean, stdev))
-                fails.append((k, mean, stdev, summary[k][0]))
     return total_time, (fails, errors)
 
 def test_results_xml(tests):
@@ -221,17 +247,16 @@ def parse_args():
                         help="Number of runs per benchmark.", default=1)
     parser.add_argument("-j", dest="j", action="store", type=int, default=4)
     parser.add_argument("--runj", dest="runj", action="store", type=int, default=1)
-    parser.add_argument("--cmdstan-args", dest="cmdstan_args", action="store",
-                        default="method=sample",
-                        help="Options to cmdstan binary. Must include method=")
+    parser.add_argument("--method", dest="method", action="store", default="sample",
+                        help="Inference method to ask Stan to use for all models.")
     return parser.parse_args()
 
-def process_test(overwrite, check_golds, check_golds_exact, runs, cmdstan_args):
+def process_test(overwrite, check_golds, check_golds_exact, runs, method):
     def process_test_wrapper(tup):
         # TODO: figure out the right place to compute the average or maybe don't compute the average.
         model, exe, data = tup
         time_, (fails, errors) = run(exe, data, overwrite, check_golds,
-                                     check_golds_exact, runs, cmdstan_args)
+                                     check_golds_exact, runs, method)
         average_time = time_ / runs
         return (model, average_time, fails, errors)
     return process_test_wrapper
@@ -246,7 +271,6 @@ if __name__ == "__main__":
     make_time, _ = time_step("make_all_models", make, executables, args.j)
     tests = [(model, exe, find_data_for_model(model))
              for model, exe in zip(models, executables)]
-    tests = filter(lambda x: x[2], tests)
     if args.runj > 1:
         tp = ThreadPool(args.runj)
         map_ = tp.imap_unordered
@@ -254,7 +278,7 @@ if __name__ == "__main__":
         map_ = map
     results = map_(process_test(args.overwrite, args.check_golds,
                                 args.check_golds_exact, args.runs,
-                                args.cmdstan_args),
+                                args.method),
                     tests)
     results = list(results)
     results.append(("compilation", make_time, [], []))
