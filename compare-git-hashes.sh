@@ -6,6 +6,10 @@ usage() {
     echo "$0 <git-hash-1> <git-hash-2> <directories of models> '<extra args for runPerformanceTests.py>''"
 }
 
+write_makelocal() {
+    echo "CXXFLAGS += -march=core2" > make/local
+}
+
 clean_checkout() {
     git submodule update --init --recursive
     git submodule foreach --recursive git clean -xffd
@@ -17,6 +21,7 @@ clean_checkout() {
         echo "ERROR: Git repo isn't clean - I'd recommend you make a separate recursive clone of CmdStan for this."
         exit
     fi
+    write_makelocal
     popd
 }
 
