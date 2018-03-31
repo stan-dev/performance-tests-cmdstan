@@ -22,8 +22,10 @@ pipeline {
                 cd cmdstan
                 git pull origin develop
                 cd ..
-                git commit cmdstan -m "Update submodules"
-                git push origin master
+                if [ -n `git status --porcelain cmdstan`]; then
+                  git commit cmdstan -m "Update submodules"
+                  git push origin master
+                fi
             """
             }
         }
