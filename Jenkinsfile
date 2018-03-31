@@ -2,7 +2,7 @@ pipeline {
     agent { label 'master' }
     options { skipDefaultCheckout() }
     stage('Update CmdStan pointer to latest develop') {
-        when { branch 'develop' }
+        when { branch 'master' }
         steps {
             checkout([$class: 'GitSCM',
                       branches: [[name: '*/develop']],
@@ -20,8 +20,9 @@ pipeline {
             sh """
                 cd cmdstan
                 git pull origin develop
-                git commit -a -m "Update submodules"
-                git push origin develop
+                cd ..
+                git commit cmdstan -m "Update submodules"
+                git push origin master
             """
         }
     }
@@ -50,6 +51,16 @@ pipeline {
                 }
                 deleteDir()
             }
+        }
+    }
+    stage("Run develop against some other branch!") {
+        when { not branch 'master' }
+        steps {
+            git submodule status | grep cmdstan | awk '{print $1}'
+            sh """
+                cmdstan_hash=$(git submodule status | grep cmdstan | awk '{print $1}')
+                bash compare-git-hashes.sh develop $cmdstan_hash stat_comp_benchmarks
+            """
         }
     }
 }
