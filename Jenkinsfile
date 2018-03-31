@@ -1,5 +1,6 @@
 pipeline {
     agent { label 'master' }
+    options { skipDefaultCheckout() }
     stage('Update CmdStan pointer to latest develop') {
         when { branch 'develop' }
         steps {
@@ -16,9 +17,12 @@ pipeline {
                       userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
                                            credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                 ]]])
-            git submodule update --remote --merge
-            git commit -a -m "Update submodules"
-            git push origin develop
+            sh """
+                cd cmdstan
+                git pull origin develop
+                git commit -a -m "Update submodules"
+                git push origin develop
+            """
         }
     }
     stage('Run shotgun performance regression tests') {
