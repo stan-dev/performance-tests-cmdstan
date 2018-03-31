@@ -7,10 +7,11 @@ usage() {
 }
 
 clean_checkout() {
-    pushd cmdstan
-    git checkout "$1"
     git submodule update --init --recursive
     git submodule foreach --recursive git clean -xffd
+    pushd cmdstan
+    git checkout "$1"
+    make clean-all
     dirty=$(git status --porcelain)
     if [ "$dirty" != "" ]; then
         echo "ERROR: Git repo isn't clean - I'd recommend you make a separate recursive clone of CmdStan for this."
