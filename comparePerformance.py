@@ -18,7 +18,7 @@ def get_times(csv):
 if __name__ == "__main__":
     csv1 = sys.argv[1]
     csv2 = sys.argv[2]
-    times1, times2 = map(get_times, csv1, csv2)
+    times1, times2 = map(get_times, [csv1, csv2])
     ratios = [(n, times1[n]/times2[n]) for n in times1]
 
     for r in ratios:
