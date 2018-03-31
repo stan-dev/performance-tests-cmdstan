@@ -29,7 +29,7 @@ pipeline {
             """
             }
         }
-        stage('Run shotgun performance regression tests') {
+        stage('Shotgun Performance Regression Tests') {
             steps {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} examples"
             }
@@ -43,7 +43,7 @@ pipeline {
                 }
             }
         }
-        stage("Run performance and numerical accuracy tests on known-good models") {
+        stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
             steps {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 10 stat_comp_benchmarks"
             }
@@ -58,7 +58,7 @@ pipeline {
                 }
             }
         }
-        stage("Run develop against some other branch!") {
+        stage("Test cmdstan develop against cmdstan pointer in this branch") {
             when { not { branch 'master' } }
             steps {
                 sh """
