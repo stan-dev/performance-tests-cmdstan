@@ -31,7 +31,7 @@ pipeline {
         }
         stage('Shotgun Performance Regression Tests') {
             steps {
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} examples"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models"
             }
             post {
                 always {
@@ -39,7 +39,6 @@ pipeline {
                         junit '*.xml'
                         archiveArtifacts '*.xml'
                     }
-                    deleteDir()
                 }
             }
         }
@@ -54,7 +53,6 @@ pipeline {
                         archiveArtifacts '*.csv, *.xml'
                         perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
                     }
-                    deleteDir()
                 }
             }
         }
@@ -66,6 +64,11 @@ pipeline {
                 bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
             """
             }
+        }
+    }
+    post {
+        always {
+            deleteDir()
         }
     }
 }
