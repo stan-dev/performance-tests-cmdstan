@@ -13,9 +13,9 @@ write_makelocal() {
 source clean.sh
 
 clean_checkout() {
+    pushd cmdstan; git checkout "$1"; popd
     make clean
     pushd cmdstan
-    git checkout "$1"
     dirty=$(git status --porcelain)
     if [ "$dirty" != "" ]; then
         echo "ERROR: Git repo isn't clean - I'd recommend you make a separate recursive clone of CmdStan for this."
