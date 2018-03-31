@@ -6,7 +6,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/develop']],
+                          branches: [[name: '*/master']],
                           doGenerateSubmoduleConfigurations: false,
                           extensions: [[$class: 'SubmoduleOption',
                                         disableSubmodules: false,
