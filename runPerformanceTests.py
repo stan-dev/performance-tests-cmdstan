@@ -69,48 +69,48 @@ def make(targets, j=8):
 model_name_re = re.compile(".*/[A-z_][^/]+\.stan$")
 
 bad_models = frozenset(
-    ["examples/example-models/ARM/Ch.21/finite_populations.stan"
-     , "examples/example-models/ARM/Ch.21/multiple_comparison.stan"
-     , "examples/example-models/ARM/Ch.21/r_sqr.stan"
-     , "examples/example-models/ARM/Ch.23/electric_1a.stan"
-     , "examples/example-models/ARM/Ch.23/educational_subsidy.stan"
-     , "examples/example-models/bugs_examples/vol2/pines/pines-3.stan"
-     , "examples/example-models/bugs_examples/vol3/fire/fire.stan"
+    ["example-models/ARM/Ch.21/finite_populations.stan"
+     , "example-models/ARM/Ch.21/multiple_comparison.stan"
+     , "example-models/ARM/Ch.21/r_sqr.stan"
+     , "example-models/ARM/Ch.23/electric_1a.stan"
+     , "example-models/ARM/Ch.23/educational_subsidy.stan"
+     , "example-models/bugs_examples/vol2/pines/pines-3.stan"
+     , "example-models/bugs_examples/vol3/fire/fire.stan"
      # The following have data issues
-              , "examples/example-models/ARM/Ch.10/ideo_two_pred.stan"
-     , "examples/example-models/ARM/Ch.16/radon.1.stan"
-     , "examples/example-models/ARM/Ch.16/radon.2.stan"
-     , "examples/example-models/ARM/Ch.16/radon.2a.stan"
-     , "examples/example-models/ARM/Ch.16/radon.2b.stan"
-     , "examples/example-models/ARM/Ch.16/radon.3.stan"
-     , "examples/example-models/ARM/Ch.16/radon.nopooling.stan"
-     , "examples/example-models/ARM/Ch.16/radon.pooling.stan"
-     , "examples/example-models/ARM/Ch.18/radon.1.stan"
-     , "examples/example-models/ARM/Ch.18/radon.2.stan"
-     , "examples/example-models/ARM/Ch.18/radon.nopooling.stan"
-     , "examples/example-models/ARM/Ch.18/radon.pooling.stan"
-     , "examples/example-models/ARM/Ch.19/item_response.stan"
-     , "examples/example-models/bugs_examples/vol1/dogs/dogs.stan"
-     , "examples/example-models/bugs_examples/vol1/rats/rats_stanified.stan"
-     , "examples/example-models/bugs_examples/vol2/pines/pines-4.stan"
-     , "examples/example-models/bugs_examples/vol2/pines/fit.stan"
-     , "examples/example-models/BPA/Ch.06/MtX.stan"
-     , "examples/example-models/ARM/Ch.21/radon_vary_intercept_a.stan"
-     , "examples/example-models/ARM/Ch.21/radon_vary_intercept_b.stan"
-     , "examples/example-models/ARM/Ch.23/sesame_street2.stan"
-     , "examples/example-models/ARM/Ch.3/kidiq_validation.stan"
-     , "examples/example-models/ARM/Ch.7/earnings_interactions.stan"
-     , "examples/example-models/ARM/Ch.8/y_x.stan"
-     , "examples/example-models/basic_estimators/normal_mixture_k.stan"
-     , "examples/example-models/basic_estimators/normal_mixture_k_prop.stan"
-     , "examples/example-models/BPA/Ch.04/GLM0.stan"
-     , "examples/example-models/BPA/Ch.04/GLM1.stan"
-     , "examples/example-models/BPA/Ch.04/GLM2.stan"
-     , "examples/example-models/BPA/Ch.04/GLMM3.stan"
-     , "examples/example-models/BPA/Ch.04/GLMM4.stan"
-     , "examples/example-models/BPA/Ch.04/GLMM5.stan"
-     , "examples/example-models/BPA/Ch.05/ssm2.stan"
-     , "examples/example-models/BPA/Ch.07/cjs_group_raneff.stan"
+     , "example-models/ARM/Ch.10/ideo_two_pred.stan"
+     , "example-models/ARM/Ch.16/radon.1.stan"
+     , "example-models/ARM/Ch.16/radon.2.stan"
+     , "example-models/ARM/Ch.16/radon.2a.stan"
+     , "example-models/ARM/Ch.16/radon.2b.stan"
+     , "example-models/ARM/Ch.16/radon.3.stan"
+     , "example-models/ARM/Ch.16/radon.nopooling.stan"
+     , "example-models/ARM/Ch.16/radon.pooling.stan"
+     , "example-models/ARM/Ch.18/radon.1.stan"
+     , "example-models/ARM/Ch.18/radon.2.stan"
+     , "example-models/ARM/Ch.18/radon.nopooling.stan"
+     , "example-models/ARM/Ch.18/radon.pooling.stan"
+     , "example-models/ARM/Ch.19/item_response.stan"
+     , "example-models/bugs_examples/vol1/dogs/dogs.stan"
+     , "example-models/bugs_examples/vol1/rats/rats_stanified.stan"
+     , "example-models/bugs_examples/vol2/pines/pines-4.stan"
+     , "example-models/bugs_examples/vol2/pines/fit.stan"
+     , "example-models/BPA/Ch.06/MtX.stan"
+     , "example-models/ARM/Ch.21/radon_vary_intercept_a.stan"
+     , "example-models/ARM/Ch.21/radon_vary_intercept_b.stan"
+     , "example-models/ARM/Ch.23/sesame_street2.stan"
+     , "example-models/ARM/Ch.3/kidiq_validation.stan"
+     , "example-models/ARM/Ch.7/earnings_interactions.stan"
+     , "example-models/ARM/Ch.8/y_x.stan"
+     , "example-models/basic_estimators/normal_mixture_k.stan"
+     , "example-models/basic_estimators/normal_mixture_k_prop.stan"
+     , "example-models/BPA/Ch.04/GLM0.stan"
+     , "example-models/BPA/Ch.04/GLM1.stan"
+     , "example-models/BPA/Ch.04/GLM2.stan"
+     , "example-models/BPA/Ch.04/GLMM3.stan"
+     , "example-models/BPA/Ch.04/GLMM4.stan"
+     , "example-models/BPA/Ch.04/GLMM5.stan"
+     , "example-models/BPA/Ch.05/ssm2.stan"
+     , "example-models/BPA/Ch.07/cjs_group_raneff.stan"
     ])
 
 def avg(coll):
@@ -152,19 +152,25 @@ def parse_summary(f):
     return d
 
 def run_model(exe, method, data, tmp, runs):
+    def run_as_fixed_param():
+        shexec("{} method=sample algorithm='fixed_param' random seed=1234 output file={}"
+               .format(exe, tmp))
+
     data_str = data and "data file={}".format(data)
     total_time = 0
     for i in range(runs):
         start = time()
-        try:
-            shexec("{} method={} {} random seed=1234 output file={}"
-                .format(exe, method, data_str, tmp))
-        except FailedCommand as e:
-            if e.returncode == 78:
-                shexec("{} method=sample algorithm='fixed_param' random seed=1234 output file={}"
-                        .format(exe, tmp))
-            else:
-                raise e
+        if not data_str:
+            run_as_fixed_param()
+        else:
+            try:
+                shexec("{} method={} {} random seed=1234 output file={}"
+                    .format(exe, method, data_str, tmp))
+            except FailedCommand as e:
+                if e.returncode == 78:
+                    run_as_fixed_param()
+                else:
+                    raise e
         end = time()
         total_time += end-start
     return total_time
