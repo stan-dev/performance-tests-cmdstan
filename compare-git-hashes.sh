@@ -10,18 +10,18 @@ write_makelocal() {
     echo "CXXFLAGS += -march=native" > make/local
 }
 
-source clean.sh
-
 clean_checkout() {
+    make revert
     pushd cmdstan; git checkout "$1"; popd
-    make clean
     pushd cmdstan
+    make clean-all
     dirty=$(git status --porcelain)
     if [ "$dirty" != "" ]; then
         echo "ERROR: Git repo isn't clean - I'd recommend you make a separate recursive clone of CmdStan for this."
         exit
     fi
     write_makelocal
+    git status
     popd
 }
 
