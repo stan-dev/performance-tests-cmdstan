@@ -24,6 +24,7 @@ pipeline {
                 git pull origin develop
                 cd ..
                 if [ -n "\$(git status --porcelain cmdstan)" ]; then
+                  git checkout master
                   git commit cmdstan -m "Update submodules"
                   git push origin master
                 fi
