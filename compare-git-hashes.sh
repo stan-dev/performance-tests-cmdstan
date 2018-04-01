@@ -12,9 +12,11 @@ write_makelocal() {
 
 clean_checkout() {
     make revert
-    pushd cmdstan; git checkout "$1"; popd
-    pushd cmdstan
-    make clean-all
+    cd cmdstan; git checkout "$1"
+    git submodule update --init --recursive
+    cd ..
+    make clean
+    cd cmdstan
     dirty=$(git status --porcelain)
     if [ "$dirty" != "" ]; then
         echo "ERROR: Git repo isn't clean - I'd recommend you make a separate recursive clone of CmdStan for this."
@@ -22,7 +24,7 @@ clean_checkout() {
     fi
     write_makelocal
     git status
-    popd
+    cd ..
 }
 
 if [ -z "$1" ] || [ -z "$2" ] || [ -z "$3" ]; then
