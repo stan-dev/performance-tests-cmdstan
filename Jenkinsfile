@@ -29,20 +29,17 @@ pipeline {
             """
             }
         }
-        stage('Shotgun Performance Regression Tests') {
+        stage("Test cmdstan develop against cmdstan pointer in this branch") {
+            when { not { branch 'master' } }
             steps {
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models"
-            }
-            post {
-                always {
-                    retry(2) {
-                        junit '*.xml'
-                        archiveArtifacts '*.xml'
-                    }
-                }
+                sh """
+                cmdstan_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
+            """
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
+            when { branch 'master' }
             steps {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 10 stat_comp_benchmarks"
             }
@@ -56,13 +53,18 @@ pipeline {
                 }
             }
         }
-        stage("Test cmdstan develop against cmdstan pointer in this branch") {
-            when { not { branch 'master' } }
+        stage('Shotgun Performance Regression Tests') {
+            when { branch 'master' }
             steps {
-                sh """
-                cmdstan_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
-            """
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
+            }
+            post {
+                always {
+                    retry(2) {
+                        junit '*.xml'
+                        archiveArtifacts '*.xml'
+                    }
+                }
             }
         }
     }
