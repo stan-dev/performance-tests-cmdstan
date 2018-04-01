@@ -25,6 +25,7 @@ pipeline {
                 cd ..
                 if [ -n "\$(git status --porcelain cmdstan)" ]; then
                   git checkout master
+                  git pull
                   git commit cmdstan -m "Update submodules"
                   git push origin master
                 fi
@@ -63,6 +64,8 @@ pipeline {
                 archiveArtifacts '*.xml'
                 perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
             }
+        }
+        always {
             deleteDir()
         }
     }
