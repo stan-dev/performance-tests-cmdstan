@@ -33,13 +33,13 @@ fi
 set -e -x
 
 clean_checkout "$1"
-./runPerformanceTests.py -j8 --runj 5 --overwrite-golds $4 $3
+./runPerformanceTests.py -j8 --overwrite-golds $4 $3
 
 for i in performance.*; do
     mv $i "${1}_${i}"
 done
 
 clean_checkout "$2"
-./runPerformanceTests.py -j8 --runj 5 --check-golds-exact 1e-8 $4 $3
+./runPerformanceTests.py -j8 --check-golds-exact 1e-8 $4 $3
 
 ./comparePerformance.py "${1}_performance.csv" performance.csv
