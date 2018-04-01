@@ -7,7 +7,7 @@ usage() {
 }
 
 write_makelocal() {
-    echo "CXXFLAGS += -march=core2" > make/local
+    echo "CXXFLAGS += -march=native" > make/local
 }
 
 source clean.sh
@@ -41,4 +41,5 @@ done
 
 clean_checkout "$2"
 ./runPerformanceTests.py -j8 --runj 5 --check-golds-exact 1e-8 $4 $3
+
 ./comparePerformance.py "${1}_performance.csv" performance.csv
