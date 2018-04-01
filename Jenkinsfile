@@ -1,6 +1,7 @@
 pipeline {
     agent { label 'master' }
     options { skipDefaultCheckout() }
+    triggers { cron('H 2 * * *') }
     stages {
         stage('Update CmdStan pointer to latest develop') {
             when { branch 'master' }
@@ -35,6 +36,7 @@ pipeline {
                 sh """
                 cmdstan_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                 bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
+                mv performance.xml \$cmdstan_hash.xml
             """
             }
         }
@@ -42,34 +44,24 @@ pipeline {
             when { branch 'master' }
             steps {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 10 stat_comp_benchmarks"
-            }
-            post {
-                always {
-                    retry(2) {
-                        junit '*.xml'
-                        archiveArtifacts '*.csv, *.xml'
-                        perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
-                    }
-                }
+                sh "mv performance.xml known_good_perf.xml"
             }
         }
         stage('Shotgun Performance Regression Tests') {
             when { branch 'master' }
             steps {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
-            }
-            post {
-                always {
-                    retry(2) {
-                        junit '*.xml'
-                        archiveArtifacts '*.xml'
-                    }
-                }
+                sh "mv performance.xml shotgun_perf.xml"
             }
         }
     }
     post {
         always {
+            retry(2) {
+                junit '*.xml'
+                archiveArtifacts '*.xml'
+                perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
+            }
             deleteDir()
         }
     }
