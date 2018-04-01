@@ -58,7 +58,7 @@ pipeline {
         }
     }
     post {
-        always {
+        success {
             retry(2) {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
