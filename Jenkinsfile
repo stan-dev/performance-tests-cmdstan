@@ -39,31 +39,31 @@ pipeline {
                 cmdstan_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                 bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
                 mv performance.xml \$cmdstan_hash.xml
+                make revert clean
             """
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
             when { branch 'master' }
             steps {
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 10 stat_comp_benchmarks"
-                sh "mv performance.xml known_good_perf.xml"
+                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 10 stat_comp_benchmarks --check-golds"
+                sh "mv performance.xml known_good_perf.xml; ls"
             }
         }
         stage('Shotgun Performance Regression Tests') {
             when { branch 'master' }
             steps {
+                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
-                sh "mv performance.xml shotgun_perf.xml"
+                sh "mv performance.xml shotgun_perf.xml; ls"
             }
         }
     }
     post {
         success {
-            retry(2) {
-                junit '*.xml'
-                archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
-            }
+            junit '*.xml'
+            perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
         }
         always {
             deleteDir()
