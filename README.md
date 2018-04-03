@@ -22,5 +22,5 @@ To test the performance of the current cmdstan et al working directory on, for e
 ## Testing one git commit against another
 to test i.e. develop against a branch you've made on cmdstan,
 ```
-bash compare-git-hashes.sh develop <branch-name> stat_comp_benchmarks "-j8"
+./compare-git-hashes.sh develop <branch-name> stat_comp_benchmarks -j8 --runs 10
 ```
