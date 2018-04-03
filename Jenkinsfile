@@ -52,24 +52,24 @@ pipeline {
             when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 1 stat_comp_benchmarks --check-golds"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds"
                 sh "mv performance.xml known_good_perf.xml"
             }
         }
-        //stage('Shotgun Performance Regression Tests') {
-        //    when { branch 'master' }
-        //    steps {
-        //        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-        //        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
-        //        sh "mv performance.xml shotgun_perf.xml"
-        //    }
-        //}
+        stage('Shotgun Performance Regression Tests') {
+            when { branch 'master' }
+            steps {
+                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
+                sh "mv performance.xml shotgun_perf.xml"
+            }
+        }
     }
     post {
         success {
             junit '*.xml'
             archiveArtifacts '*.xml'
-            perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
+            perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml', modeThroughput: false
         }
     }
 }
