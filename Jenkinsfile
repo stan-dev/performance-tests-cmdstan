@@ -62,8 +62,8 @@ pipeline {
     }
     post {
         success {
-            junit '*.xml'
             perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
+            junit '**.xml'
         }
         always {
             deleteDir()
