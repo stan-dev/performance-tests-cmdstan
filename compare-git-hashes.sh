@@ -3,7 +3,7 @@
 usage() {
     echo "=====!!!WARNING!!!===="
     echo "This will clean all repos involved! Use only on a clean checkout."
-    echo "$0 <git-hash-1> <git-hash-2> <directories of models> '<extra args for runPerformanceTests.py>''"
+    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <extra args for runPerformanceTests.py>'"
     echo "(those last extra args are in quotes)"
 }
 
@@ -36,13 +36,13 @@ fi
 set -e -x
 
 clean_checkout "$1"
-./runPerformanceTests.py --overwrite-golds $4 $3
+./runPerformanceTests.py --overwrite-golds ${@:3:99}
 
 for i in performance.*; do
     mv $i "${1}_${i}"
 done
 
 clean_checkout "$2"
-./runPerformanceTests.py --check-golds-exact 1e-8 $4 $3
+./runPerformanceTests.py --check-golds-exact 1e-8 ${@:3:99}
 
 ./comparePerformance.py "${1}_performance.csv" performance.csv
