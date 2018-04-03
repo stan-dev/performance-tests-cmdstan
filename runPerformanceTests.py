@@ -189,8 +189,8 @@ def run_golds(gold, tmp, summary, check_golds_exact):
             print("FAIL: {} param {} |{} - {}| not within {}"
                     .format(gold, k, summary[k][0], mean, check_golds_exact))
             fails.append((k, mean, stdev, summary[k][0]))
-        elif err > 0.0001 and (err / stdev) > 0.5:
-            print("FAIL: {} param {} not within ({} - {}) / {} < 0.5"
+        elif err > 0.0001 and (err / stdev) > 0.3:
+            print("FAIL: {} param {} not within ({} - {}) / {} < 0.3"
                     .format(gold, k, summary[k][0], mean, stdev))
             fails.append((k, mean, stdev, summary[k][0]))
     return fails
