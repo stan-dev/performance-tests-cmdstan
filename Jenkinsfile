@@ -3,6 +3,11 @@ pipeline {
     options { skipDefaultCheckout() }
     triggers { cron('H 2 * * *') }
     stages {
+        stage('Delete directory') {
+            steps {
+                deleteDir()
+            }
+        }
         stage('Update CmdStan pointer to latest develop') {
             when { branch 'master' }
             steps {
@@ -48,7 +53,7 @@ pipeline {
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 1 stat_comp_benchmarks --check-golds"
-                sh "mv performance.xml known_good_perf.xml; ls"
+                sh "mv performance.xml known_good_perf.xml"
             }
         }
         //stage('Shotgun Performance Regression Tests') {
@@ -56,17 +61,15 @@ pipeline {
         //    steps {
         //        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
         //        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
-        //        sh "mv performance.xml shotgun_perf.xml; ls"
+        //        sh "mv performance.xml shotgun_perf.xml"
         //    }
         //}
     }
     post {
         success {
+            junit '*.xml'
+            archiveArtifacts '*.xml'
             perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml'
-            junit '**.xml'
-        }
-        always {
-            deleteDir()
         }
     }
 }
