@@ -20,7 +20,7 @@ To test the performance of the current cmdstan et al working directory on, for e
 `make clean` will recursively remove all non-checked-in files from all submodules. `make revert` will bring cmdstan and its submodules back to the commit specified by the current commit of the top-level `performance-tests-cmdstan` repo.
 
 ## Testing one git commit against another
-to test i.e. develop against a branch you've made on cmdstan,
+to test e.g. develop against a branch you've made on cmdstan,
 ```
-./compare-git-hashes.sh develop <branch-name> stat_comp_benchmarks -j8 --runs 10
+./compare-git-hashes.sh develop <branch-name> stat_comp_benchmarks -j8 --runs 10 <other options to runPerformanceTests.py>
 ```
