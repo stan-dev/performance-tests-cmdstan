@@ -180,7 +180,14 @@ def run_golds(gold, tmp, summary, check_golds_exact):
     with open(gold) as gf:
         gold_summary = parse_summary(gf)
 
-    fails = []
+    fails, errors = [], []
+    first_params = set(summary)
+    second_params = set(gold_summary)
+    if not (ss == sgs):
+        msg = "ERROR: First model has {}, 2nd model has {} params".format(
+            first_params - second_params, second_params - first_params)
+        print(msg)
+        errors.append(msg)
     for k, (mean, stdev) in gold_summary.items():
         if stdev < 0.00001: #XXX Uh...
             continue
@@ -214,7 +221,7 @@ def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
     if overwrite:
         shexec("mv {} {}".format(tmp, gold))
     elif check_golds or check_golds_exact:
-        fails = run_golds(gold, tmp, summary, check_golds_exact)
+        fails, errors = run_golds(gold, tmp, summary, check_golds_exact)
 
     return total_time, (fails, errors)
 
