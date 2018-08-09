@@ -183,7 +183,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
     fails, errors = [], []
     first_params = set(summary)
     second_params = set(gold_summary)
-    if not (ss == sgs):
+    if not (first_params == second_params):
         msg = "ERROR: First model has {}, 2nd model has {} params".format(
             first_params - second_params, second_params - first_params)
         print(msg)
