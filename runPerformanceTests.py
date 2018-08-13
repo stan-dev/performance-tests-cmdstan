@@ -184,10 +184,13 @@ def run_golds(gold, tmp, summary, check_golds_exact):
     first_params = set(summary)
     second_params = set(gold_summary)
     if not (first_params == second_params):
-        msg = "ERROR: First model has {}, 2nd model has {} params".format(
-            first_params - second_params, second_params - first_params)
+        msg = "ERROR: First model has these extra params: {}\n".format(
+                first_params - second_params)
+        msg += "2nd model has these extra params: {} ".format(
+                second_params - first_params)
         print(msg)
         errors.append(msg)
+        return fails, errors
     for k, (mean, stdev) in gold_summary.items():
         if stdev < 0.00001: #XXX Uh...
             continue
@@ -200,7 +203,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
             print("FAIL: {} param {} not within ({} - {}) / {} < 0.3"
                     .format(gold, k, summary[k][0], mean, stdev))
             fails.append((k, mean, stdev, summary[k][0]))
-    return fails
+    return fails, errors
 
 
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
