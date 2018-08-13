@@ -242,7 +242,7 @@ def test_results_xml(tests):
             testcase.text = ("param {} got mean {}, gold has mean {} and stdev {}"
                              .format(fail[0], fail[3], fail[1], fail[2]))
         for error in errors:
-            testcase = ET.SubElement(root, "error", type="Exception")
+            testcase = ET.SubElement(root, "error", classname=name, type="Exception")
             testcase.text = error
     return ET.ElementTree(root)
 
