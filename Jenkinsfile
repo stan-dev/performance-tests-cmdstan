@@ -59,14 +59,14 @@ pipeline {
                 sh "mv performance.xml known_good_perf.xml"
             }
         }
-        stage('Shotgun Performance Regression Tests') {
-            when { branch 'master' }
-            steps {
-                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
-                sh "mv performance.xml shotgun_perf.xml"
-            }
-        }
+        //stage('Shotgun Performance Regression Tests') {
+        //    when { branch 'master' }
+        //    steps {
+        //        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
+        //        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
+        //        sh "mv performance.xml shotgun_perf.xml"
+        //    }
+        //}
     }
     post {
         success {

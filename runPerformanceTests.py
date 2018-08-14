@@ -184,9 +184,9 @@ def run_golds(gold, tmp, summary, check_golds_exact):
     first_params = set(summary)
     second_params = set(gold_summary)
     if not (first_params == second_params):
-        msg = "First program has these extra params: {}\n".format(
+        msg = "First program has these extra params: {}.  ".format(
                 first_params - second_params)
-        msg += "2nd program has these extra params: {}\n".format(
+        msg += "2nd program has these extra params: {}.  ".format(
                 second_params - first_params)
         msg += "They have these params in common: {}".format(
                 second_params & first_params)
