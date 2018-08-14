@@ -1,6 +1,9 @@
 pipeline {
     agent { label 'master' }
-    options { skipDefaultCheckout() }
+    options {
+        skipDefaultCheckout()
+        preserveStashes(buildCount: 7)
+    }
     triggers { cron('H 2 * * *') }
     stages {
         stage('Delete directory') {

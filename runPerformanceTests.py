@@ -184,11 +184,13 @@ def run_golds(gold, tmp, summary, check_golds_exact):
     first_params = set(summary)
     second_params = set(gold_summary)
     if not (first_params == second_params):
-        msg = "ERROR: First model has these extra params: {}\n".format(
+        msg = "First program has these extra params: {}\n".format(
                 first_params - second_params)
-        msg += "2nd model has these extra params: {} ".format(
+        msg += "2nd program has these extra params: {}\n".format(
                 second_params - first_params)
-        print(msg)
+        msg += "They have these params in common: {}".format(
+                second_params & first_params)
+        print("ERROR: " + msg)
         errors.append(msg)
         return fails, errors
     for k, (mean, stdev) in gold_summary.items():
@@ -242,7 +244,7 @@ def test_results_xml(tests):
             testcase.text = ("param {} got mean {}, gold has mean {} and stdev {}"
                              .format(fail[0], fail[3], fail[1], fail[2]))
         for error in errors:
-            testcase = ET.SubElement(root, "error", classname=name, type="Exception")
+            testcase = ET.SubElement(root, "failure", type="Exception")
             testcase.text = error
     return ET.ElementTree(root)
 
