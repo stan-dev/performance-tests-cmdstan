@@ -10,7 +10,7 @@ from difflib import SequenceMatcher
 from fnmatch import fnmatch
 from functools import wraps
 from multiprocessing.pool import ThreadPool
-from time import time
+from time import time, now
 import xml.etree.ElementTree as ET
 
 GOLD_OUTPUT_DIR = "golds/"
@@ -233,19 +233,23 @@ def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
 def test_results_xml(tests):
     failures = str(sum(1 if x[2] else 0 for x in tests))
     time_ = str(sum(x[1] for x in tests))
-    root = ET.Element("testsuite", failures=failures, name="Performance Tests",
-                      tests=str(len(tests)), time=str(time_))
+    root = ET.Element("testsuite", tests = len(tests), disabled = 0,
+            failures=failures, name="Performance Tests",
+            tests=str(len(tests)), time=str(time_),
+            timestamp=str(now()))
     for model, time_, fails, errors in tests:
         name = model.replace(".stan", "").replace("/", ".")
         time_ = str(time_)
-        testcase = ET.SubElement(root, "testcase", classname=name, time=time_)
+        testcase = ET.SubElement(root, "testcase", status="run",
+                classname=name, time=time_)
+        test
         for fail in fails:
-            testcase = ET.SubElement(testcase, "failure", type="param mismatch")
-            testcase.text = ("param {} got mean {}, gold has mean {} and stdev {}"
+            testcase = ET.SubElement(testcase, "failure", type="OffGold")
+            testcase.message = ("param {} got mean {}, gold has mean {} and stdev {}"
                              .format(fail[0], fail[3], fail[1], fail[2]))
         for error in errors:
             testcase = ET.SubElement(testcase, "failure", type="Exception")
-            testcase.text = error
+            testcase.message = error
     return ET.ElementTree(root)
 
 def test_results_csv(tests):
