@@ -240,11 +240,11 @@ def test_results_xml(tests):
         time_ = str(time_)
         testcase = ET.SubElement(root, "testcase", classname=name, time=time_)
         for fail in fails:
-            testcase = ET.SubElement(root, "failure", type="param mismatch")
+            testcase = ET.SubElement(testcase, "failure", type="param mismatch")
             testcase.text = ("param {} got mean {}, gold has mean {} and stdev {}"
                              .format(fail[0], fail[3], fail[1], fail[2]))
         for error in errors:
-            testcase = ET.SubElement(root, "failure", type="Exception")
+            testcase = ET.SubElement(testcase, "failure", type="Exception")
             testcase.text = error
     return ET.ElementTree(root)
 
