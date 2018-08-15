@@ -242,7 +242,6 @@ def test_results_xml(tests):
         time_ = str(time_)
         testcase = ET.SubElement(root, "testcase", status="run",
                 classname=name, time=time_)
-        test
         for fail in fails:
             testcase = ET.SubElement(testcase, "failure", type="OffGold")
             testcase.message = ("param {} got mean {}, gold has mean {} and stdev {}"
