@@ -11,6 +11,7 @@ from fnmatch import fnmatch
 from functools import wraps
 from multiprocessing.pool import ThreadPool
 from time import time
+from datetime import now
 import xml.etree.ElementTree as ET
 
 GOLD_OUTPUT_DIR = "golds/"
@@ -236,19 +237,19 @@ def test_results_xml(tests):
     root = ET.Element("testsuite", disabled = '0',
             failures=failures, name="Performance Tests",
             tests=str(len(tests)), time=str(time_),
-            timestamp=str(time()))
+            timestamp=str(now()))
     for model, time_, fails, errors in tests:
         name = model.replace(".stan", "").replace("/", ".")
         time_ = str(time_)
         testcase = ET.SubElement(root, "testcase", status="run",
                 classname=name, time=time_)
         for fail in fails:
-            testcase = ET.SubElement(testcase, "failure", type="OffGold")
-            testcase.message = ("param {} got mean {}, gold has mean {} and stdev {}"
+            failure = ET.SubElement(testcase, "failure", type="OffGold")
+            failure.message = ("param {} got mean {}, gold has mean {} and stdev {}"
                              .format(fail[0], fail[3], fail[1], fail[2]))
         for error in errors:
-            testcase = ET.SubElement(testcase, "failure", type="Exception")
-            testcase.message = error
+            err = ET.SubElement(testcase, "failure", type="Exception")
+            err.message = error
     return ET.ElementTree(root)
 
 def test_results_csv(tests):
