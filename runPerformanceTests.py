@@ -233,7 +233,7 @@ def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
 def test_results_xml(tests):
     failures = str(sum(1 if x[2] else 0 for x in tests))
     time_ = str(sum(x[1] for x in tests))
-    root = ET.Element("testsuite", disabled = 0,
+    root = ET.Element("testsuite", disabled = '0',
             failures=failures, name="Performance Tests",
             tests=str(len(tests)), time=str(time_),
             timestamp=str(time()))
