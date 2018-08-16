@@ -55,7 +55,8 @@ pipeline {
             when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks/benchmarks/sir stat_comp_benchmarks/benchmarks/arma --check-golds"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 1
+                stat_comp_benchmarks/benchmarks/eight_schools --check-golds"
                 sh "mv performance.xml known_good_perf.xml"
             }
         }

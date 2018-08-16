@@ -240,16 +240,21 @@ def test_results_xml(tests):
             timestamp=str(datetime.now()))
     for model, time_, fails, errors in tests:
         name = model.replace(".stan", "").replace("/", ".")
+        last_dot = name.rfind(".")
+        classname = name[:last_dot]
+        name = name[last_dot + 1:]
         time_ = str(time_)
+        errors += ["FAKE ERROR"]
         testcase = ET.SubElement(root, "testcase", status="run",
-                classname=name, time=time_)
+                classname=classname, name=name, time=time_)
         for fail in fails:
             failure = ET.SubElement(testcase, "failure", type="OffGold",
+                    classname=classname, name = name,
                     message = ("param {} got mean {}, gold has mean {} and stdev {}"
                         .format(fail[0], fail[3], fail[1], fail[2])))
         for error in errors:
             err = ET.SubElement(testcase, "failure", type="Exception",
-                    message = error)
+                    classname=classname, name = name, message = error)
     return ET.ElementTree(root)
 
 def test_results_csv(tests):
