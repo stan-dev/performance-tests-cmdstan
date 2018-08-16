@@ -240,9 +240,11 @@ def test_results_xml(tests):
             timestamp=str(datetime.now()))
     for model, time_, fails, errors in tests:
         name = model.replace(".stan", "").replace("/", ".")
+        classname = name
         last_dot = name.rfind(".")
-        classname = name[:last_dot]
-        name = name[last_dot + 1:]
+        if last_dot > 0:
+            classname = classname[:last_dot]
+            name = name[last_dot + 1:]
         time_ = str(time_)
         errors += ["FAKE ERROR"]
         testcase = ET.SubElement(root, "testcase", status="run",

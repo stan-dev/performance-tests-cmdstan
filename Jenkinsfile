@@ -1,3 +1,9 @@
+#!/usr/bin/env groovy
+@Library('StanUtils')
+import org.stan.Utils
+
+def utils = new org.stan.Utils()
+
 pipeline {
     agent { label 'master' }
     options {
@@ -67,12 +73,18 @@ pipeline {
         //        sh "mv performance.xml shotgun_perf.xml"
         //    }
         //}
+        stage('Collect test results') {
+            steps {
+                junit '*.xml'
+                archiveArtifacts '*.xml'
+                perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml', modeThroughput: false
+            }
+        }
     }
+
     post {
-        success {
-            junit '*.xml'
-            archiveArtifacts '*.xml'
-            perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml', modeThroughput: false
+        failure {
+            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com") } 
         }
     }
 }
