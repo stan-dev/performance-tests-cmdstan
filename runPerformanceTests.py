@@ -244,12 +244,12 @@ def test_results_xml(tests):
         testcase = ET.SubElement(root, "testcase", status="run",
                 classname=name, time=time_)
         for fail in fails:
-            failure = ET.SubElement(testcase, "failure", type="OffGold")
-            failure.message = ("param {} got mean {}, gold has mean {} and stdev {}"
-                             .format(fail[0], fail[3], fail[1], fail[2]))
+            failure = ET.SubElement(testcase, "failure", type="OffGold",
+                    message = ("param {} got mean {}, gold has mean {} and stdev {}"
+                        .format(fail[0], fail[3], fail[1], fail[2])))
         for error in errors:
-            err = ET.SubElement(testcase, "failure", type="Exception")
-            err.message = error
+            err = ET.SubElement(testcase, "failure", type="Exception",
+                    message = error)
     return ET.ElementTree(root)
 
 def test_results_csv(tests):
