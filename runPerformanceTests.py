@@ -11,7 +11,7 @@ from fnmatch import fnmatch
 from functools import wraps
 from multiprocessing.pool import ThreadPool
 from time import time
-from datetime import now
+from datetime import datetime
 import xml.etree.ElementTree as ET
 
 GOLD_OUTPUT_DIR = "golds/"
@@ -237,7 +237,7 @@ def test_results_xml(tests):
     root = ET.Element("testsuite", disabled = '0',
             failures=failures, name="Performance Tests",
             tests=str(len(tests)), time=str(time_),
-            timestamp=str(now()))
+            timestamp=str(datetime.now()))
     for model, time_, fails, errors in tests:
         name = model.replace(".stan", "").replace("/", ".")
         time_ = str(time_)
