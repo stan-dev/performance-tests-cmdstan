@@ -236,7 +236,7 @@ def test_results_xml(tests):
     time_ = str(sum(x[1] for x in tests))
     root = ET.Element("testsuite", disabled = '0',
             failures=failures, name="Performance Tests",
-            tests=str(len(tests)), time=str(time_),
+            tests=str(len(tests)), time=str(time_ * 1000),
             timestamp=str(datetime.now()))
     for model, time_, fails, errors in tests:
         name = model.replace(".stan", "").replace("/", ".")
@@ -245,7 +245,7 @@ def test_results_xml(tests):
         if last_dot > 0:
             classname = classname[:last_dot]
             name = name[last_dot + 1:]
-        time_ = str(time_)
+        time_ = str(time_ * 1000)
         testcase = ET.SubElement(root, "testcase", status="run",
                 classname=classname, name=name, time=time_)
         for fail in fails:
