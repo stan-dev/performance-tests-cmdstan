@@ -246,7 +246,6 @@ def test_results_xml(tests):
             classname = classname[:last_dot]
             name = name[last_dot + 1:]
         time_ = str(time_)
-        errors += ["FAKE ERROR"]
         testcase = ET.SubElement(root, "testcase", status="run",
                 classname=classname, name=name, time=time_)
         for fail in fails:
