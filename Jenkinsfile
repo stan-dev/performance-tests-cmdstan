@@ -12,14 +12,9 @@ pipeline {
     }
     triggers { cron('H 2 * * *') }
     stages {
-        stage('Delete directory') {
+        stage('Clean checkout') {
             steps {
                 deleteDir()
-            }
-        }
-        stage('Update CmdStan pointer to latest develop') {
-            when { branch 'master' }
-            steps {
                 checkout([$class: 'GitSCM',
                           branches: [[name: '*/master']],
                           doGenerateSubmoduleConfigurations: false,
@@ -33,6 +28,11 @@ pipeline {
                           userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
                                                credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                     ]]])
+            }
+        }
+        stage('Update CmdStan pointer to latest develop') {
+            when { branch 'master' }
+            steps {
                 sh """
                 cd cmdstan
                 git pull origin develop
