@@ -58,7 +58,6 @@ pipeline {
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds"
@@ -66,7 +65,6 @@ pipeline {
             }
         }
         stage('Shotgun Performance Regression Tests') {
-            when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
@@ -84,7 +82,7 @@ pipeline {
 
     post {
         failure {
-            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com") } 
+            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com") }
         }
     }
 }
