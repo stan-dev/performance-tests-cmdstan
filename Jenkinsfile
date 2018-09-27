@@ -69,6 +69,7 @@ pipeline {
         stage('Shotgun Performance Regression Tests') {
             when { branch 'master' }
             steps {
+                sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples"
                 sh "mv performance.xml shotgun_perf.xml"
