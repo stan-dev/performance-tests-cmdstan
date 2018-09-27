@@ -42,6 +42,7 @@ pipeline {
                   git pull
                   git commit cmdstan -m "Update submodules"
                   git push origin master
+                  exit 1
                 fi
             """
             }
