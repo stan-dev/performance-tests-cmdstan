@@ -275,6 +275,7 @@ def parse_args():
                         help="Number of runs per benchmark.", default=1)
     parser.add_argument("-j", dest="j", action="store", type=int, default=4)
     parser.add_argument("--runj", dest="runj", action="store", type=int, default=1)
+    parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
     return parser.parse_args()
@@ -309,9 +310,9 @@ if __name__ == "__main__":
                                 args.method),
                     tests)
     results = list(results)
-    results.append(("compilation", make_time, [], []))
-    test_results_xml(results).write("performance.xml")
-    with open("performance.csv", "w") as f:
+    results.append(("{}.compilation".format(args.name), make_time, [], []))
+    test_results_xml(results).write("{}.xml".format(args.name))
+    with open("{}.csv".format(args.name), "w") as f:
         f.write(test_results_csv(results))
     for model, _, fails, errors in results:
         if fails or errors:
