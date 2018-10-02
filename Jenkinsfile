@@ -46,7 +46,7 @@ pipeline {
                   exit 1
                 fi
             """, returnStatus:true
-                    if rc != 0 {
+                    if (rc != 0) {
                         currentBuild.result = 'ABORTED'
                         error('Stopping build early because there have been updates')
                     }
