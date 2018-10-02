@@ -34,7 +34,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 script {
-                    def rc = sh """
+                    def rc = sh script:"""
                 cd cmdstan
                 git pull origin develop
                 cd ..
