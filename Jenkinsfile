@@ -34,22 +34,17 @@ pipeline {
             when { branch 'master' }
             steps {
                 script {
-                    def rc = sh """
-                cd cmdstan
-                git pull origin develop
-                cd ..
-                if [ -n "\$(git status --porcelain cmdstan)" ]; then
-                  git checkout master
-                  git pull
-                  git commit cmdstan -m "Update submodules"
-                  git push origin master
-                  exit 1
-                fi
-            """, returnStatus:true
-                    if rc != 0 {
-                        currentBuild.result = 'ABORTED'
-                        error('Stopping build early because there have been updates')
-                    }
+                    sh """
+                        cd cmdstan
+                        git pull origin develop
+                        cd ..
+                        if [ -n "\$(git status --porcelain cmdstan)" ]; then
+                            git checkout master
+                            git pull
+                            git commit cmdstan -m "Update submodules"
+                            git push origin master
+                        fi
+                        """ 
                 }
             }
         }
