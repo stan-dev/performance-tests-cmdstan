@@ -37,6 +37,7 @@ pipeline {
                     sh """
                         cd cmdstan
                         git pull origin develop
+                        git submodule update --init --recursive
                         cd ..
                         if [ -n "\$(git status --porcelain cmdstan)" ]; then
                             git checkout master
@@ -44,7 +45,7 @@ pipeline {
                             git commit cmdstan -m "Update submodules"
                             git push origin master
                         fi
-                        """ 
+                        """
                 }
             }
         }
