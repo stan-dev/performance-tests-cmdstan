@@ -10,7 +10,6 @@ pipeline {
         skipDefaultCheckout()
         preserveStashes(buildCount: 7)
     }
-    triggers { cron('H 2 * * *') }
     stages {
         stage('Clean checkout') {
             steps {
