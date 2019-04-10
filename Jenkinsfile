@@ -66,26 +66,41 @@ pipeline {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf"
             }
         }
-        stage('Shotgun Performance Regression Tests') {
-            when { branch 'master' }
-            steps {
-                sh "make clean"
-                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf"
-            }
-        }
+        //stage('Shotgun Performance Regression Tests') {
+        //    when { branch 'master' }
+        //    steps {
+        //        sh "make clean"
+        //        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
+        //        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf"
+        //    }
+        //}
         stage('Collect test results') {
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml', modeThroughput: false
+
+                perfReport compareBuildPrevious: true, 
+
+                relativeFailedThresholdNegative: 1.5,
+                relativeFailedThresholdPositive: 1.5,
+
+                relativeUnstableThresholdNegative: 1,
+                relativeUnstableThresholdPositive: 1,
+
+                errorFailedThreshold: 10, 
+                errorUnstableThreshold: 1, 
+
+                failBuildIfNoResultFile: false, 
+                modePerformancePerTestCase: true, 
+                sourceDataFiles: '*.xml', 
+                modeThroughput: false
             }
         }
     }
 
     post {
         failure {
-            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com") }
+            script { utils.mailBuildResults("FAILURE", "serban.nicusor@toptal.com") }
         }
     }
 }
