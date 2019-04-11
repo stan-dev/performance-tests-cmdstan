@@ -15,7 +15,7 @@ pipeline {
             steps {
                 deleteDir()
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/master']],
+                          branches: [[name: '*/jenkins-tests']],
                           doGenerateSubmoduleConfigurations: false,
                           extensions: [[$class: 'SubmoduleOption',
                                         disableSubmodules: false,
@@ -30,7 +30,7 @@ pipeline {
             }
         }
         stage('Update CmdStan pointer to latest develop') {
-            when { branch 'master' }
+            when { branch 'jenkins-tests' }
             steps {
                 script {
                     sh """
@@ -39,17 +39,17 @@ pipeline {
                         git submodule update --init --recursive
                         cd ..
                         if [ -n "\$(git status --porcelain cmdstan)" ]; then
-                            git checkout master
+                            git checkout jenkins-tests
                             git pull
                             git commit cmdstan -m "Update submodules"
-                            git push origin master
+                            git push origin jenkins-tests
                         fi
                         """
                 }
             }
         }
         stage("Test cmdstan develop against cmdstan pointer in this branch") {
-            when { not { branch 'master' } }
+            when { not { branch 'jenkins-tests' } }
             steps {
                 sh """
                 cmdstan_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
@@ -60,14 +60,14 @@ pipeline {
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            when { branch 'master' }
+            when { branch 'jenkins-tests' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf"
             }
         }
         stage('Shotgun Performance Regression Tests') {
-            when { branch 'master' }
+            when { branch 'jenkins-tests' }
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
