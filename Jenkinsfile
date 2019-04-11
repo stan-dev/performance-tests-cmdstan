@@ -5,7 +5,7 @@ import org.stan.Utils
 def utils = new org.stan.Utils()
 
 pipeline {
-    agent { label 'linux' }
+    agent { label 'master' }
     options {
         skipDefaultCheckout()
         preserveStashes(buildCount: 7)
