@@ -264,6 +264,7 @@ def test_results_csv(tests):
 def parse_args():
     parser = argparse.ArgumentParser(description="Run gold tests and record performance.")
     parser.add_argument("directories", nargs="+")
+    parser.add_argument("--debug", dest="debug", action="store_true")
     parser.add_argument("--check-golds", dest="check_golds", action="store_true",
                         help="Run the gold tests and check output within loose boundaries.")
     parser.add_argument("--check-golds-exact", dest="check_golds_exact", action="store",
@@ -296,6 +297,10 @@ if __name__ == "__main__":
     models = find_files("*.stan", args.directories)
     models = filter(model_name_re.match, models)
     models = list(filter(lambda m: not m in bad_models, models))
+    if args.debug:
+        print("Models: ")
+        for model in models:
+            print model
     executables = [m[:-5] for m in models]
     make_time, _ = time_step("make_all_models", make, executables, args.j)
     tests = [(model, exe, find_data_for_model(model))
