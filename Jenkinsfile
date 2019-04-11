@@ -66,14 +66,14 @@ pipeline {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf"
             }
         }
-        //stage('Shotgun Performance Regression Tests') {
-        //    when { branch 'master' }
-        //    steps {
-        //        sh "make clean"
-        //        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-        //        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf"
-        //    }
-        //}
+        stage('Shotgun Performance Regression Tests') {
+            when { branch 'master' }
+            steps {
+                sh "make clean"
+                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf"
+            }
+        }
         stage('Collect test results') {
             steps {
                 junit '*.xml'
@@ -81,13 +81,13 @@ pipeline {
 
                 perfReport compareBuildPrevious: true, 
 
-                relativeFailedThresholdNegative: 1.5,
-                relativeFailedThresholdPositive: 1.5,
+                relativeFailedThresholdNegative: 1,
+                relativeFailedThresholdPositive: 1,
 
                 relativeUnstableThresholdNegative: 1,
                 relativeUnstableThresholdPositive: 1,
 
-                errorFailedThreshold: -1.0, 
+                errorFailedThreshold: 0.1, 
                 errorUnstableThreshold: 0.0, 
 
                 failBuildIfNoResultFile: false, 
