@@ -71,7 +71,7 @@ pipeline {
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples example-models/regressions --name=shotgun_perf"
             }
         }
         stage('Collect test results') {
