@@ -87,7 +87,7 @@ pipeline {
                 relativeUnstableThresholdNegative: 1,
                 relativeUnstableThresholdPositive: 1,
 
-                errorFailedThreshold: 0.0, 
+                errorFailedThreshold: -1.0, 
                 errorUnstableThreshold: 0.0, 
 
                 failBuildIfNoResultFile: false, 
