@@ -25,6 +25,10 @@ def find_files(pattern, dirs):
                     res.append(os.path.join(d, f))
     return res
 
+def read_tests(filename)
+    test_files = [line.rstrip('\n') for line in open(filename)]
+    return test_files
+        
 def str_dist(target):
     def str_dist_internal(candidate):
         return SequenceMatcher(None, candidate, target).ratio()
@@ -68,6 +72,7 @@ def make(targets, j=8):
            .format(j, " ".join("../" + t for t in targets)))
 
 model_name_re = re.compile(".*/[A-z_][^/]+\.stan$")
+tests = []
 
 bad_models = frozenset(
     ["example-models/ARM/Ch.21/finite_populations.stan"
@@ -208,7 +213,6 @@ def run_golds(gold, tmp, summary, check_golds_exact):
             fails.append((k, mean, stdev, summary[k][0]))
     return fails, errors
 
-
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
     fails, errors = [], []
     gold = os.path.join(GOLD_OUTPUT_DIR,
@@ -278,6 +282,7 @@ def parse_args():
     parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
+    parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
     return parser.parse_args()
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
@@ -293,9 +298,11 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
 if __name__ == "__main__":
     args = parse_args()
 
-    models = find_files("*.stan", args.directories)
+    models = read_tests(args.tests)
+    #models = find_files("*.stan", args.directories)
     models = filter(model_name_re.match, models)
     models = list(filter(lambda m: not m in bad_models, models))
+
     executables = [m[:-5] for m in models]
     make_time, _ = time_step("make_all_models", make, executables, args.j)
     tests = [(model, exe, find_data_for_model(model))

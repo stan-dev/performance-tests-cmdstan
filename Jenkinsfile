@@ -5,7 +5,7 @@ import org.stan.Utils
 def utils = new org.stan.Utils()
 
 pipeline {
-    agent { label 'master' }
+    agent { label 'gelman-group-mac' }
     options {
         skipDefaultCheckout()
         preserveStashes(buildCount: 7)
@@ -63,7 +63,7 @@ pipeline {
             when { branch 'jenkins-tests' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
@@ -71,7 +71,7 @@ pipeline {
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf --tests-file=shotgun_perf.tests"
             }
         }
         stage('Collect test results') {
@@ -79,28 +79,24 @@ pipeline {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
 
+                
                 perfReport compareBuildPrevious: true, 
 
-                relativeFailedThresholdNegative: 5,
-                relativeFailedThresholdPositive: 5,
+                    relativeFailedThresholdNegative: 5,
+                    relativeFailedThresholdPositive: 5,
 
-                relativeUnstableThresholdNegative: 1,
-                relativeUnstableThresholdPositive: 1,
+                    relativeUnstableThresholdNegative: 2.5,
+                    relativeUnstableThresholdPositive: 2.5,
 
-                errorUnstableResponseTimeThreshold: "shotgun_perf:10\nknown_good_perf:10",
+                    errorFailedThreshold: 1, 
+                    errorUnstableThreshold: 0.1, 
 
-                //errorFailedThreshold: 0.1, 
-                //errorUnstableThreshold: 0.0, 
-
-                //relativeFailedThreshold: 0.1, 
-                //relativeUnstableThreshold: 0.0, 
-
-                failBuildIfNoResultFile: false, 
-                modePerformancePerTestCase: true, 
-                modeOfThreshold: true,
-                sourceDataFiles: '*.xml', 
-                modeThroughput: false,
-                configType: 'PRT'
+                    failBuildIfNoResultFile: false, 
+                    modePerformancePerTestCase: true, 
+                    modeOfThreshold: true,
+                    sourceDataFiles: '*.xml', 
+                    modeThroughput: false,
+                    configType: 'PRT'
             }
         }
     }
