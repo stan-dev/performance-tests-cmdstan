@@ -72,7 +72,6 @@ def make(targets, j=8):
            .format(j, " ".join("../" + t for t in targets)))
 
 model_name_re = re.compile(".*/[A-z_][^/]+\.stan$")
-tests = []
 
 bad_models = frozenset(
     ["example-models/ARM/Ch.21/finite_populations.stan"
