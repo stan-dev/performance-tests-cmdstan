@@ -81,11 +81,11 @@ pipeline {
 
                 perfReport compareBuildPrevious: true, 
 
-                relativeFailedThresholdNegative: 1,
-                relativeFailedThresholdPositive: 1,
+                relativeFailedThresholdNegative: 0.00001,
+                relativeFailedThresholdPositive: 0.00001,
 
-                relativeUnstableThresholdNegative: 1,
-                relativeUnstableThresholdPositive: 1,
+                relativeUnstableThresholdNegative: 0.000001,
+                relativeUnstableThresholdPositive: 0.000001,
 
                 errorFailedThreshold: 0.1, 
                 errorUnstableThreshold: 0.0, 
