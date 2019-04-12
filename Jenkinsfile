@@ -87,13 +87,20 @@ pipeline {
                 relativeUnstableThresholdNegative: 0.000001,
                 relativeUnstableThresholdPositive: 0.000001,
 
-                errorFailedThreshold: 0.1, 
-                errorUnstableThreshold: 0.0, 
+                errorUnstableResponseTimeThreshold: "shotgun_perf:10\nknown_good_perf:10",
+
+                //errorFailedThreshold: 0.1, 
+                //errorUnstableThreshold: 0.0, 
+
+                //relativeFailedThreshold: 0.1, 
+                //relativeUnstableThreshold: 0.0, 
 
                 failBuildIfNoResultFile: false, 
                 modePerformancePerTestCase: true, 
+                modeOfThreshold: true,
                 sourceDataFiles: '*.xml', 
-                modeThroughput: false
+                modeThroughput: false,
+                configType: 'PRT'
             }
         }
     }
