@@ -25,7 +25,7 @@ def find_files(pattern, dirs):
                     res.append(os.path.join(d, f))
     return res
 
-def read_tests(filename)
+def read_tests(filename):
     test_files = [line.rstrip('\n') for line in open(filename)]
     return test_files
         
