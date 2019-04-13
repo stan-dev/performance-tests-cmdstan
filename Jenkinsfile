@@ -95,7 +95,7 @@ pipeline {
                     modePerformancePerTestCase: true, 
                     //modeOfThreshold: true,
                     sourceDataFiles: '*.xml', 
-                    modeThroughput: false,
+                    modeThroughput: false
                     //configType: 'PRT'
             }
         }
