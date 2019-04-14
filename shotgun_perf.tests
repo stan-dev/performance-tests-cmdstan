@@ -3,7 +3,6 @@ example-models/bugs_examples/vol1/equiv/equiv.stan
 example-models/bugs_examples/vol1/inhalers/inhalers.stan
 example-models/bugs_examples/vol1/leuk/leuk.stan
 example-models/bugs_examples/vol1/lsat/lsat.stan
-example-models/bugs_examples/vol1/mice/mice.stan
 example-models/bugs_examples/vol1/salm/salm.stan
 example-models/bugs_examples/vol1/salm/salm2.stan
 example-models/bugs_examples/vol1/seeds/seeds.stan
@@ -12,7 +11,6 @@ example-models/bugs_examples/vol1/stacks/stacks_d_normal_ridge.stan
 example-models/bugs_examples/vol1/stacks/stacks_e_dexp_ridge.stan
 example-models/bugs_examples/vol1/surgical/surgical.stan
 example-models/bugs_examples/vol1/surgical/surgical_stanified.stan
-example-models/bugs_examples/vol2/beetles/beetles_cloglog.stan
 example-models/bugs_examples/vol2/beetles/beetles_logit.stan
 example-models/bugs_examples/vol2/beetles/beetles_probit.stan
 example-models/bugs_examples/vol2/birats/birats.stan
