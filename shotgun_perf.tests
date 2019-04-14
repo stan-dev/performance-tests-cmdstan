@@ -11,15 +11,12 @@ example-models/bugs_examples/vol1/stacks/stacks_e_dexp_ridge.stan
 example-models/bugs_examples/vol1/surgical/surgical.stan
 example-models/bugs_examples/vol1/surgical/surgical_stanified.stan
 example-models/bugs_examples/vol2/beetles/beetles_logit.stan
-example-models/bugs_examples/vol2/beetles/beetles_probit.stan
 example-models/bugs_examples/vol2/birats/birats.stan
 example-models/bugs_examples/vol2/cervix/cervix2.stan
-example-models/bugs_examples/vol2/dugongs/dugongs.stan
 example-models/bugs_examples/vol2/mvn_orange/mvn_orange.stan
 example-models/bugs_examples/vol2/pines/pines-2.stan
 example-models/bugs_examples/vol2/pines/pines-3.stan
 example-models/bugs_examples/vol2/pines/pines-4.stan
-example-models/bugs_examples/vol2/pines/pines-independent.stan
 example-models/bugs_examples/vol2/schools/schools-1.stan
 example-models/bugs_examples/vol2/schools/schools-2.stan
 example-models/bugs_examples/vol2/schools/schools-3.stan
@@ -27,7 +24,6 @@ example-models/bugs_examples/vol2/schools/schools-4.stan
 example-models/bugs_examples/vol2/schools/schools.stan
 example-models/bugs_examples/vol2/stagnant/stagnant.stan
 example-models/bugs_examples/vol2/stagnant/stagnant2.stan
-example-models/bugs_examples/vol2/t_df/estdof.stan
 example-models/bugs_examples/vol2/t_df/simt4.stan
 example-models/bugs_examples/vol3/camel/camel.stan
 example-models/bugs_examples/vol3/camel/camel2.stan
