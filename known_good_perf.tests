@@ -1,6 +1,5 @@
 stat_comp_benchmarks/benchmarks/arK/arK.stan
 stat_comp_benchmarks/benchmarks/arma/arma.stan
-stat_comp_benchmarks/benchmarks/eight_schools/eight_schools.stan
 stat_comp_benchmarks/benchmarks/garch/garch.stan
 stat_comp_benchmarks/benchmarks/gp_pois_regr/gp_pois_regr.stan
 stat_comp_benchmarks/benchmarks/gp_regr/gen_gp_data.stan
