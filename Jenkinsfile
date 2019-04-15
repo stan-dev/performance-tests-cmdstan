@@ -63,7 +63,7 @@ pipeline {
             when { branch 'jenkins-tests' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf.tests"
+                sh "./runPerformanceTests.py -j10 --runs 1 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
@@ -71,7 +71,7 @@ pipeline {
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples --name=shotgun_perf --tests-file=shotgun_perf.tests"
+                sh "./runPerformanceTests.py -j10 --runj 1 example-models/bugs_examples --name=shotgun_perf --tests-file=shotgun_perf.tests"
             }
         }
         stage('Collect test results') {
