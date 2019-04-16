@@ -30,7 +30,7 @@ pipeline {
             }
         }
         stage('Update CmdStan pointer to latest develop') {
-            when { branch 'jenkins-tests' }
+            when { branch 'master' }
             steps {
                 script {
                     sh """
@@ -49,7 +49,7 @@ pipeline {
             }
         }
         stage("Test cmdstan develop against cmdstan pointer in this branch") {
-            when { not { branch 'jenkins-tests' } }
+            when { not { branch 'master' } }
             steps {
                 sh """
                 cmdstan_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
@@ -60,14 +60,14 @@ pipeline {
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            when { branch 'jenkins-tests' }
+            when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
                 sh "./runPerformanceTests.py -j10 --runs 1 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
-            when { branch 'jenkins-tests' }
+            when { branch 'master' }
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
@@ -96,6 +96,10 @@ pipeline {
                     sourceDataFiles: '*.xml', 
                     modeThroughput: false,
                     configType: 'PRT'
+
+                script{
+                    def comment = pullRequest.comment('This PR is highly illogical..')
+                }
             }
         }
     }
