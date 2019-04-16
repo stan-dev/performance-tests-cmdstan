@@ -57,7 +57,7 @@ pipeline {
             steps {
                 sh """
                 bash compare-git-hashes.sh develop ${cmdstan_hash} stat_comp_benchmarks
-                mv performance.xml \$cmdstan_hash.xml
+                mv performance.xml ${cmdstan_hash}.xml
                 make revert clean
             """
             }
