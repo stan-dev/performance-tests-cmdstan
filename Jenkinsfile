@@ -11,7 +11,7 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: 'master', name: 'cmdstan_hash',
+        string(defaultValue: '', name: 'cmdstan_hash',
                description: "CmdStan hash/branch to compare against")
     }
     stages {
