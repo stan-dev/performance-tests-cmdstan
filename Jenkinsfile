@@ -102,11 +102,6 @@ pipeline {
     }
 
     post {
-        always {           
-                script{
-                    def comment = pullRequest.comment('This PR is highly illogical..')
-                }
-        }
         failure {
             script { utils.mailBuildResults("FAILURE", "serban.nicusor@toptal.com") }
         }
