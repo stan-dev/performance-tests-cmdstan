@@ -13,7 +13,18 @@ write_makelocal() {
 
 clean_checkout() {
     make revert
-    cd cmdstan; git checkout "$1"
+	
+	cd cmdstan
+	
+	prNumber = $(echo $1 | cut -d "-" -f 2)
+	
+	if [[ "$1" == "PR-"* ]] ; then
+		git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
+        git checkout refs/remotes/origin/pr/$prNumber/merge
+	else
+		git checkout "$1"
+	fi
+
     git submodule update --init --recursive
     cd ..
     make clean

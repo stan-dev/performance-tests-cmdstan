@@ -10,6 +10,10 @@ pipeline {
         skipDefaultCheckout()
         preserveStashes(buildCount: 7)
     }
+    parameters {
+        string(defaultValue: '', name: 'cmdstan_compare_hash',
+               description: "CmdStan hash/branch to compare against")
+    }
     stages {
         stage('Clean checkout') {
             steps {
@@ -51,8 +55,9 @@ pipeline {
         stage("Test cmdstan develop against cmdstan pointer in this branch") {
             when { not { branch 'master' } }
             steps {
-                sh """
-                cmdstan_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                sh """       
+                old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                cmdstan_hash=\$(if [ -n "${cmdstan_compare_hash}" ]; then echo "${cmdstan_compare_hash}"; else echo "\$old_hash" ; fi)
                 bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
                 mv performance.xml \$cmdstan_hash.xml
                 make revert clean
