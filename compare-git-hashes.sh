@@ -16,7 +16,7 @@ clean_checkout() {
 	
 	cd cmdstan
 	
-	prNumber = $(echo $1 | cut -d "-" -f 2)
+	prNumber=$(echo $1 | cut -d "-" -f 2)
 	
 	if [[ "$1" == "PR-"* ]] ; then
 		git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
