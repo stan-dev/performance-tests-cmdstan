@@ -57,7 +57,7 @@ pipeline {
             steps {
                 sh """       
                 old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                cmdstan_hash=\$(if [ -n "${cmdstan_compare_hash}" ]; then echo "${cmdstan_compare_hash}"; else echo "\$old_hash" ; fi)
+                cmdstan_hash=\$(if [ -n "${params.cmdstan_compare_hash}" ]; then echo "${params.cmdstan_compare_hash}"; else echo "\$old_hash" ; fi)
                 bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
                 mv performance.xml \$cmdstan_hash.xml
                 make revert clean
