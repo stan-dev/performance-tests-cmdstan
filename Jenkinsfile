@@ -5,7 +5,7 @@ import org.stan.Utils
 def utils = new org.stan.Utils()
 
 pipeline {
-    agent { label 'master' }
+    agent { label 'gelman-group-mac' }
     options {
         skipDefaultCheckout()
         preserveStashes(buildCount: 7)
