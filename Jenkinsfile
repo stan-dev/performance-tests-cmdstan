@@ -68,7 +68,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
@@ -76,19 +76,38 @@ pipeline {
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj ${env.PARALLEL} example-models/bugs_examples example-models/regressions --name=shotgun_perf"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
             }
         }
         stage('Collect test results') {
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: true, errorFailedThreshold: 0, errorUnstableThreshold: 0, failBuildIfNoResultFile: false, modePerformancePerTestCase: true, sourceDataFiles: '*.xml', modeThroughput: false
+                perfReport compareBuildPrevious: true, 
+
+                    //relativeFailedThresholdNegative: 10,
+                    relativeFailedThresholdPositive: 15,
+
+                    //relativeUnstableThresholdNegative: 5,
+                    relativeUnstableThresholdPositive: 10,
+
+                    errorFailedThreshold: 1, 
+                    //errorUnstableThreshold: 0.1, 
+
+                    failBuildIfNoResultFile: false, 
+                    modePerformancePerTestCase: true, 
+                    modeOfThreshold: true,
+                    sourceDataFiles: '*.xml', 
+                    modeThroughput: false,
+                    configType: 'PRT'
             }
         }
     }
 
     post {
+        unstable {
+            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com") }
+        }
         failure {
             script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com") }
         }
