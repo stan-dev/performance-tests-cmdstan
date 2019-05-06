@@ -16,13 +16,18 @@ clean_checkout() {
 	
 	cd cmdstan
 	
-	prNumber=$(echo $1 | cut -d "-" -f 2)
-	
 	if [[ "$1" == "PR-"* ]] ; then
+        prNumber=$(echo $1 | cut -d "-" -f 2)
 		git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
 	else
-		git checkout "$1"
+        if [[ "$1" == "downstream_tests" ]] ; then
+            git checkout develop
+        elif [[ "$1" == "downstream_hotfix" ]] ; then
+            git checkout master
+        else
+		    git checkout "$1"
+        fi
 	fi
 
     git submodule update --init --recursive
