@@ -3,6 +3,7 @@
 import org.stan.Utils
 
 def utils = new org.stan.Utils()
+def branch = ""
 
 pipeline {
     agent { label 'gelman-group-mac' }
@@ -11,8 +12,12 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: '', name: 'cmdstan_compare_hash',
+        string(defaultValue: '', name: 'cmdstan_pr',
                description: "CmdStan hash/branch to compare against")
+        string(defaultValue: '', name: 'stan_pr',
+               description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
+        string(defaultValue: '', name: 'math_pr',
+               description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
         stage('Clean checkout') {
@@ -55,9 +60,25 @@ pipeline {
         stage("Test cmdstan develop against cmdstan pointer in this branch") {
             when { not { branch 'master' } }
             steps {
+                script{
+                    /* Update submodules */
+                    utils.checkout_pr("stan", "stan", params.stan_pr)
+                    utils.checkout_pr("math", "stan/lib/stan_math", params.math_pr)
+                    /* Handle cmdstan_pr */
+                    if(params.cmdstan_pr == "downstream_tests"){
+                        branch = "develop"
+                    }
+                    else if(params.cmdstan_pr == "downstream_hotfix"){
+                        branch = "master"
+                    }
+                    else{
+                        branch = params.cmdstan_pr
+                    }
+                }
+
                 sh """       
                 old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                cmdstan_hash=\$(if [ -n "${params.cmdstan_compare_hash}" ]; then echo "${params.cmdstan_compare_hash}"; else echo "\$old_hash" ; fi)
+                cmdstan_hash=\$(if [ -n "${branch}" ]; then echo "${branch}"; else echo "\$old_hash" ; fi)
                 bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
                 mv performance.xml \$cmdstan_hash.xml
                 make revert clean

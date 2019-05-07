@@ -21,13 +21,7 @@ clean_checkout() {
 		git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
 	else
-        if [[ "$1" == "downstream_tests" ]] ; then
-            git checkout develop
-        elif [[ "$1" == "downstream_hotfix" ]] ; then
-            git checkout master
-        else
-		    git checkout "$1"
-        fi
+		git checkout "$1"
 	fi
 
     git submodule update --init --recursive
