@@ -3,7 +3,7 @@
 usage() {
     echo "=====!!!WARNING!!!===="
     echo "This will clean all repos involved! Use only on a clean checkout."
-    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <extra args for runPerformanceTests.py>'"
+    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <do submodule update (false|true)> <extra args for runPerformanceTests.py>'"
     echo "(those last extra args are in quotes)"
 }
 
@@ -24,7 +24,10 @@ clean_checkout() {
 		git checkout "$1"
 	fi
 
-    git submodule update --init --recursive
+    if [[ "$4" != "false" ]] ; then
+        git submodule update --init --recursive
+    fi
+    
     cd ..
     make clean
     cd cmdstan

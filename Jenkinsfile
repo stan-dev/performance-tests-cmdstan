@@ -79,7 +79,7 @@ pipeline {
                 sh """       
                 old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                 cmdstan_hash=\$(if [ -n "${branch}" ]; then echo "${branch}"; else echo "\$old_hash" ; fi)
-                bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks
+                bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks false
                 mv performance.xml \$cmdstan_hash.xml
                 make revert clean
             """
