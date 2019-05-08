@@ -3,10 +3,12 @@
 import org.stan.Utils
 
 def utils = new org.stan.Utils()
-def branch = ''
 
 pipeline {
     agent { label 'gelman-group-mac' }
+    environment {
+        branch = ""
+    }
     options {
         skipDefaultCheckout()
         preserveStashes(buildCount: 7)
