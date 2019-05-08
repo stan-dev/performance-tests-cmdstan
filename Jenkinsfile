@@ -7,7 +7,9 @@ def utils = new org.stan.Utils()
 pipeline {
     agent { label 'gelman-group-mac' }
     environment {
-        branch = ""
+        cmdstan_pr = ""
+        stan_pr = ""
+        math_pr = ""
     }
     options {
         skipDefaultCheckout()
@@ -60,24 +62,31 @@ pipeline {
             when { not { branch 'master' } }
             steps {
                 script{
-                    /* Update submodules */
-                    utils.checkout_pr("stan", "stan", params.stan_pr)
-                    utils.checkout_pr("math", "stan/lib/stan_math", params.math_pr)
                     /* Handle cmdstan_pr */
                     if(params.cmdstan_pr == "downstream_tests"){
-                        branch = "develop"
+                        cmdstan_pr = "develop"
                     }
                     else if(params.cmdstan_pr == "downstream_hotfix"){
-                        branch = "master"
+                        cmdstan_pr = "master"
                     }
                     else{
                         branch = params.cmdstan_pr
                     }
 
+                    /* Handle stan_pr */
+                    if(params.stan_pr == ""){
+                        stan_pr = "develop"
+                    }
+
+                    /* Handle math_pr */
+                    if(params.math_pr == ""){
+                        math_pr = "develop"
+                    }
+
                     sh """       
                         old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                        cmdstan_hash=\$(if [ -n "${branch}" ]; then echo "${branch}"; else echo "\$old_hash" ; fi)
-                        bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks false
+                        cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                        bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks ${stan_pr} ${math_pr} false
                         mv performance.xml \$cmdstan_hash.xml
                         make revert clean
                     """
