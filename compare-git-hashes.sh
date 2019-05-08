@@ -27,24 +27,24 @@ clean_checkout() {
 
     #Checkout stan
     cd stan
-    if [[ "$4" == "PR-"* ]] ; then
-        prNumber=$(echo $4 | cut -d "-" -f 2)
+    if [[ "$2" == "PR-"* ]] ; then
+        prNumber=$(echo $2 | cut -d "-" -f 2)
 		git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
 	else
-		git checkout "$4" && git pull origin "$4"
+		git checkout "$2" && git pull origin "$2"
 	fi
     #cd stan && git clean -xffd
 	cd ..
 
     #Checkout math
     pushd stan/lib/stan_math
-    if [[ "$5" == "PR-"* ]] ; then
-        prNumber=$(echo $5 | cut -d "-" -f 2)
+    if [[ "$3" == "PR-"* ]] ; then
+        prNumber=$(echo $3 | cut -d "-" -f 2)
 		git fetch https://github.com/stan-dev/math +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
 	else
-		git checkout "$5" && git pull origin "$5"
+		git checkout "$3" && git pull origin "$3"
 	fi
     #cd stan/lib/stan_math && git clean -xffd
 	popd
@@ -69,14 +69,14 @@ fi
 
 set -e -x
 
-clean_checkout "$1"
+clean_checkout "$1" "$4" "$5"
 ./runPerformanceTests.py --overwrite-golds ${@:3:99}
 
 for i in performance.*; do
     mv $i "${1}_${i}"
 done
 
-clean_checkout "$2"
+clean_checkout "$2" "$4" "$5"
 ./runPerformanceTests.py --check-golds-exact 1e-8 ${@:3:99}
 
 ./comparePerformance.py "${1}_performance.csv" performance.csv
