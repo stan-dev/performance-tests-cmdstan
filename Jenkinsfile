@@ -4,10 +4,17 @@ import org.stan.Utils
 
 def utils = new org.stan.Utils()
 
+def branchOrPR(pr) {
+  if (pr == "downstream_tests") return "develop"
+  if (pr == "downstream_hotfix") return "master"
+  if (pr == "") return "develop"
+  return pr
+}
+
 pipeline {
     agent { label 'gelman-group-mac' }
     environment {
-        branch = ""
+        cmdstan_pr = ""
     }
     options {
         skipDefaultCheckout()
@@ -60,27 +67,16 @@ pipeline {
             when { not { branch 'master' } }
             steps {
                 script{
-                    /* Update submodules */
-                    utils.checkout_pr("stan", "stan", params.stan_pr)
-                    utils.checkout_pr("math", "stan/lib/stan_math", params.math_pr)
-                    /* Handle cmdstan_pr */
-                    if(params.cmdstan_pr == "downstream_tests"){
-                        branch = "develop"
-                    }
-                    else if(params.cmdstan_pr == "downstream_hotfix"){
-                        branch = "master"
-                    }
-                    else{
-                        branch = params.cmdstan_pr
-                    }
+                        /* Handle cmdstan_pr */
+                        cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
-                    sh """       
-                        old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                        cmdstan_hash=\$(if [ -n "${branch}" ]; then echo "${branch}"; else echo "\$old_hash" ; fi)
-                        bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks false
-                        mv performance.xml \$cmdstan_hash.xml
-                        make revert clean
-                    """
+                        sh """       
+                            old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                            cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                            bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                            mv performance.xml \$cmdstan_hash.xml
+                            make revert clean
+                        """
                 }
             }
         }
