@@ -3,7 +3,7 @@
 usage() {
     echo "=====!!!WARNING!!!===="
     echo "This will clean all repos involved! Use only on a clean checkout."
-    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <stan_pr> <math_pr> <do submodule update (false|true)> <extra args for runPerformanceTests.py>'"
+    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <stan_pr> <math_pr> <extra args for runPerformanceTests.py>'"
     echo "(those last extra args are in quotes)"
 }
 
@@ -25,33 +25,29 @@ clean_checkout() {
 		git checkout "$1"
 	fi
 
-    if [[ "$6" != "false" ]] ; then
-        git submodule update --init --recursive
-    else
-        #Checkout stan
-        cd stan
-        if [[ "$4" == "PR-"* ]] ; then
-            prNumber=$(echo $4 | cut -d "-" -f 2)
-	    	git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
-            git checkout refs/remotes/origin/pr/$prNumber/merge
-	    else
-	    	git checkout $4 && git pull origin $4
-	    fi
-        #cd stan && git clean -xffd
-	    cd ..
-    
-        #Checkout math
-        pushd stan/lib/stan_math
-        if [[ "$5" == "PR-"* ]] ; then
-            prNumber=$(echo $5 | cut -d "-" -f 2)
-	    	git fetch https://github.com/stan-dev/math +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
-            git checkout refs/remotes/origin/pr/$prNumber/merge
-	    else
-	    	git checkout $5 && git pull origin $5
-	    fi
-        #cd stan/lib/stan_math && git clean -xffd
-	    popd
-    fi
+    #Checkout stan
+    cd stan
+    if [[ "$4" == "PR-"* ]] ; then
+        prNumber=$(echo $4 | cut -d "-" -f 2)
+		git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
+        git checkout refs/remotes/origin/pr/$prNumber/merge
+	else
+		git checkout $4 && git pull origin $4
+	fi
+    #cd stan && git clean -xffd
+	cd ..
+
+    #Checkout math
+    pushd stan/lib/stan_math
+    if [[ "$5" == "PR-"* ]] ; then
+        prNumber=$(echo $5 | cut -d "-" -f 2)
+		git fetch https://github.com/stan-dev/math +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
+        git checkout refs/remotes/origin/pr/$prNumber/merge
+	else
+		git checkout $5 && git pull origin $5
+	fi
+    #cd stan/lib/stan_math && git clean -xffd
+	popd
     
     cd ..
     make clean
