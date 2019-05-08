@@ -3,7 +3,7 @@
 import org.stan.Utils
 
 def utils = new org.stan.Utils()
-def branch = ""
+def branch = ''
 
 pipeline {
     agent { label 'gelman-group-mac' }
