@@ -12,12 +12,9 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: '', name: 'cmdstan_pr',
-               description: "CmdStan hash/branch to compare against")
-        string(defaultValue: '', name: 'stan_pr',
-               description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
-        string(defaultValue: '', name: 'math_pr',
-               description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
+        string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
+        string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
+        string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
         stage('Clean checkout') {
@@ -74,15 +71,15 @@ pipeline {
                     else{
                         branch = params.cmdstan_pr
                     }
-                }
 
-                sh """       
-                old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                cmdstan_hash=\$(if [ -n "${branch}" ]; then echo "${branch}"; else echo "\$old_hash" ; fi)
-                bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks false
-                mv performance.xml \$cmdstan_hash.xml
-                make revert clean
-            """
+                    sh """       
+                        old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                        cmdstan_hash=\$(if [ -n "${branch}" ]; then echo "${branch}"; else echo "\$old_hash" ; fi)
+                        bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks false
+                        mv performance.xml \$cmdstan_hash.xml
+                        make revert clean
+                    """
+                }
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
