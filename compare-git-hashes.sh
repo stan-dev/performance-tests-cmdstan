@@ -22,8 +22,9 @@ clean_checkout() {
 		git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
 	else
-		git checkout "$1"
+		git checkout "$1" && git pull origin "$1"
 	fi
+    git clean -xffd
 
     #Checkout stan
     cd stan
@@ -34,7 +35,7 @@ clean_checkout() {
 	else
 		git checkout "$2" && git pull origin "$2"
 	fi
-    #cd stan && git clean -xffd
+    git clean -xffd
 	cd ..
 
     #Checkout math
@@ -46,7 +47,7 @@ clean_checkout() {
 	else
 		git checkout "$3" && git pull origin "$3"
 	fi
-    #cd stan/lib/stan_math && git clean -xffd
+    git clean -xffd
 	popd
     
     cd ..
