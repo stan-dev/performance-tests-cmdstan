@@ -96,20 +96,16 @@ pipeline {
             }
         }
         stage('Collect test results') {
+            when { branch 'master' }
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
                 perfReport compareBuildPrevious: true, 
 
-                    //relativeFailedThresholdNegative: 10,
-                    relativeFailedThresholdPositive: 15,
-
-                    //relativeUnstableThresholdNegative: 5,
-                    relativeUnstableThresholdPositive: 10,
+                    relativeFailedThresholdPositive: 10,
+                    relativeUnstableThresholdPositive: 5,
 
                     errorFailedThreshold: 1, 
-                    //errorUnstableThreshold: 0.1, 
-
                     failBuildIfNoResultFile: false, 
                     modePerformancePerTestCase: true, 
                     modeOfThreshold: true,

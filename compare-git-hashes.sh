@@ -13,42 +13,42 @@ write_makelocal() {
 
 clean_checkout() {
     make revert
-	
-	cd cmdstan
+    
+    cd cmdstan
 
     #Checkout CmdStan
-	if [[ "$1" == "PR-"* ]] ; then
+    if [[ "$1" == "PR-"* ]] ; then
         prNumber=$(echo $1 | cut -d "-" -f 2)
-		git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
+        git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
-	else
-		git checkout "$1" && git pull origin "$1"
-	fi
-    git clean -xffd
+    else
+        git checkout "$1" && git pull origin "$1"
+    fi
+    git reset --hard HEAD && git clean -xffd
 
     #Checkout stan
     cd stan
     if [[ "$2" == "PR-"* ]] ; then
         prNumber=$(echo $2 | cut -d "-" -f 2)
-		git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
+        git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
-	else
-		git checkout "$2" && git pull origin "$2"
-	fi
-    git clean -xffd
-	cd ..
+    else
+        git checkout "$2" && git pull origin "$2"
+    fi
+    git reset --hard HEAD && git clean -xffd
+    cd ..
 
     #Checkout math
     pushd stan/lib/stan_math
     if [[ "$3" == "PR-"* ]] ; then
         prNumber=$(echo $3 | cut -d "-" -f 2)
-		git fetch https://github.com/stan-dev/math +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
+        git fetch https://github.com/stan-dev/math +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
-	else
-		git checkout "$3" && git pull origin "$3"
-	fi
-    git clean -xffd
-	popd
+    else
+        git checkout "$3" && git pull origin "$3"
+    fi
+    git reset --hard HEAD && git clean -xffd
+    popd
     
     cd ..
     make clean
