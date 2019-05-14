@@ -70,10 +70,10 @@ pipeline {
                         /* Handle cmdstan_pr */
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
-                        sh """       
+                        sh """
                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                            bash compare-git-hashes.sh develop \$cmdstan_hash stat_comp_benchmarks ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
                             mv performance.xml \$cmdstan_hash.xml
                             make revert clean
                         """
@@ -100,16 +100,16 @@ pipeline {
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: true, 
+                perfReport compareBuildPrevious: true,
 
                     relativeFailedThresholdPositive: 10,
                     relativeUnstableThresholdPositive: 5,
 
-                    errorFailedThreshold: 1, 
-                    failBuildIfNoResultFile: false, 
-                    modePerformancePerTestCase: true, 
+                    errorFailedThreshold: 1,
+                    failBuildIfNoResultFile: false,
+                    modePerformancePerTestCase: true,
                     modeOfThreshold: true,
-                    sourceDataFiles: '*.xml', 
+                    sourceDataFiles: '*.xml',
                     modeThroughput: false,
                     configType: 'PRT'
             }
