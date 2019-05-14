@@ -22,9 +22,11 @@ clean_checkout() {
         git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
     else
-        git checkout "$1" && git pull origin "$1"
+        git fetch
+        git checkout "$1"
     fi
     git reset --hard HEAD && git clean -xffd
+    git submodule update --init --recursive
 
     #Checkout stan
     cd stan
@@ -32,8 +34,9 @@ clean_checkout() {
         prNumber=$(echo $2 | cut -d "-" -f 2)
         git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
-    else
-        git checkout "$2" && git pull origin "$2"
+    elif [ "$2" != "false" ] ; then
+        git fetch
+        git checkout "$2"
     fi
     git reset --hard HEAD && git clean -xffd
     cd ..
@@ -44,7 +47,7 @@ clean_checkout() {
         prNumber=$(echo $3 | cut -d "-" -f 2)
         git fetch https://github.com/stan-dev/math +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
-    else
+    elif [ "$3" != "false" ] ; then
         git checkout "$3" && git pull origin "$3"
     fi
     git reset --hard HEAD && git clean -xffd
@@ -70,14 +73,16 @@ fi
 
 set -e -x
 
-clean_checkout "$1" "$4" "$5"
-./runPerformanceTests.py --overwrite-golds ${@:3:99}
+# First checkout the first arg cmdstan hash, assuming stan and math are as specified 
+# by that cmdstan commit
+clean_checkout "$2" "false" "false"
+./runPerformanceTests.py --overwrite-golds $1
 
 for i in performance.*; do
-    mv $i "${1}_${i}"
+    mv $i "${2}_${i}"
 done
 
-clean_checkout "$2" "$4" "$5"
-./runPerformanceTests.py --check-golds-exact 1e-8 ${@:3:99}
+clean_checkout "$3" "$4" "$5"
+./runPerformanceTests.py --check-golds-exact 1e-8 $1
 
-./comparePerformance.py "${1}_performance.csv" performance.csv
+./comparePerformance.py "${2}_performance.csv" performance.csv
