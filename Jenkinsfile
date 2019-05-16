@@ -11,6 +11,12 @@ def branchOrPR(pr) {
   return pr
 }
 
+def post_comment(def text, def repository, def pr_number) {
+  withCredentials([string(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', variable: 'GITHUB_TOKEN')]) {
+    sh "curl -s -H \"Authorization: token ${GITHUB_TOKEN}\" -X POST -d '{\"body\": \"${text}\"}' \"https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments\""
+  }
+}
+
 pipeline {
     agent { label 'gelman-group-mac' }
     environment {
@@ -117,6 +123,50 @@ pipeline {
     }
 
     post {
+        success {
+            script {
+
+                def performance_log = currentBuild.rawBuild.getLog()     
+                def comment = ""
+
+                def test_matches = (performance_log =~ /\('(.*)\)/)
+                for(item in test_matches){
+                    comment += item[0] + "\r\n"
+                }
+
+                def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
+                try{
+                    comment += "Result: " + result_match[0][1].toString() + "\r\n"
+                }
+                catch(Exception ex){
+                    comment += "Result: " + "Regex did not match anything" + "\r\n"
+                }
+
+                def result_match_hash = (performance_log =~ /Merge (.*?) into/)
+                try{
+                    comment += "Commit hash: " + result_match_hash[0][1].toString() + "\r\n"
+                }
+                catch(Exception ex){
+                    comment += "Commit hash: " + "Regex did not match anything" + "\r\n"
+                }
+
+                if(params.cmdstan_pr.contains("PR-")){
+                    def pr_number = (params.cmdstan_pr =~ /PR-(.*?)$/)[0][1]
+                    post_comment(comment, "cmdstan", pr_number)
+                }
+                
+                if(params.stan_pr.contains("PR-")){
+                    def pr_number = (params.stan_pr =~ /PR-(.*?)$/)[0][1]
+                    post_comment(comment, "stan", pr_number)
+                }
+                
+                if(params.math_pr.contains("PR-")){
+                    def pr_number = (params.math_pr =~ /PR-(.*?)$/)[0][1]
+                    post_comment(comment, "math", pr_number)
+                }
+                
+            }
+        }
         unstable {
             script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com") }
         }
