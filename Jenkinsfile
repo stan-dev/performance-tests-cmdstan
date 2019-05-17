@@ -5,9 +5,9 @@ import org.stan.Utils
 def utils = new org.stan.Utils()
 
 def branchOrPR(pr) {
-  if (pr == "downstream_tests") return "origin/develop"
-  if (pr == "downstream_hotfix") return "origin/master"
-  if (pr == "") return "origin/develop"
+  if (pr == "downstream_tests") return "develop"
+  if (pr == "downstream_hotfix") return "master"
+  if (pr == "") return "develop"
   return pr
 }
 

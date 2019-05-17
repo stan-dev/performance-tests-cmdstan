@@ -22,8 +22,7 @@ clean_checkout() {
         git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
     else
-        git fetch
-        git checkout "$1"
+        git checkout "$1" && git pull origin "$1"
     fi
     git reset --hard HEAD
     git clean -xffd
@@ -36,8 +35,7 @@ clean_checkout() {
         git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
     elif [ "$2" != "false" ] ; then
-        git fetch
-        git checkout "$2"
+        git checkout "$2" && git pull origin "$2"
     fi
     git reset --hard HEAD
     git clean -xffd
