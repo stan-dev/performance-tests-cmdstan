@@ -5,9 +5,9 @@ import org.stan.Utils
 def utils = new org.stan.Utils()
 
 def branchOrPR(pr) {
-  if (pr == "downstream_tests") return "develop"
-  if (pr == "downstream_hotfix") return "master"
-  if (pr == "") return "develop"
+  if (pr == "downstream_tests") return "origin/develop"
+  if (pr == "downstream_hotfix") return "origin/master"
+  if (pr == "") return "origin/develop"
   return pr
 }
 
@@ -73,7 +73,7 @@ pipeline {
                         sh """
                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                            bash compare-git-hashes.sh stat_comp_benchmarks origin/develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
                             mv performance.xml \$cmdstan_hash.xml
                             make revert clean
                         """

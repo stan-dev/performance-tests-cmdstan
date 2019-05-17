@@ -13,7 +13,7 @@ write_makelocal() {
 
 clean_checkout() {
     make revert
-    
+
     cd cmdstan
 
     #Checkout CmdStan
@@ -25,7 +25,8 @@ clean_checkout() {
         git fetch
         git checkout "$1"
     fi
-    git reset --hard HEAD && git clean -xffd
+    git reset --hard HEAD
+    git clean -xffd
     git submodule update --init --recursive
 
     #Checkout stan
@@ -38,7 +39,8 @@ clean_checkout() {
         git fetch
         git checkout "$2"
     fi
-    git reset --hard HEAD && git clean -xffd
+    git reset --hard HEAD
+    git clean -xffd
     cd ..
 
     #Checkout math
@@ -50,9 +52,10 @@ clean_checkout() {
     elif [ "$3" != "false" ] ; then
         git checkout "$3" && git pull origin "$3"
     fi
-    git reset --hard HEAD && git clean -xffd
+    git reset --hard HEAD
+    git clean -xffd
     popd
-    
+
     cd ..
     make clean
     cd cmdstan
@@ -73,7 +76,7 @@ fi
 
 set -e -x
 
-# First checkout the first arg cmdstan hash, assuming stan and math are as specified 
+# First checkout the first arg cmdstan hash, assuming stan and math are as specified
 # by that cmdstan commit
 clean_checkout "$2" "false" "false"
 ./runPerformanceTests.py --overwrite-golds $1
