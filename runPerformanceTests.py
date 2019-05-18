@@ -18,6 +18,7 @@ GOLD_OUTPUT_DIR = os.path.join("golds","")
 DIR_UP = os.path.join("..","")
 CURR_DIR = os.path.join(".","")
 SEP_RE = "\\\\" if os.sep == "\\" else "/"
+EXE_FILE_EXT = ".exe" if os.name == "nt" else ""
 def find_files(pattern, dirs):
     res = []
     for pd in dirs:
@@ -71,7 +72,7 @@ def shexec(command, wd = "."):
 
 def make(targets, j=8):
     shexec("make -j{} {}"
-          .format(j, " ".join(DIR_UP + t for t in targets)), wd = "cmdstan")
+          .format(j, " ".join(DIR_UP + t + EXE_FILE_EXT for t in targets)), wd = "cmdstan")
 
 model_name_re = re.compile(".*"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
 
