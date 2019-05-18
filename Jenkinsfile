@@ -159,17 +159,17 @@ pipeline {
 
                 if(params.cmdstan_pr.contains("PR-")){
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "cmdstan", pr_number.toString())
+                    post_comment(comment, "cmdstan", pr_number)
                 }
                 
                 if(params.stan_pr.contains("PR-")){
                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "stan", pr_number.toString())
+                    post_comment(comment, "stan", pr_number)
                 }
                 
                 if(params.math_pr.contains("PR-")){
                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "math", pr_number.toString())
+                    post_comment(comment, "math", pr_number)
                 } 
             }
         }
