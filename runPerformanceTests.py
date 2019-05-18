@@ -14,8 +14,10 @@ from time import time
 from datetime import datetime
 import xml.etree.ElementTree as ET
 
-GOLD_OUTPUT_DIR = "golds/"
-
+GOLD_OUTPUT_DIR = os.path.join("golds","")
+DIR_UP = os.path.join("..","")
+CURR_DIR = os.path.join(".","")
+SEP_RE = "\\\\" if os.sep == "\\" else "/"
 def find_files(pattern, dirs):
     res = []
     for pd in dirs:
@@ -60,62 +62,62 @@ class FailedCommand(Exception):
                   .format(returncode, command))
 
 
-def shexec(command):
+def shexec(command, wd = "."):
     print(command)
-    returncode = subprocess.call(command, shell=True)
+    returncode = subprocess.call(command, shell=True, cwd=wd)
     if returncode != 0:
         raise FailedCommand(returncode, command)
     return returncode
 
 def make(targets, j=8):
-    shexec("cd cmdstan; make -j{} {}"
-           .format(j, " ".join("../" + t for t in targets)))
+    shexec("make -j{} {}"
+          .format(j, " ".join(DIR_UP + t for t in targets)), wd = "cmdstan")
 
-model_name_re = re.compile(".*/[A-z_][^/]+\.stan$")
+model_name_re = re.compile(".*"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
 
 bad_models = frozenset(
-    ["example-models/ARM/Ch.21/finite_populations.stan"
-     , "example-models/ARM/Ch.21/multiple_comparison.stan"
-     , "example-models/ARM/Ch.21/r_sqr.stan"
-     , "example-models/ARM/Ch.23/electric_1a.stan"
-     , "example-models/ARM/Ch.23/educational_subsidy.stan"
-     , "example-models/bugs_examples/vol2/pines/pines-3.stan"
-     , "example-models/bugs_examples/vol3/fire/fire.stan"
+    [os.path.join("example-models","ARM","Ch.21","finite_populations.stan")
+     , os.path.join("example-models","ARM","Ch.21","multiple_comparison.stan")
+     , os.path.join("example-models","ARM","Ch.21","r_sqr.stan")
+     , os.path.join("example-models","ARM","Ch.23","electric_1a.stan")
+     , os.path.join("example-models","ARM","Ch.23","educational_subsidy.stan")
+     , os.path.join("example-models","bugs_examples","vol2","pines","pines-3.stan")
+     , os.path.join("example-models","bugs_examples","vol3","fire","fire.stan")
      # The following have data issues
-     , "example-models/ARM/Ch.10/ideo_two_pred.stan"
-     , "example-models/ARM/Ch.16/radon.1.stan"
-     , "example-models/ARM/Ch.16/radon.2.stan"
-     , "example-models/ARM/Ch.16/radon.2a.stan"
-     , "example-models/ARM/Ch.16/radon.2b.stan"
-     , "example-models/ARM/Ch.16/radon.3.stan"
-     , "example-models/ARM/Ch.16/radon.nopooling.stan"
-     , "example-models/ARM/Ch.16/radon.pooling.stan"
-     , "example-models/ARM/Ch.18/radon.1.stan"
-     , "example-models/ARM/Ch.18/radon.2.stan"
-     , "example-models/ARM/Ch.18/radon.nopooling.stan"
-     , "example-models/ARM/Ch.18/radon.pooling.stan"
-     , "example-models/ARM/Ch.19/item_response.stan"
-     , "example-models/bugs_examples/vol1/dogs/dogs.stan"
-     , "example-models/bugs_examples/vol1/rats/rats_stanified.stan"
-     , "example-models/bugs_examples/vol2/pines/pines-4.stan"
-     , "example-models/bugs_examples/vol2/pines/fit.stan"
-     , "example-models/BPA/Ch.06/MtX.stan"
-     , "example-models/ARM/Ch.21/radon_vary_intercept_a.stan"
-     , "example-models/ARM/Ch.21/radon_vary_intercept_b.stan"
-     , "example-models/ARM/Ch.23/sesame_street2.stan"
-     , "example-models/ARM/Ch.3/kidiq_validation.stan"
-     , "example-models/ARM/Ch.7/earnings_interactions.stan"
-     , "example-models/ARM/Ch.8/y_x.stan"
-     , "example-models/basic_estimators/normal_mixture_k.stan"
-     , "example-models/basic_estimators/normal_mixture_k_prop.stan"
-     , "example-models/BPA/Ch.04/GLM0.stan"
-     , "example-models/BPA/Ch.04/GLM1.stan"
-     , "example-models/BPA/Ch.04/GLM2.stan"
-     , "example-models/BPA/Ch.04/GLMM3.stan"
-     , "example-models/BPA/Ch.04/GLMM4.stan"
-     , "example-models/BPA/Ch.04/GLMM5.stan"
-     , "example-models/BPA/Ch.05/ssm2.stan"
-     , "example-models/BPA/Ch.07/cjs_group_raneff.stan"
+     , os.path.join("example-models","ARM","Ch.10","ideo_two_pred.stan")
+     , os.path.join("example-models","ARM","Ch.16","radon.1.stan")
+     , os.path.join("example-models","ample-models","ARM","Ch.16","radon.2.stan")
+     , os.path.join("example-models","ARM","Ch.16","radon.2a.stan")
+     , os.path.join("example-models","ARM","Ch.16","radon.2b.stan")
+     , os.path.join("example-models","ample-models","ARM","Ch.16","radon.3.stan")
+     , os.path.join("example-models","ample-models","ARM","Ch.16","radon.nopooling.stan")
+     , os.path.join("example-models","ARM","Ch.16","radon.pooling.stan")
+     , os.path.join("example-models","ARM","Ch.18","radon.1.stan")
+     , os.path.join("example-models","ARM","Ch.18","radon.2.stan")
+     , os.path.join("example-models","ARM","Ch.18","radon.nopooling.stan")
+     , os.path.join("example-models","ARM","Ch.18","radon.pooling.stan")
+     , os.path.join("example-models","ARM","Ch.19","item_response.stan")
+     , os.path.join("example-models","bugs_examples","vol1","dogs","dogs.stan")
+     , os.path.join("example-models","bugs_examples","vol1","rats","rats_stanified.stan")
+     , os.path.join("example-models","bugs_examples","vol2","pines","pines-4.stan")
+     , os.path.join("example-models","bugs_examples","vol2","pines","fit.stan")
+     , os.path.join("example-models","BPA","Ch.06","MtX.stan")
+     , os.path.join("example-models","ARM","Ch.21","radon_vary_intercept_a.stan")
+     , os.path.join("example-models","ARM","Ch.21","radon_vary_intercept_b.stan")
+     , os.path.join("example-models","ARM","Ch.23","sesame_street2.stan")
+     , os.path.join("example-models","ARM","Ch.3","kidiq_validation.stan")
+     , os.path.join("example-models","ARM","Ch.7","earnings_interactions.stan")
+     , os.path.join("example-models","ARM","Ch.8","y_x.stan")
+     , os.path.join("example-models","basic_estimators","normal_mixture_k.stan")
+     , os.path.join("example-models","basic_estimators","normal_mixture_k_prop.stan")
+     , os.path.join("example-models","BPA","Ch.04","GLM0.stan")
+     , os.path.join("example-models","BPA","Ch.04","GLM1.stan")
+     , os.path.join("example-models","BPA","Ch.04","GLM2.stan")
+     , os.path.join("example-models","BPA","Ch.04","GLMM3.stan")
+     , os.path.join("example-models","BPA","Ch.04","GLMM4.stan")
+     , os.path.join("example-models","BPA","Ch.04","GLMM5.stan")
+     , os.path.join("example-models","BPA","Ch.05","ssm2.stan")
+     , os.path.join("example-models","BPA","Ch.07","cjs_group_raneff.stan")
     ])
 
 def avg(coll):
@@ -215,7 +217,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
     fails, errors = [], []
     gold = os.path.join(GOLD_OUTPUT_DIR,
-                        exe.replace("../", "").replace("/", "_") + ".gold")
+                        exe.replace(DIR_UP, "").replace(os.sep, "_") + ".gold")
     tmp = gold + ".tmp"
     try:
         total_time = run_model(exe, method, data, tmp, runs)
@@ -242,7 +244,7 @@ def test_results_xml(tests):
             tests=str(len(tests)), time=str(time_),
             timestamp=str(datetime.now()))
     for model, time_, fails, errors in tests:
-        name = model.replace(".stan", "").replace("/", ".")
+        name = model.replace(".stan", "").replace(os.sep, ".")
         classname = name
         last_dot = name.rfind(".")
         if last_dot > 0:
