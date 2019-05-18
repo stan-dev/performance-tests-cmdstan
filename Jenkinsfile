@@ -24,21 +24,21 @@ def get_results(){
 
     def test_matches = (performance_log =~ /\('(.*)\)/)
     for(item in test_matches){
-        comment += item[0] + "\r\n"
+        comment += item[0] + "\\r\\n"
     }
     def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
     try{
-        comment += "Result: " + result_match[0][1].toString() + "\r\n"
+        comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
     }
     catch(Exception ex){
-        comment += "Result: " + "Regex did not match anything" + "\r\n"
+        comment += "Result: " + "Regex did not match anything" + "\\r\\n"
     }
     def result_match_hash = (performance_log =~ /Merge (.*?) into/)
     try{
-        comment += "Commit hash: " + result_match_hash[0][1].toString() + "\r\n"
+        comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
     }
     catch(Exception ex){
-        comment += "Commit hash: " + "Regex did not match anything" + "\r\n"
+        comment += "Commit hash: " + "Regex did not match anything" + "\\r\\n"
     }
 
     performance_log = null
