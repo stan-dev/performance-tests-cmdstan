@@ -1,11 +1,9 @@
 #!/usr/bin/python
 
 import sys
-import numpy as np
 
-def geo_mean(iterable):
-    a = np.log(iterable)
-    return np.exp(a.sum()/len(a))
+def mean(nums):
+    return sum(nums) / len(nums)
 
 def get_times(csv):
     times = {}
@@ -28,4 +26,4 @@ if __name__ == "__main__":
     for r in ratios:
         print(r[0], round(r[1], 2))
 
-    print(geo_mean([r for _, r in ratios]))
+    print(mean([r for _, r in ratios]))
