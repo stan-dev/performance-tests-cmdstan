@@ -13,6 +13,7 @@ from multiprocessing.pool import ThreadPool
 from time import time
 from datetime import datetime
 import xml.etree.ElementTree as ET
+import multiprocessing
 
 GOLD_OUTPUT_DIR = os.path.join("golds","")
 DIR_UP = os.path.join("..","")
@@ -31,7 +32,7 @@ def find_files(pattern, dirs):
 def read_tests(filename):
     test_files = [line.rstrip('\n') for line in open(filename)]
     return test_files
-        
+
 def str_dist(target):
     def str_dist_internal(candidate):
         return SequenceMatcher(None, candidate, target).ratio()
@@ -279,7 +280,7 @@ def parse_args():
                         help="Overwrite the gold test records.")
     parser.add_argument("--runs", dest="runs", action="store", type=int,
                         help="Number of runs per benchmark.", default=1)
-    parser.add_argument("-j", dest="j", action="store", type=int, default=4)
+    parser.add_argument("-j", dest="j", action="store", type=int, default=multiprocessing.cpu_count())
     parser.add_argument("--runj", dest="runj", action="store", type=int, default=1)
     parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
     parser.add_argument("--method", dest="method", action="store", default="sample",
