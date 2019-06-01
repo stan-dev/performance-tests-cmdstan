@@ -214,6 +214,8 @@ def run_golds(gold, tmp, summary, check_golds_exact):
             print("FAIL: {} param {} not within ({} - {}) / {} < 0.3"
                     .format(gold, k, summary[k][0], mean, stdev))
             fails.append((k, mean, stdev, summary[k][0]))
+    if not fails and not errors:
+        print("SUCCESS: Gold {} passed.".format(gold))
     return fails, errors
 
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
