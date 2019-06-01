@@ -270,7 +270,7 @@ def test_results_csv(tests):
 
 def parse_args():
     parser = argparse.ArgumentParser(description="Run gold tests and record performance.")
-    parser.add_argument("directories", nargs="+")
+    parser.add_argument("directories", nargs="*")
     parser.add_argument("--check-golds", dest="check_golds", action="store_true",
                         help="Run the gold tests and check output within loose boundaries.")
     parser.add_argument("--check-golds-exact", dest="check_golds_exact", action="store",
