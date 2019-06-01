@@ -30,7 +30,8 @@ def find_files(pattern, dirs):
     return res
 
 def read_tests(filename):
-    test_files = [line.rstrip('\n') for line in open(filename)]
+    test_files = [line.rstrip('\n') for line in open(filename)
+                  if not line.startswith("#")]
     return test_files
 
 def str_dist(target):
