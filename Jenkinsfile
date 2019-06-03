@@ -62,7 +62,7 @@ pipeline {
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
         string(defaultValue: '', name: 'make_local', description: "Make/file contents")
     }
-    stages {
+    stage('Parallel tests') {
 
         parallel {
 
@@ -187,8 +187,7 @@ pipeline {
                         modeThroughput: false,
                         configType: 'PRT'
                 }
-            }
-          }
+            }       
         }
     }
 
