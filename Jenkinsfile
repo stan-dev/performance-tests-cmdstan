@@ -65,6 +65,26 @@ pipeline {
     }
 
     stages {
+
+        stage('Clean checkout') {
+            steps {
+                deleteDir()
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/master']],
+                          doGenerateSubmoduleConfigurations: false,
+                          extensions: [[$class: 'SubmoduleOption',
+                                        disableSubmodules: false,
+                                        parentCredentials: false,
+                                        recursiveSubmodules: true,
+                                        reference: '',
+                                        trackingSubmodules: false]],
+                          submoduleCfg: [],
+                          userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
+                                               credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
+                    ]]])
+            }
+        }
+
         stage('Parallel tests') {
 
             parallel {
