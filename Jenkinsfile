@@ -74,21 +74,21 @@ pipeline {
                             /* Handle cmdstan_pr */
                             cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
-                            sh """
-                                old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                                cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                            bat """
+                                bash old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                                bash cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                                 bash compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
-                                mv performance.xml \$cmdstan_hash.xml
+                                bash mv performance.xml \$cmdstan_hash.xml
                                 make revert clean
                             """
                     }
 
-                    writeFile(file: "cmdstan/make/local", text: make_local)
-                    sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                    bat "bash echo ${make_local} > cmdstan/make/local"
+                    bat "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
 
                     sh "make clean"
-                    writeFile(file: "cmdstan/make/local", text: make_local)
-                    sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                    bat "bash echo ${make_local} > cmdstan/make/local"
+                    bat "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
 
                     junit '*.xml'
                     archiveArtifacts '*.xml'
@@ -188,7 +188,7 @@ pipeline {
                         configType: 'PRT'
                 }
             }
-
+          }
         }
     }
 
@@ -212,12 +212,6 @@ pipeline {
                     post_comment(comment, "math", pr_number)
                 } 
             }
-        }
-        unstable {
-            //
-        }
-        failure {
-            //
         }
     }
 }
