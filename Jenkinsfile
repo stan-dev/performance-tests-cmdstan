@@ -57,7 +57,7 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: '', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch")
+        string(defaultValue: 'develop', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch")
         string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
         string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
