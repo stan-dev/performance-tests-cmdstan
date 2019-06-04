@@ -66,8 +66,7 @@ pipeline {
 
     stages {
 
-        stage("Update CmdStan pointer to latest ${params.cmdstan_origin_pr}") {
-            when { branch 'master' }
+        stage('Update CmdStan pointer to latest ' + ${params.cmdstan_origin_pr}) {
             steps {
                 script {
                     sh """
