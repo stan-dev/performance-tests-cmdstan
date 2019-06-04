@@ -92,20 +92,21 @@ pipeline {
                             cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
                             bat """
-                                bash old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                                bash cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                                bash compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
-                                bash mv performance.xml \$cmdstan_hash.xml
-                                make revert clean
+                                bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')""
+                                bash -c "cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)""
+                                bash -c "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}""
+                                bash -c "mv performance.xml \$cmdstan_hash.xml"
+                                bash -c "make revert clean"
                             """
                     }
 
-                    bat "bash echo ${make_local} > cmdstan/make/local"
-                    bat "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                    bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
+                    bat "python runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
 
-                    sh "make clean"
-                    bat "bash echo ${make_local} > cmdstan/make/local"
-                    bat "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                    bat "bash -c \"make clean\""
+
+                    bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
+                    bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
 
                     junit '*.xml'
                     archiveArtifacts '*.xml'
