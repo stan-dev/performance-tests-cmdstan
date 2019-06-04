@@ -65,19 +65,6 @@ pipeline {
     }
 
     stages {
-
-        stage('Update CmdStan pointer to latest ' + params.cmdstan_origin_pr) {
-            steps {
-                script {
-                    sh """
-                        cd cmdstan
-                        git pull origin ${params.cmdstan_origin_pr}
-                        git submodule update --init --recursive
-                        """
-                }
-            }
-        }
-
         stage('Parallel tests') {
 
             parallel {
@@ -89,6 +76,12 @@ pipeline {
                     script{
                             /* Handle cmdstan_pr */
                             cmdstan_pr = branchOrPR(params.cmdstan_pr)
+
+                            bat """
+                                bash -c "cd cmdstan"
+                                bash -c "git pull origin ${params.cmdstan_origin_pr}"
+                                bash -c "git submodule update --init --recursive"
+                            """
 
                             bat """
                                 bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')""
@@ -133,6 +126,12 @@ pipeline {
                             cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
                             sh """
+                                cd cmdstan
+                                git pull origin ${params.cmdstan_origin_pr}
+                                git submodule update --init --recursive
+                            """
+
+                            sh """
                                 old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                                 cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                                 ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
@@ -172,6 +171,12 @@ pipeline {
                     script{
                             /* Handle cmdstan_pr */
                             cmdstan_pr = branchOrPR(params.cmdstan_pr)
+
+                            sh """
+                                cd cmdstan
+                                git pull origin ${params.cmdstan_origin_pr}
+                                git submodule update --init --recursive
+                            """
 
                             sh """
                                 old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
