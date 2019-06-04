@@ -67,6 +67,7 @@ pipeline {
     stages {
 
         stage('Clean checkout') {
+            agent any
             steps {
                 deleteDir()
                 checkout([$class: 'GitSCM',
