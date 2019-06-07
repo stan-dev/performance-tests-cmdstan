@@ -332,6 +332,10 @@ if __name__ == "__main__":
     test_results_xml(results).write("{}.xml".format(args.name))
     with open("{}.csv".format(args.name), "w") as f:
         f.write(test_results_csv(results))
+    failed = false
     for model, _, fails, errors in results:
         if fails or errors:
             print("'{}' had fails '{}' and errors '{}'".format(model, fails, errors))
+            failed = true
+    if failed:
+        sys.exit(-1)
