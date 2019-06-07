@@ -22,3 +22,4 @@ example-models/bugs_examples/vol2/stagnant/stagnant.stan
 example-models/bugs_examples/vol2/t_df/simt4.stan
 example-models/bugs_examples/vol3/fire/fire.stan
 example-models/bugs_examples/vol3/hepatitis/hepatitisME.stan
+example-models/regressions/matrix_indexing.stan
