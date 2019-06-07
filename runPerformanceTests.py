@@ -31,10 +31,20 @@ def find_files(pattern, dirs):
                     res.append(os.path.join(d, f))
     return res
 
-def read_tests(filename):
-    test_files = [line.rstrip('\n') for line in open(filename)
-                  if not line.startswith("#")]
-    return test_files
+def read_tests(filename, default_num_samples):
+    test_files = []
+    num_samples = []
+    with open(filename) as f:
+        for line in f:
+            if line.startswith("#"): continue
+            if ", " in line:
+                model, num_samples = line.split(", ")
+            else:
+                model = line
+                num_samples = default_num_samples
+            num_samples.append(num_samples)
+            test_files.append(model)
+    return test_files, num_samples
 
 def str_dist(target):
     def str_dist_internal(candidate):
@@ -166,7 +176,7 @@ def parse_summary(f):
         d[param] = (float(avg), float(stdev))
     return d
 
-def run_model(exe, method, data, tmp, runs):
+def run_model(exe, method, data, tmp, runs, num_samples):
     def run_as_fixed_param():
         shexec("{} method=sample algorithm='fixed_param' random seed=1234 output file={}"
                .format(exe, tmp))
@@ -179,8 +189,11 @@ def run_model(exe, method, data, tmp, runs):
             run_as_fixed_param()
         else:
             try:
-                shexec("{} method={} {} random seed=1234 output file={}"
-                    .format(exe, method, data_str, tmp))
+                num_samples_str = ""
+                if method == "sample":
+                    num_samples_str = "num_samples={} num_warmup={}".format(num_samples, num_samples)
+                shexec("{} method={} {} {} random seed=1234 output file={}"
+                    .format(exe, method, num_samples_str, data_str, tmp))
             except FailedCommand as e:
                 if e.returncode == 78:
                     run_as_fixed_param()
@@ -224,7 +237,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         print("SUCCESS: Gold {} passed.".format(gold))
     return fails, errors
 
-def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
+def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, num_samples):
     if not os.path.isfile(exe):
         return 0, ([], ["{} did not compile".format(exe)])
 
@@ -233,7 +246,7 @@ def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
                         exe.replace(DIR_UP, "").replace(os.sep, "_") + ".gold")
     tmp = gold + ".tmp"
     try:
-        total_time = run_model(exe, method, data, tmp, runs)
+        total_time = run_model(exe, method, data, tmp, runs, num_samples)
     except Exception as e:
         print("Encountered exception while running {}:".format(exe))
         print(e)
@@ -296,14 +309,16 @@ def parse_args():
     parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
+    parser.add_argument("--num-samples", dest="num_samples", action="store", default=2000, type=int,
+                        help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
     return parser.parse_args()
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
     def process_test_wrapper(tup):
-        model, exe, data = tup
+        model, exe, data, num_samples = tup
         time_, (fails, errors) = run(exe, data, overwrite, check_golds,
-                                     check_golds_exact, runs, method)
+                                     check_golds_exact, runs, method, num_samples)
         average_time = time_ / runs
         return (model, average_time, fails, errors)
     return process_test_wrapper
@@ -315,16 +330,17 @@ if __name__ == "__main__":
 
     if args.tests == "":
         models = find_files("*.stan", args.directories)
+        num_samples = [args.num_samples] * len(models)
     else:
-        models = read_tests(args.tests)
+        models, num_samples = read_tests(args.tests, args.num_samples)
 
     models = filter(model_name_re.match, models)
     models = list(filter(lambda m: not m in bad_models, models))
 
     executables = [m[:-5] for m in models]
     make_time, _ = time_step("make_all_models", make, executables, args.j)
-    tests = [(model, exe, find_data_for_model(model))
-             for model, exe in zip(models, executables)]
+    tests = [(model, exe, find_data_for_model(model), num_samples)
+             for model, exe, num_samples in zip(models, executables, num_samples)]
     if args.runj > 1:
         tp = ThreadPool(args.runj)
         map_ = tp.imap_unordered
