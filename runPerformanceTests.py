@@ -4,6 +4,7 @@ import argparse
 import csv
 from collections import defaultdict
 import os
+import sys
 import re
 import subprocess
 from difflib import SequenceMatcher
