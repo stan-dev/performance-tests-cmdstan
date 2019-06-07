@@ -74,8 +74,11 @@ def shexec(command, wd = "."):
     return returncode
 
 def make(targets, j=8):
-    shexec("make -j{} {}"
-          .format(j, " ".join(DIR_UP + t + EXE_FILE_EXT for t in targets)), wd = "cmdstan")
+    try:
+        shexec("make -i -j{} {}"
+            .format(j, " ".join(DIR_UP + t + EXE_FILE_EXT for t in targets)), wd = "cmdstan")
+    except FailedCommand:
+        print("Failed to make at least some targets")
 
 model_name_re = re.compile(".*"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
 
@@ -294,7 +297,6 @@ def parse_args():
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
     def process_test_wrapper(tup):
-        # TODO: figure out the right place to compute the average or maybe don't compute the average.
         model, exe, data = tup
         time_, (fails, errors) = run(exe, data, overwrite, check_golds,
                                      check_golds_exact, runs, method)
