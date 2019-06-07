@@ -4,6 +4,7 @@ import argparse
 import csv
 from collections import defaultdict
 import os
+import os.path
 import sys
 import re
 import subprocess
@@ -241,6 +242,8 @@ def run_golds(gold, tmp, summary, check_golds_exact):
     return fails, errors
 
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, fixed_time):
+    if not os.path.isfile(exe):
+        return 0, ([], ["{} did not compile".format(exe)])
     fails, errors = [], []
     gold = os.path.join(GOLD_OUTPUT_DIR,
                         exe.replace(DIR_UP, "").replace(os.sep, "_") + ".gold")
