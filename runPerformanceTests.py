@@ -36,6 +36,7 @@ def read_tests(filename, default_num_samples):
     num_samples_list = []
     with open(filename) as f:
         for line in f:
+            line = line.strip()
             if line.startswith("#"): continue
             if ", " in line:
                 model, num_samples = line.split(", ")
@@ -339,8 +340,8 @@ if __name__ == "__main__":
 
     executables = [m[:-5] for m in models]
     make_time, _ = time_step("make_all_models", make, executables, args.j)
-    tests = [(model, exe, find_data_for_model(model), num_samples)
-             for model, exe, num_samples in zip(models, executables, num_samples)]
+    tests = [(model, exe, find_data_for_model(model), ns)
+             for model, exe, ns in zip(models, executables, num_samples)]
     if args.runj > 1:
         tp = ThreadPool(args.runj)
         map_ = tp.imap_unordered
