@@ -11,7 +11,7 @@ from difflib import SequenceMatcher
 from fnmatch import fnmatch
 from functools import wraps
 from multiprocessing.pool import ThreadPool
-from time import time
+import time
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import multiprocessing
@@ -53,31 +53,27 @@ def find_data_for_model(model):
         return closest_string(model, data_files)
 
 def time_step(name, fn, *args, **kwargs):
-    start = time()
+    start = time.time()
     res = fn(*args, **kwargs)
-    end = time()
+    end = time.time()
     return end-start, res
 
-class FailedCommand(Exception):
-    def __init__(self, returncode, command):
-        self.returncode = returncode
-        self.command = command
-        Exception(self, "return code '{}' from command '{}'!"
-                  .format(returncode, command))
-
-
-def shexec(command, wd = "."):
-    print(command)
-    returncode = subprocess.call(command, shell=True, cwd=wd)
+def shexec(command, wd = ".", timeout=None):
+    subp = subprocess.Popen("exec " + command, shell=True, cwd=wd)
+    if timeout:
+        time.sleep(timeout)
+        subp.terminate()
+        return 0
+    returncode = subp.wait()
     if returncode != 0:
-        raise FailedCommand(returncode, command)
+        raise subprocess.CalledProcessError(returncode, command)
     return returncode
 
 def make(targets, j=8):
     try:
         shexec("make -i -j{} {}"
             .format(j, " ".join(DIR_UP + t + EXE_FILE_EXT for t in targets)), wd = "cmdstan")
-    except FailedCommand:
+    except subprocess.CalledProcessError:
         print("Failed to make at least some targets")
 
 model_name_re = re.compile(".*"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
@@ -137,7 +133,7 @@ def stdev(coll, mean):
 
 def csv_summary(csv_file):
     d = defaultdict(list)
-    with open(csv_file, 'rb') as raw:
+    with open(csv_file, 'r') as raw:
         headers = None
         for row in csv.reader(raw):
             if row[0].startswith("#"):
@@ -155,6 +151,22 @@ def csv_summary(csv_file):
         res[k] = (mean, stdev(v, mean))
     return res
 
+def get_n_leapfrog(csv_file):
+    n_leapfrog = 0
+    with open(csv_file, 'r') as raw:
+        headers = None
+        for row in csv.reader(raw):
+            if row[0].startswith("#"):
+                continue
+            if headers is None:
+                headers = row
+                continue
+            for i in range(0, len(row)):
+                if headers[i] == "n_leapfrog__":
+                    n_leapfrog += int(row[i])
+                    continue
+    return n_leapfrog
+
 def format_summary_lines(summary):
     return ["{} {} {}\n".format(k, avg, stdev) for k, (avg, stdev) in summary.items()]
 
@@ -165,27 +177,32 @@ def parse_summary(f):
         d[param] = (float(avg), float(stdev))
     return d
 
-def run_model(exe, method, data, tmp, runs):
+def run_model(exe, method, data, tmp, runs, fixed_time):
     def run_as_fixed_param():
         shexec("{} method=sample algorithm='fixed_param' random seed=1234 output file={}"
                .format(exe, tmp))
 
     data_str = data and "data file={}".format(data)
     total_time = 0
+    if fixed_time and method=="sample":
+        num_sample_str = "num_samples=2147483647" #lots! we will be timing out anyway.
+    else:
+        num_sample_str = ""
+
     for i in range(runs):
-        start = time()
+        start = time.time()
         if not data_str:
             run_as_fixed_param()
         else:
             try:
-                shexec("{} method={} {} random seed=1234 output file={}"
-                    .format(exe, method, data_str, tmp))
-            except FailedCommand as e:
+                shexec("{} method={} {} {} random seed=1234 output file={}"
+                       .format(exe, method, num_sample_str, data_str, tmp), timeout=fixed_time)
+            except subprocess.CalledProcessError as e:
                 if e.returncode == 78:
                     run_as_fixed_param()
                 else:
                     raise e
-        end = time()
+        end = time.time()
         total_time += end-start
     return total_time
 
@@ -223,18 +240,19 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         print("SUCCESS: Gold {} passed.".format(gold))
     return fails, errors
 
-def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
+def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, fixed_time):
     fails, errors = [], []
     gold = os.path.join(GOLD_OUTPUT_DIR,
                         exe.replace(DIR_UP, "").replace(os.sep, "_") + ".gold")
     tmp = gold + ".tmp"
     try:
-        total_time = run_model(exe, method, data, tmp, runs)
+        total_time = run_model(exe, method, data, tmp, runs, fixed_time)
     except Exception as e:
         print("Encountered exception while running {}:".format(exe))
         print(e)
         return 0, (fails, errors + [str(e)])
     summary = csv_summary(tmp)
+    n_leapfrog = get_n_leapfrog(tmp)
     with open(tmp, "w+") as f:
         f.writelines(format_summary_lines(summary))
 
@@ -243,7 +261,9 @@ def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
     elif check_golds or check_golds_exact:
         fails, errors = run_golds(gold, tmp, summary, check_golds_exact)
 
-    return total_time, (fails, errors)
+    stat = total_time / (fixed_time and n_leapfrog or runs)
+
+    return stat, (fails, errors)
 
 def test_results_xml(tests):
     failures = str(sum(1 if x[2] else 0 for x in tests))
@@ -293,15 +313,15 @@ def parse_args():
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
+    parser.add_argument("--fixed-time", dest="fixed_time", action="store", type=int, default=None)
     return parser.parse_args()
 
-def process_test(overwrite, check_golds, check_golds_exact, runs, method):
+def process_test(overwrite, check_golds, check_golds_exact, runs, method, fixed_time):
     def process_test_wrapper(tup):
         model, exe, data = tup
-        time_, (fails, errors) = run(exe, data, overwrite, check_golds,
-                                     check_golds_exact, runs, method)
-        average_time = time_ / runs
-        return (model, average_time, fails, errors)
+        stat, (fails, errors) = run(exe, data, overwrite, check_golds,
+                                     check_golds_exact, runs, method, fixed_time)
+        return (model, stat, fails, errors)
     return process_test_wrapper
 
 if __name__ == "__main__":
@@ -328,7 +348,7 @@ if __name__ == "__main__":
         map_ = map
     results = map_(process_test(args.overwrite, args.check_golds,
                                 args.check_golds_exact, args.runs,
-                                args.method),
+                                args.method, args.fixed_time),
                     tests)
     results = list(results)
     results.append(("{}.compilation".format(args.name), make_time, [], []))
