@@ -33,7 +33,7 @@ def find_files(pattern, dirs):
 
 def read_tests(filename, default_num_samples):
     test_files = []
-    num_samples = []
+    num_samples_list = []
     with open(filename) as f:
         for line in f:
             if line.startswith("#"): continue
@@ -42,9 +42,9 @@ def read_tests(filename, default_num_samples):
             else:
                 model = line
                 num_samples = default_num_samples
-            num_samples.append(num_samples)
+            num_samples_list.append(num_samples)
             test_files.append(model)
-    return test_files, num_samples
+    return test_files, num_samples_list
 
 def str_dist(target):
     def str_dist_internal(candidate):
