@@ -310,7 +310,7 @@ def parse_args():
     parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
-    parser.add_argument("--num-samples", dest="num_samples", action="store", default=2000, type=int,
+    parser.add_argument("--num-samples", dest="num_samples", action="store", default=1000, type=int,
                         help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
     return parser.parse_args()
