@@ -240,7 +240,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
 
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, num_samples):
     if not os.path.isfile(exe):
-        return 0, ([], ["{} did not compile".format(exe)])
+        return 0, ([], ["Did not compile!"])
 
     fails, errors = [], []
     gold = os.path.join(GOLD_OUTPUT_DIR,
