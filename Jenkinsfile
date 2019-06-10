@@ -90,149 +90,148 @@ pipeline {
 
             parallel {
 
-            stage("Test cmdstan base against cmdstan pointer in this branch on windows") {
-                agent { label 'windows' }
-                steps {
-
-                    script{
-                            /* Handle cmdstan_pr */
-                            cmdstan_pr = branchOrPR(params.cmdstan_pr)
-
-                            bat """
-                                bash -c "cd cmdstan"
-                                bash -c "git pull origin ${params.cmdstan_origin_pr}"
-                                bash -c "git submodule update --init --recursive"
-                            """
-
-                            bat """
-                                bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')""
-                                bash -c "cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)""
-                                bash -c "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}""
-                                bash -c "mv performance.xml \$cmdstan_hash.xml"
-                                bash -c "make revert clean"
-                            """
+                stage("Test cmdstan base against cmdstan pointer in this branch on windows") {
+                    agent { label 'windows' }
+                    steps {
+    
+                        script{
+                                /* Handle cmdstan_pr */
+                                cmdstan_pr = branchOrPR(params.cmdstan_pr)
+    
+                                bat """
+                                    bash -c "cd cmdstan"
+                                    bash -c "git pull origin ${params.cmdstan_origin_pr}"
+                                    bash -c "git submodule update --init --recursive"
+                                """
+    
+                                bat """
+                                    bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')""
+                                    bash -c "cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)""
+                                    bash -c "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}""
+                                    bash -c "mv performance.xml \$cmdstan_hash.xml"
+                                    bash -c "make revert clean"
+                                """
+                        }
+    
+                        bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
+                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+    
+                        bat "bash -c \"make clean\""
+    
+                        bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
+                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+    
+                        junit '*.xml'
+                        archiveArtifacts '*.xml'
+                        perfReport compareBuildPrevious: true,
+    
+                            relativeFailedThresholdPositive: 10,
+                            relativeUnstableThresholdPositive: 5,
+    
+                            errorFailedThreshold: 1,
+                            failBuildIfNoResultFile: false,
+                            modePerformancePerTestCase: true,
+                            modeOfThreshold: true,
+                            sourceDataFiles: '*.xml',
+                            modeThroughput: false,
+                            configType: 'PRT'
                     }
-
-                    bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
-                    bat "python runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
-
-                    bat "bash -c \"make clean\""
-
-                    bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
-                    bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
-
-                    junit '*.xml'
-                    archiveArtifacts '*.xml'
-                    perfReport compareBuildPrevious: true,
-
-                        relativeFailedThresholdPositive: 10,
-                        relativeUnstableThresholdPositive: 5,
-
-                        errorFailedThreshold: 1,
-                        failBuildIfNoResultFile: false,
-                        modePerformancePerTestCase: true,
-                        modeOfThreshold: true,
-                        sourceDataFiles: '*.xml',
-                        modeThroughput: false,
-                        configType: 'PRT'
                 }
-            }
-
-            stage("Test cmdstan base against cmdstan pointer in this branch on linux") {
-                agent { label 'linux' }
-                steps {
-                    
-                    script{
-                            /* Handle cmdstan_pr */
-                            cmdstan_pr = branchOrPR(params.cmdstan_pr)
-
-                            sh """
-                                cd cmdstan
-                                git pull origin ${params.cmdstan_origin_pr}
-                                git submodule update --init --recursive
-                            """
-
-                            sh """
-                                old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                                cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                                ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
-                                mv performance.xml \$cmdstan_hash.xml
-                                make revert clean
-                            """
+    
+                stage("Test cmdstan base against cmdstan pointer in this branch on linux") {
+                    agent { label 'linux' }
+                    steps {
+                        
+                        script{
+                                /* Handle cmdstan_pr */
+                                cmdstan_pr = branchOrPR(params.cmdstan_pr)
+    
+                                sh """
+                                    cd cmdstan
+                                    git pull origin ${params.cmdstan_origin_pr}
+                                    git submodule update --init --recursive
+                                """
+    
+                                sh """
+                                    old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                                    cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                                    ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                                    mv performance.xml \$cmdstan_hash.xml
+                                    make revert clean
+                                """
+                        }
+    
+                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+    
+                        sh "make clean"
+                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+    
+                        junit '*.xml'
+                        archiveArtifacts '*.xml'
+                        perfReport compareBuildPrevious: true,
+    
+                            relativeFailedThresholdPositive: 10,
+                            relativeUnstableThresholdPositive: 5,
+    
+                            errorFailedThreshold: 1,
+                            failBuildIfNoResultFile: false,
+                            modePerformancePerTestCase: true,
+                            modeOfThreshold: true,
+                            sourceDataFiles: '*.xml',
+                            modeThroughput: false,
+                            configType: 'PRT'
                     }
-
-                    writeFile(file: "cmdstan/make/local", text: make_local)
-                    sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
-
-                    sh "make clean"
-                    writeFile(file: "cmdstan/make/local", text: make_local)
-                    sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
-
-                    junit '*.xml'
-                    archiveArtifacts '*.xml'
-                    perfReport compareBuildPrevious: true,
-
-                        relativeFailedThresholdPositive: 10,
-                        relativeUnstableThresholdPositive: 5,
-
-                        errorFailedThreshold: 1,
-                        failBuildIfNoResultFile: false,
-                        modePerformancePerTestCase: true,
-                        modeOfThreshold: true,
-                        sourceDataFiles: '*.xml',
-                        modeThroughput: false,
-                        configType: 'PRT'
                 }
-            }
-
-            stage("Test cmdstan base against cmdstan pointer in this branch on macosx") {
-                agent { label 'osx' }
-                steps {
-                    
-                    script{
-                            /* Handle cmdstan_pr */
-                            cmdstan_pr = branchOrPR(params.cmdstan_pr)
-
-                            sh """
-                                cd cmdstan
-                                git pull origin ${params.cmdstan_origin_pr}
-                                git submodule update --init --recursive
-                            """
-
-                            sh """
-                                old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                                cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                                ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
-                                mv performance.xml \$cmdstan_hash.xml
-                                make revert clean
-                            """
+    
+                stage("Test cmdstan base against cmdstan pointer in this branch on macosx") {
+                    agent { label 'osx' }
+                    steps {
+                        
+                        script{
+                                /* Handle cmdstan_pr */
+                                cmdstan_pr = branchOrPR(params.cmdstan_pr)
+    
+                                sh """
+                                    cd cmdstan
+                                    git pull origin ${params.cmdstan_origin_pr}
+                                    git submodule update --init --recursive
+                                """
+    
+                                sh """
+                                    old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                                    cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                                    ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                                    mv performance.xml \$cmdstan_hash.xml
+                                    make revert clean
+                                """
+                        }
+    
+                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+    
+                        sh "make clean"
+                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+    
+                        junit '*.xml'
+                        archiveArtifacts '*.xml'
+                        perfReport compareBuildPrevious: true,
+    
+                            relativeFailedThresholdPositive: 10,
+                            relativeUnstableThresholdPositive: 5,
+    
+                            errorFailedThreshold: 1,
+                            failBuildIfNoResultFile: false,
+                            modePerformancePerTestCase: true,
+                            modeOfThreshold: true,
+                            sourceDataFiles: '*.xml',
+                            modeThroughput: false,
+                            configType: 'PRT'
                     }
-
-                    writeFile(file: "cmdstan/make/local", text: make_local)
-                    sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
-
-                    sh "make clean"
-                    writeFile(file: "cmdstan/make/local", text: make_local)
-                    sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
-
-                    junit '*.xml'
-                    archiveArtifacts '*.xml'
-                    perfReport compareBuildPrevious: true,
-
-                        relativeFailedThresholdPositive: 10,
-                        relativeUnstableThresholdPositive: 5,
-
-                        errorFailedThreshold: 1,
-                        failBuildIfNoResultFile: false,
-                        modePerformancePerTestCase: true,
-                        modeOfThreshold: true,
-                        sourceDataFiles: '*.xml',
-                        modeThroughput: false,
-                        configType: 'PRT'
-                }
-            }       
+                }       
             }
-
         }
     }
     post {
