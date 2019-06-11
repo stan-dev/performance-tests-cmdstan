@@ -310,7 +310,7 @@ def parse_args():
     parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
-    parser.add_argument("--num-samples", dest="num_samples", action="store", default=1000, type=int,
+    parser.add_argument("--num-samples", dest="num_samples", action="store", default=None, type=int,
                         help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
     return parser.parse_args()
@@ -331,9 +331,11 @@ if __name__ == "__main__":
 
     if args.tests == "":
         models = find_files("*.stan", args.directories)
-        num_samples = [args.num_samples] * len(models)
+        num_samples = [args.num_samples or 1000] * len(models)
     else:
         models, num_samples = read_tests(args.tests, args.num_samples)
+        if args.num_samples:
+            num_samples = [args.num_samples] * len(models)
 
     models = filter(model_name_re.match, models)
     models = list(filter(lambda m: not m in bad_models, models))
