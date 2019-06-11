@@ -329,11 +329,12 @@ if __name__ == "__main__":
 
     models = None
 
+    default_num_samples = 1000
     if args.tests == "":
         models = find_files("*.stan", args.directories)
-        num_samples = [args.num_samples or 1000] * len(models)
+        num_samples = [args.num_samples or default_num_samples] * len(models)
     else:
-        models, num_samples = read_tests(args.tests, args.num_samples)
+        models, num_samples = read_tests(args.tests, args.num_samples or default_num_samples)
         if args.num_samples:
             num_samples = [args.num_samples] * len(models)
 
