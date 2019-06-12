@@ -87,9 +87,7 @@ pipeline {
         }
 
         stage('Parallel tests') {
-
             parallel {
-
                 stage("Test cmdstan base against cmdstan pointer in this branch on windows") {
                     agent { label 'windows' }
                     steps {
