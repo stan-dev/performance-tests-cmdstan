@@ -1,3 +1,3 @@
 cd ..
 tar -czf performance-tests-cmdstan.tar.gz ./performance-tests-cmdstan
-ghr --recreate stanc3-tests-`date --iso-8601`
+ghr --recreate stanc3-tests-`date --iso-8601` performance-tests-cmdstan.tar.gz
