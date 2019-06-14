@@ -1,0 +1,16 @@
+example-models/bugs_examples/vol3/hepatitis/hepatitis.stan
+example-models/bugs_examples/vol2/birats/birats.stan
+example-models/bugs_examples/vol2/jaws/jaws.stan
+example-models/bugs_examples/vol2/mvn_orange/mvn_orange.stan
+example-models/bugs_examples/vol2/schools/schools-1.stan
+example-models/bugs_examples/vol2/schools/schools-2.stan
+example-models/bugs_examples/vol2/schools/schools-3.stan
+example-models/bugs_examples/vol2/schools/schools-4.stan
+example-models/bugs_examples/vol2/schools/schools.stan
+example-models/bugs_examples/vol2/stagnant/stagnant.stan
+example-models/bugs_examples/vol2/alli/alli2.stan
+example-models/bugs_examples/vol2/endo/endo1.stan
+example-models/bugs_examples/vol2/endo/endo2.stan
+example-models/bugs_examples/vol2/endo/endo3.stan
+example-models/bugs_examples/vol3/camel/camel.stan
+example-models/bugs_examples/vol3/camel/camel2.stan
