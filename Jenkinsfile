@@ -62,33 +62,96 @@ pipeline {
         string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
         string(defaultValue: '', name: 'make_local', description: "Make/file contents")
+        booleanParam(defaultValue: true, name: 'run_windows', description: "True/False to run tests on windows")
+        booleanParam(defaultValue: true, name: 'run_linux', description: "True/False to run tests on linux")
+        booleanParam(defaultValue: true, name: 'run_macosx', description: "True/False to run tests on macosx")
     }
 
     stages {
 
-        stage('Clean checkout') {
-            agent any
-            steps {
-                deleteDir()
-                checkout([$class: 'GitSCM',
-                          branches: [[name: '*/master']],
-                          doGenerateSubmoduleConfigurations: false,
-                          extensions: [[$class: 'SubmoduleOption',
-                                        disableSubmodules: false,
-                                        parentCredentials: false,
-                                        recursiveSubmodules: true,
-                                        reference: '',
-                                        trackingSubmodules: false]],
-                          submoduleCfg: [],
-                          userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
-                                               credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
-                    ]]])
+        stage('Parallel Clean checkout') {
+            parallel {
+                stage("Clean checkout windows"){
+                    when {
+                        expression { 
+                            params.run_windows == true
+                        }
+                    }
+                    agent { label 'windows' }
+                    steps {
+                        deleteDir()
+                        //checkout scm
+                        checkout([$class: 'GitSCM',
+                                  branches: [[name: '*/master']],
+                                  doGenerateSubmoduleConfigurations: false,
+                                  extensions: [[$class: 'SubmoduleOption',
+                                                disableSubmodules: false,
+                                                parentCredentials: false,
+                                                recursiveSubmodules: true,
+                                                reference: '',
+                                                trackingSubmodules: false]], 
+                                  submoduleCfg: [], 
+                                  userRemoteConfigs: [[url: 'https://github.com/stan-dev/performance-tests-cmdstan.git']]])
+                    }
+                }
+                stage("Clean checkout linux"){
+                    when {
+                        expression { 
+                            params.run_linux == true
+                        }
+                    }
+                    agent { label 'linux' }
+                    steps {
+                        deleteDir()
+                        //checkout scm
+                        checkout([$class: 'GitSCM',
+                                  branches: [[name: '*/master']],
+                                  doGenerateSubmoduleConfigurations: false,
+                                  extensions: [[$class: 'SubmoduleOption',
+                                                disableSubmodules: false,
+                                                parentCredentials: false,
+                                                recursiveSubmodules: true,
+                                                reference: '',
+                                                trackingSubmodules: false]], 
+                                  submoduleCfg: [], 
+                                  userRemoteConfigs: [[url: 'https://github.com/stan-dev/performance-tests-cmdstan.git']]])
+                    }
+                }
+                stage("Clean checkout osx"){
+                    when {
+                        expression { 
+                            params.run_macosx == true
+                        }
+                    }
+                    agent { label 'osx' }
+                    steps {
+                        deleteDir()
+                        checkout([$class: 'GitSCM',
+                                  branches: [[name: '*/master']],
+                                  doGenerateSubmoduleConfigurations: false,
+                                  extensions: [[$class: 'SubmoduleOption',
+                                                disableSubmodules: false,
+                                                parentCredentials: false,
+                                                recursiveSubmodules: true,
+                                                reference: '',
+                                                trackingSubmodules: false]],
+                                  submoduleCfg: [],
+                                  userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
+                                                       credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
+                            ]]])
+                    }
+                }
             }
         }
 
         stage('Parallel tests') {
             parallel {
                 stage("Test cmdstan base against cmdstan pointer in this branch on windows") {
+                    when {
+                        expression { 
+                            params.run_windows == true
+                        }
+                    }
                     agent { label 'windows' }
                     steps {
     
@@ -117,14 +180,14 @@ pipeline {
                         bat "bash -c \"make clean\""
     
                         bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
-                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\bugs_examples example-models\regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
                         perfReport compareBuildPrevious: true,
     
-                            relativeFailedThresholdPositive: 10,
-                            relativeUnstableThresholdPositive: 5,
+                            //relativeFailedThresholdPositive: 10,
+                            //relativeUnstableThresholdPositive: 5,
     
                             errorFailedThreshold: 1,
                             failBuildIfNoResultFile: false,
@@ -137,6 +200,11 @@ pipeline {
                 }
     
                 stage("Test cmdstan base against cmdstan pointer in this branch on linux") {
+                    when {
+                        expression { 
+                            params.run_linux == true
+                        }
+                    }
                     agent { label 'linux' }
                     steps {
                         
@@ -184,6 +252,11 @@ pipeline {
                 }
     
                 stage("Test cmdstan base against cmdstan pointer in this branch on macosx") {
+                    when {
+                        expression { 
+                            params.run_macosx == true
+                        }
+                    }
                     agent { label 'osx' }
                     steps {
                         
