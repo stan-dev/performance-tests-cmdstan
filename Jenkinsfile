@@ -180,7 +180,7 @@ pipeline {
                         bat "bash -c \"make clean\""
     
                         bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
-                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\bugs_examples example-models\regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\\bugs_examples example-models\\regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
