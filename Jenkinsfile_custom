@@ -58,10 +58,12 @@ pipeline {
     }
     parameters {
         string(defaultValue: 'develop', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch")
+        
         string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
         string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
         string(defaultValue: '', name: 'make_local', description: "Make/file contents")
+
         booleanParam(defaultValue: true, name: 'run_windows', description: "True/False to run tests on windows")
         booleanParam(defaultValue: true, name: 'run_linux', description: "True/False to run tests on linux")
         booleanParam(defaultValue: true, name: 'run_macosx', description: "True/False to run tests on macosx")
@@ -302,28 +304,6 @@ pipeline {
                             configType: 'PRT'
                     }
                 }       
-            }
-        }
-    }
-    post {
-        success {
-            script {
-                def comment = get_results()
-
-                if(params.cmdstan_pr.contains("PR-")){
-                    def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "cmdstan", pr_number)
-                }
-                
-                if(params.stan_pr.contains("PR-")){
-                    def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "stan", pr_number)
-                }
-                
-                if(params.math_pr.contains("PR-")){
-                    def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "math", pr_number)
-                } 
             }
         }
     }
