@@ -58,7 +58,7 @@ pipeline {
     }
     parameters {
         string(defaultValue: 'develop', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch")
-        
+
         string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
         string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
@@ -186,18 +186,6 @@ pipeline {
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
-                        perfReport compareBuildPrevious: true,
-    
-                            relativeFailedThresholdPositive: 10,
-                            relativeUnstableThresholdPositive: 5,
-    
-                            errorFailedThreshold: 1,
-                            failBuildIfNoResultFile: false,
-                            modePerformancePerTestCase: true,
-                            modeOfThreshold: true,
-                            sourceDataFiles: '*.xml',
-                            modeThroughput: false,
-                            configType: 'PRT'
                     }
                 }
     
@@ -238,18 +226,6 @@ pipeline {
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
-                        perfReport compareBuildPrevious: true,
-    
-                            relativeFailedThresholdPositive: 10,
-                            relativeUnstableThresholdPositive: 5,
-    
-                            errorFailedThreshold: 1,
-                            failBuildIfNoResultFile: false,
-                            modePerformancePerTestCase: true,
-                            modeOfThreshold: true,
-                            sourceDataFiles: '*.xml',
-                            modeThroughput: false,
-                            configType: 'PRT'
                     }
                 }
     
@@ -290,18 +266,6 @@ pipeline {
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
-                        perfReport compareBuildPrevious: true,
-    
-                            relativeFailedThresholdPositive: 10,
-                            relativeUnstableThresholdPositive: 5,
-    
-                            errorFailedThreshold: 1,
-                            failBuildIfNoResultFile: false,
-                            modePerformancePerTestCase: true,
-                            modeOfThreshold: true,
-                            sourceDataFiles: '*.xml',
-                            modeThroughput: false,
-                            configType: 'PRT'
                     }
                 }       
             }
