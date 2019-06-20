@@ -38,10 +38,13 @@ The script will then check out and pull all of these commits, branches, or PRs f
 The [Custom Jenkins](https://jenkins.mc-stan.org/job/CmdStan%20Performance%20Tests/job/Custom/) job has the following parameters:  
 ```
     string(defaultValue: 'develop', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch")
+
     string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
     string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
     string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
+
     string(defaultValue: '', name: 'make_local', description: "Make/file contents")
+
     booleanParam(defaultValue: true, name: 'run_windows', description: "True/False to run tests on windows")
     booleanParam(defaultValue: true, name: 'run_linux', description: "True/False to run tests on linux")
     booleanParam(defaultValue: true, name: 'run_macosx', description: "True/False to run tests on macosx")
@@ -56,6 +59,6 @@ The job will:
 - Build final results
 - Log outputs and comparations  
 
-
-* To start a job simply build it with default or custom parameters passed in the UI
-* To check logs, click on the job number and go to `Console Output`
+  
+ To start a job simply build it with default or custom parameters passed in the UI  
+ To check logs, click on the job number and go to `Console Output`  
