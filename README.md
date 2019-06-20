@@ -47,15 +47,15 @@ The [Custom Jenkins](https://jenkins.mc-stan.org/job/CmdStan%20Performance%20Tes
     booleanParam(defaultValue: true, name: 'run_macosx', description: "True/False to run tests on macosx")
 ```
 
-The job will clone the repository locally on each machine in parallel,   
-get the submodules `git submodule update --init --recursive`,  
-run performance tests and compare outputs see [compare-git-hashes.sh](https://github.com/stan-dev/performance-tests-cmdstan/blob/master/compare-git-hashes.sh),  
-run `Numerical Accuracy and Performance Tests on Known-Good Models`,  
-run `Shotgun Performance Regression Tests`,  
-build final results,  
-log outputs and comparations,  
-ends  
+The job will:
+- Clone the repository locally on each machine in parallel
+- Get the submodules `git submodule update --init --recursive`
+- Run performance tests and compare outputs see [compare-git-hashes.sh](https://github.com/stan-dev/Performance-tests-cmdstan/blob/master/compare-git-hashes.sh)
+- Run `Numerical Accuracy and Performance Tests on Known-Good Models`
+- Run `Shotgun Performance Regression Tests`
+- Build final results
+- Log outputs and comparations  
 
 
-- To start a job simply build it with default or custom parameters passed in the UI
-- To check logs, click on the job number and go to `Console Output`
+* To start a job simply build it with default or custom parameters passed in the UI
+* To check logs, click on the job number and go to `Console Output`
