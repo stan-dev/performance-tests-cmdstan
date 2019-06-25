@@ -168,7 +168,8 @@ def csv_summary(csv_file):
     return res
 
 def format_summary_lines(summary):
-    return ["{} {:.15f} {:.15f}\n".format(k, avg, stdev) for k, (avg, stdev) in summary.items()]
+    return ["{} {:.15f} {:.15f}\n".format(k, avg, stdev) 
+            for k, (avg, stdev) in sorted(summary.items())]
 
 def parse_summary(f):
     d = {}
