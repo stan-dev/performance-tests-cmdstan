@@ -17,9 +17,9 @@ rm cmdstan/bin/stanc || true
 ./runPerformanceTests.py --overwrite-golds $1
 
 for i in performance.*; do
-    mv $i "${2}_${i}"
+    mv $i "reference_${i}"
 done
 
 cp "$2" cmdstan/bin/stanc
 make clean-models
-./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv
+./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "$reference_performance.csv" performance.csv
