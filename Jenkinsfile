@@ -1,6 +1,7 @@
 #!/usr/bin/env groovy
 @Library('StanUtils')
 import org.stan.Utils
+import groovy.json.JsonSlurper
 
 def utils = new org.stan.Utils()
 
@@ -12,9 +13,88 @@ def branchOrPR(pr) {
 }
 
 def post_comment(text, repository, pr_number) {
+
+    def new_results = results_to_obj(text)
+    def old_results = get_last_results(repository, pr_number)
+    def final_results = [:]
+
+    new_results.each{ k, v ->   
+      def new_value = v.toDouble();
+      def old_value = old_results[k].toDouble();
+      final_results[k] = 1 - new_value / old_value
+    }
+
+    def _comment = ""
+
+    _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull"
+    _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"
+
+    _comment += "- - - - - - - - - - - - - - - - - - - - -"
+
+    _comment += "| Name | Old Result | New Result | 1 - new / old |"
+    _comment += "| ------------- |------------- | ------------- | ------------- |"
+
+    final_results.each{ k, v -> 
+    
+    def _name = "${k}"
+    def _final_value = "${v}"
+    def _new_value = new_results[_name]
+    def _old_value = old_results[_name]
+
+    _comment += "| $_name | $_old_value | $_new_value | $_final_value |"
+    
+    }
+
     sh """#!/bin/bash
-        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${text}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
+        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
     """
+}
+
+def results_to_obj(body){
+
+    def returnMap = [:]
+
+    returnMap["gp_pois_regr"] = (body =~ /gp_pois_regr\.stan, (.*?)\)/)[0][1] 
+    returnMap["low_dim_corr_gauss"] = (body =~ /low_dim_corr_gauss\.stan, (.*?)\)/)[0][1] 
+    returnMap["irt_2pl"] = (body =~ /irt_2pl\.stan, (.*?)\)/)[0][1] 
+    returnMap["one_comp_mm_elim_abs"] = (body =~ /one_comp_mm_elim_abs\.stan, (.*?)\)/)[0][1] 
+    returnMap["eight_schools"] = (body =~ /eight_schools\.stan, (.*?)\)/)[0][1] 
+    returnMap["gp_regr"] = (body =~ /gp_regr\.stan, (.*?)\)/)[0][1] 
+    returnMap["arK"] = (body =~ /arK\.stan, (.*?)\)/)[0][1] 
+    returnMap["compilation"] = (body =~ /compilation, (.*?)\)/)[0][1] 
+    returnMap["low_dim_gauss_mix_collapse"] = (body =~ /low_dim_gauss_mix_collapse\.stan, (.*?)\)/)[0][1] 
+    returnMap["low_dim_gauss_mix"] = (body =~ /low_dim_gauss_mix\.stan, (.*?)\)/)[0][1] 
+    returnMap["sir"] = (body =~ /sir\.stan, (.*?)\)/)[0][1] 
+    returnMap["sim_one_comp_mm_elim_abs"] = (body =~ /sim_one_comp_mm_elim_abs\.stan, (.*?)\)/)[0][1] 
+    returnMap["garch"] = (body =~ /garch\.stan, (.*?)\)/)[0][1] 
+    returnMap["gen_gp_data"] = (body =~ /gen_gp_data\.stan, (.*?)\)/)[0][1] 
+    returnMap["arma"] = (body =~ /arma\.stan, (.*?)\)/)[0][1] 
+    returnMap["result"] = (body =~ /(?m)Result: (.*?)$/)[0][1] 
+    
+    return returnMap
+}
+
+def get_last_results(repository, pr_number){
+
+    def get = new URL("https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc").openConnection();
+    def getRC = get.getResponseCode();
+    
+    if(getRC.equals(200)) {
+      
+        def res = get.getInputStream().getText();
+      
+      	def jsonSlurper = new JsonSlurper();
+
+        def returnMap = [:]
+      
+        for(o in jsonSlurper.parseText(res)){
+          
+            def body = o.body.toString()
+            if(body.contains("stat_comp_benchmarks/benchmarks")){
+                return results_to_obj(body);
+            }    
+        }
+    }
 }
 
 @NonCPS
