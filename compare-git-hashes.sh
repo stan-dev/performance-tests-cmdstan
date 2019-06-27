@@ -3,8 +3,7 @@
 usage() {
     echo "=====!!!WARNING!!!===="
     echo "This will clean all repos involved! Use only on a clean checkout."
-    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <stan_pr> <math_pr> <extra args for runPerformanceTests.py>'"
-    echo "(those last extra args are in quotes)"
+    echo "$0 \"<arguments to runPerformanceTests.py>\" <reference-cmdstan-git-hash> <cmdstan_pr_or_hash> <stan_pr> <math_pr>"
 }
 
 write_makelocal() {

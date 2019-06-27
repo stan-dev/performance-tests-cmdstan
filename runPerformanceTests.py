@@ -168,7 +168,8 @@ def csv_summary(csv_file):
     return res
 
 def format_summary_lines(summary):
-    return ["{} {:.15f} {:.15f}\n".format(k, avg, stdev) for k, (avg, stdev) in summary.items()]
+    return ["{} {:.15f} {:.15f}\n".format(k, avg, stdev)
+            for k, (avg, stdev) in sorted(summary.items())]
 
 def parse_summary(f):
     d = {}
@@ -313,6 +314,7 @@ def parse_args():
     parser.add_argument("--num-samples", dest="num_samples", action="store", default=None, type=int,
                         help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
+    parser.add_argument("--scorch-earth", dest="scorch", action="store_true")
     return parser.parse_args()
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
@@ -323,6 +325,14 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
         average_time = time_ / runs
         return (model, average_time, fails, errors)
     return process_test_wrapper
+
+def delete_temporary_exe_files(exes):
+    for exe in exes:
+        extensions = ["", ".hpp"]
+        for ext in extensions:
+            print("Removing " + exe + ext)
+            if os.path.exists(exe + ext):
+                os.remove(exe + ext)
 
 if __name__ == "__main__":
     args = parse_args()
@@ -342,6 +352,9 @@ if __name__ == "__main__":
     models = list(filter(lambda m: not m in bad_models, models))
 
     executables = [m[:-5] for m in models]
+    if args.scorch:
+        delete_temporary_exe_files(executables)
+
     make_time, _ = time_step("make_all_models", make, executables, args.j)
     tests = [(model, exe, find_data_for_model(model), ns)
              for model, exe, ns in zip(models, executables, num_samples)]

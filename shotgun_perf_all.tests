@@ -23,6 +23,7 @@ example-models/bugs_examples/vol2/t_df/simt4.stan
 example-models/bugs_examples/vol3/fire/fire.stan
 example-models/bugs_examples/vol3/hepatitis/hepatitisME.stan
 example-models/regressions/matrix_indexing.stan
+example-models/bugs_examples/vol3/hepatitis/hepatitis.stan, 20000
 example-models/bugs_examples/vol1/blocker/blocker.stan, 20000
 example-models/bugs_examples/vol1/bones/bones.stan, 20000
 example-models/bugs_examples/vol1/dyes/dyes.stan, 20000
@@ -74,7 +75,6 @@ example-models/bugs_examples/vol3/funshapes/hsquare.stan, 20000
 example-models/bugs_examples/vol3/funshapes/parallelogram.stan, 20000
 example-models/bugs_examples/vol3/funshapes/ring.stan, 20000
 example-models/bugs_examples/vol3/funshapes/squaremc.stan, 20000
-example-models/bugs_examples/vol3/hepatitis/hepatitis.stan, 20000
 example-models/knitr/bandits/bernoulli-bandits.stan
 example-models/knitr/bradley-terry/individual-hierarchical.stan
 example-models/knitr/bradley-terry/individual-uniform.stan
