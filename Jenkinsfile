@@ -143,6 +143,15 @@ pipeline {
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
+        stage{
+            steps{
+                script{
+                    sh """
+                    echo Hello
+                    """
+                }
+            }
+        }
         //stage('Clean checkout') {
         //    steps {
         //        deleteDir()
