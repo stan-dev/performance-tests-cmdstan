@@ -12,44 +12,6 @@ def branchOrPR(pr) {
   return pr
 }
 
-def post_comment(text, repository, pr_number) {
-
-    def new_results = results_to_obj(text)
-    def old_results = get_last_results(repository, pr_number)
-    def final_results = [:]
-
-    new_results.each{ k, v ->   
-      def new_value = v.toDouble();
-      def old_value = old_results[k].toDouble();
-      final_results[k] = 1 - new_value / old_value
-    }
-
-    def _comment = ""
-
-    _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull"
-    _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"
-
-    _comment += "- - - - - - - - - - - - - - - - - - - - -"
-
-    _comment += "| Name | Old Result | New Result | 1 - new / old |"
-    _comment += "| ------------- |------------- | ------------- | ------------- |"
-
-    final_results.each{ k, v -> 
-    
-    def _name = "${k}"
-    def _final_value = "${v}"
-    def _new_value = new_results[_name]
-    def _old_value = old_results[_name]
-
-    _comment += "| $_name | $_old_value | $_new_value | $_final_value |"
-    
-    }
-
-    sh """#!/bin/bash
-        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
-    """
-}
-
 def results_to_obj(body){
 
     def returnMap = [:]
@@ -124,6 +86,57 @@ def get_results(){
     performance_log = null
 
     return comment
+}
+
+def post_comment(text, repository, pr_number) {
+
+    println "Post Comment Function"
+
+    println text
+    println repository
+    println pr_number
+
+    def new_results = results_to_obj(text)
+    def old_results = get_last_results(repository, pr_number)
+    def final_results = [:]
+
+    new_results.each{ k, v ->   
+
+      println k
+      println v
+
+      def new_value = v.toDouble();
+      def old_value = old_results[k].toDouble();
+      final_results[k] = (1 - new_value) / old_value
+
+    }
+
+    def _comment = ""
+
+    _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull"
+    _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"
+
+    _comment += "- - - - - - - - - - - - - - - - - - - - -"
+
+    _comment += "| Name | Old Result | New Result | 1 - new / old |"
+    _comment += "| ------------- |------------- | ------------- | ------------- |"
+
+    final_results.each{ k, v -> 
+    
+    def _name = "${k}"
+    def _final_value = "${v}"
+    def _new_value = new_results[_name]
+    def _old_value = old_results[_name]
+
+    _comment += "| $_name | $_old_value | $_new_value | $_final_value |"
+
+    println _comment
+    
+    }
+
+    sh """#!/bin/bash
+        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
+    """
 }
 
 pipeline {
