@@ -207,7 +207,7 @@ Waiting for next available executor on ‘gelman-group-mac’
 Running on gelman-group-mac in /Users/Shared/Jenkins/gelman-group-mac/workspace/rformance_Tests_downstream_tests
 [Pipeline] {
 [Pipeline] withCredentials
-Masking supported pattern matches of $GITHUB_TOKEN
+Masking supported pattern matches of GITHUB_TOKEN
 [Pipeline] {
 [Pipeline] withEnv
 [Pipeline] {
@@ -263,7 +263,7 @@ Stage "Update CmdStan pointer to latest develop" skipped due to when conditional
 [Pipeline] sh
 ++ git submodule status
 ++ grep cmdstan
-++ awk '{print $1}'
+++ awk '{print 1}'
 perl: warning: Setting locale failed.
 perl: warning: Please check that your locale settings:
 	LC_ALL = (unset),
