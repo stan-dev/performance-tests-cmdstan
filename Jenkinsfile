@@ -172,7 +172,6 @@ Commit message: "Not ready for these yet"
  > /usr/bin/git submodule sync # timeout=10
  > /usr/bin/git config --get remote.origin.url # timeout=10
  > /usr/bin/git submodule init # timeout=10
- > /usr/bin/git config -f .gitmodules --get-regexp ^submodule\.(.+)\.url # timeout=10
  > /usr/bin/git config --get submodule.cmdstan.url # timeout=10
  > /usr/bin/git config -f .gitmodules --get submodule.cmdstan.path # timeout=10
  > /usr/bin/git config --get submodule.example-models.url # timeout=10
@@ -242,7 +241,6 @@ Commit message: "Not ready for these yet"
  > /usr/bin/git submodule sync # timeout=10
  > /usr/bin/git config --get remote.origin.url # timeout=10
  > /usr/bin/git submodule init # timeout=10
- > /usr/bin/git config -f .gitmodules --get-regexp ^submodule\.(.+)\.url # timeout=10
  > /usr/bin/git config --get submodule.cmdstan.url # timeout=10
  > /usr/bin/git config -f .gitmodules --get submodule.cmdstan.path # timeout=10
  > /usr/bin/git config --get submodule.example-models.url # timeout=10
@@ -353,7 +351,6 @@ perl: warning: Please check that your locale settings:
     are supported and installed on your system.
 perl: warning: Falling back to the standard locale ("C").
 + cd cmdstan
-+ [[ develop == \P\R\-* ]]
 + git fetch
  > /usr/bin/git submodule update --init --recursive stat_comp_benchmarks # timeout=10
 + git checkout develop
@@ -404,7 +401,6 @@ perl: warning: Please check that your locale settings:
     are supported and installed on your system.
 perl: warning: Falling back to the standard locale ("C").
 + cd stan
-+ [[ false == \P\R\-* ]]
 + '[' false '!=' false ']'
 + git reset --hard HEAD
 HEAD is now at d03404c Updates the Math submodule to 8f8cbbb.
@@ -412,7 +408,6 @@ HEAD is now at d03404c Updates the Math submodule to 8f8cbbb.
 + cd ..
 + pushd stan/lib/stan_math
 /Users/Shared/Jenkins/gelman-group-mac/workspace/rformance_Tests_downstream_tests/cmdstan/stan/lib/stan_math /Users/Shared/Jenkins/gelman-group-mac/workspace/rformance_Tests_downstream_tests/cmdstan
-+ [[ false == \P\R\-* ]]
 + '[' false '!=' false ']'
 + git reset --hard HEAD
 HEAD is now at 8f8cbbb Merge pull request #1234 from bstatcomp/feature/issue-1122-is-constant-struct-parameter-packs
@@ -1903,7 +1898,7 @@ perl: warning: Please check that your locale settings:
     are supported and installed on your system.
 perl: warning: Falling back to the standard locale ("C").
 + cd cmdstan
-+ [[ develop == \P\R\-* ]]
+
 + git fetch
 + git checkout develop
 Already on 'develop'
@@ -1956,7 +1951,8 @@ perl: warning: Please check that your locale settings:
     are supported and installed on your system.
 perl: warning: Falling back to the standard locale ("C").
 + cd stan
-+ [[ PR-2775 == \P\R\-* ]]
+
+
 ++ echo PR-2775
 ++ cut -d - -f 2
 + prNumber=2775
@@ -1988,7 +1984,8 @@ Removing src/stan/model/model_header.hpp.gch
 + cd ..
 + pushd stan/lib/stan_math
 /Users/Shared/Jenkins/gelman-group-mac/workspace/rformance_Tests_downstream_tests/cmdstan/stan/lib/stan_math /Users/Shared/Jenkins/gelman-group-mac/workspace/rformance_Tests_downstream_tests/cmdstan
-+ [[ develop == \P\R\-* ]]
+
+
 + '[' develop '!=' false ']'
 + git fetch
 + git checkout develop
