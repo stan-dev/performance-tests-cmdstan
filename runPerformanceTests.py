@@ -43,6 +43,10 @@ def read_tests(filename, default_num_samples):
             else:
                 model = line
                 num_samples = default_num_samples
+            if model in bad_models:
+                print("You specified {} but we have that blacklisted; skipping"
+                      .format(model))
+                continue
             num_samples_list.append(num_samples)
             test_files.append(model)
     return test_files, num_samples_list
@@ -342,22 +346,26 @@ if __name__ == "__main__":
     default_num_samples = 1000
     if args.tests == "":
         models = find_files("*.stan", args.directories)
+        models = filter(model_name_re.match, models)
+        models = list(filter(lambda m: not m in bad_models, models))
         num_samples = [args.num_samples or default_num_samples] * len(models)
     else:
         models, num_samples = read_tests(args.tests, args.num_samples or default_num_samples)
         if args.num_samples:
             num_samples = [args.num_samples] * len(models)
 
-    models = filter(model_name_re.match, models)
-    models = list(filter(lambda m: not m in bad_models, models))
 
     executables = [m[:-5] for m in models]
     if args.scorch:
         delete_temporary_exe_files(executables)
 
-    make_time, _ = time_step("make_all_models", make, executables, args.j)
+    if not len(models) == len(num_samples):
+        print("Something got the models list out of sync with the num_samples list")
+        sys.exit(-10)
     tests = [(model, exe, find_data_for_model(model), ns)
              for model, exe, ns in zip(models, executables, num_samples)]
+
+    make_time, _ = time_step("make_all_models", make, executables, args.j)
     if args.runj > 1:
         tp = ThreadPool(args.runj)
         map_ = tp.imap_unordered
