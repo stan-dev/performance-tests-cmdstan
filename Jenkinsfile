@@ -146,7 +146,7 @@ pipeline {
         stage('aaa'){
             steps{
                 script{
-                    sh """
+                    def txt =  """
 + ./comparePerformance.py develop_performance.csv performance.csv
 ('stat_comp_benchmarks/benchmarks/gp_pois_regr/gp_pois_regr.stan', 0.99)
 ('stat_comp_benchmarks/benchmarks/low_dim_corr_gauss/low_dim_corr_gauss.stan', 0.99)
@@ -167,6 +167,8 @@ pipeline {
 + mv performance.xml develop.xml
 + make revert clean
                     """
+
+                    echo txt
                 }
             }
         }
