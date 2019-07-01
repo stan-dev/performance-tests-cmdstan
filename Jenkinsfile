@@ -127,8 +127,7 @@ def get_results(){
 }
 
 pipeline {
-    //gelman-group-mac
-    agent { label 'linux' }
+    agent { label 'gelman-group-mac' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
