@@ -143,123 +143,94 @@ pipeline {
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
-        stage('aaa'){
-            steps{
-                script{
-                    def txt =  """
-+ ./comparePerformance.py develop_performance.csv performance.csv
-('stat_comp_benchmarks/benchmarks/gp_pois_regr/gp_pois_regr.stan', 0.99)
-('stat_comp_benchmarks/benchmarks/low_dim_corr_gauss/low_dim_corr_gauss.stan', 0.99)
-('stat_comp_benchmarks/benchmarks/irt_2pl/irt_2pl.stan', 1.0)
-('stat_comp_benchmarks/benchmarks/pkpd/one_comp_mm_elim_abs.stan', 0.99)
-('stat_comp_benchmarks/benchmarks/eight_schools/eight_schools.stan', 1.0)
-('stat_comp_benchmarks/benchmarks/gp_regr/gp_regr.stan', 0.96)
-('stat_comp_benchmarks/benchmarks/arK/arK.stan', 1.0)
-('performance.compilation', 1.02)
-('stat_comp_benchmarks/benchmarks/low_dim_gauss_mix_collapse/low_dim_gauss_mix_collapse.stan', 0.99)
-('stat_comp_benchmarks/benchmarks/low_dim_gauss_mix/low_dim_gauss_mix.stan', 1.0)
-('stat_comp_benchmarks/benchmarks/sir/sir.stan', 0.99)
-('stat_comp_benchmarks/benchmarks/pkpd/sim_one_comp_mm_elim_abs.stan', 1.0)
-('stat_comp_benchmarks/benchmarks/garch/garch.stan', 0.96)
-('stat_comp_benchmarks/benchmarks/gp_regr/gen_gp_data.stan', 0.99)
-('stat_comp_benchmarks/benchmarks/arma/arma.stan', 1.0)
-0.992197862963
-+ mv performance.xml develop.xml
-+ make revert clean
-                    """
-
-                    echo txt
+        stage('Clean checkout') {
+            steps {
+                deleteDir()
+                checkout([$class: 'GitSCM',
+                          branches: [[name: '*/master']],
+                          doGenerateSubmoduleConfigurations: false,
+                          extensions: [[$class: 'SubmoduleOption',
+                                        disableSubmodules: false,
+                                        parentCredentials: false,
+                                        recursiveSubmodules: true,
+                                        reference: '',
+                                        trackingSubmodules: false]],
+                          submoduleCfg: [],
+                          userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
+                                               credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
+                    ]]])
+            }
+        }
+        stage('Update CmdStan pointer to latest develop') {
+            when { branch 'master' }
+            steps {
+                script {
+                    sh """
+                        cd cmdstan
+                        git pull origin develop
+                        git submodule update --init --recursive
+                        cd ..
+                        if [ -n "\$(git status --porcelain cmdstan)" ]; then
+                            git checkout master
+                            git pull
+                            git commit cmdstan -m "Update submodules"
+                            git push origin master
+                        fi
+                        """
                 }
             }
         }
-        //stage('Clean checkout') {
-        //    steps {
-        //        deleteDir()
-        //        checkout([$class: 'GitSCM',
-        //                  branches: [[name: '*/master']],
-        //                  doGenerateSubmoduleConfigurations: false,
-        //                  extensions: [[$class: 'SubmoduleOption',
-        //                                disableSubmodules: false,
-        //                                parentCredentials: false,
-        //                                recursiveSubmodules: true,
-        //                                reference: '',
-        //                                trackingSubmodules: false]],
-        //                  submoduleCfg: [],
-        //                  userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
-        //                                       credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
-        //            ]]])
-        //    }
-        //}
-        //stage('Update CmdStan pointer to latest develop') {
-        //    when { branch 'master' }
-        //    steps {
-        //        script {
-        //            sh """
-        //                cd cmdstan
-        //                git pull origin develop
-        //                git submodule update --init --recursive
-        //                cd ..
-        //                if [ -n "\$(git status --porcelain cmdstan)" ]; then
-        //                    git checkout master
-        //                    git pull
-        //                    git commit cmdstan -m "Update submodules"
-        //                    git push origin master
-        //                fi
-        //                """
-        //        }
-        //    }
-        //}
-        //stage("Test cmdstan develop against cmdstan pointer in this branch") {
-        //    when { not { branch 'master' } }
-        //    steps {
-        //        script{
-        //                /* Handle cmdstan_pr */
-        //                cmdstan_pr = branchOrPR(params.cmdstan_pr)
-//
-        //                sh """
-        //                    old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-        //                    cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-        //                    bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
-        //                    mv performance.xml \$cmdstan_hash.xml
-        //                    make revert clean
-        //                """
-        //        }
-        //    }
-        //}
-        //stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-        //    when { branch 'master' }
-        //    steps {
-        //        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-        //        sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
-        //    }
-        //}
-        //stage('Shotgun Performance Regression Tests') {
-        //    when { branch 'master' }
-        //    steps {
-        //        sh "make clean"
-        //        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-        //        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
-        //    }
-        //}
-        //stage('Collect test results') {
-        //    when { branch 'master' }
-        //    steps {
-        //        junit '*.xml'
-        //        archiveArtifacts '*.xml'
-        //        perfReport compareBuildPrevious: true,
-//
-        //            relativeFailedThresholdPositive: 10,
-        //            relativeUnstableThresholdPositive: 5,
-//
-        //            errorFailedThreshold: 1,
-        //            failBuildIfNoResultFile: false,
-        //            modePerformancePerTestCase: true,
-        //            modeOfThreshold: true,
-        //            sourceDataFiles: '*.xml',
-        //            modeThroughput: false,
-        //            configType: 'PRT'
-        //    }
-        //}
+        stage("Test cmdstan develop against cmdstan pointer in this branch") {
+            when { not { branch 'master' } }
+            steps {
+                script{
+                        /* Handle cmdstan_pr */
+                        cmdstan_pr = branchOrPR(params.cmdstan_pr)
+
+                        sh """
+                            old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                            cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                            mv performance.xml \$cmdstan_hash.xml
+                            make revert clean
+                        """
+                }
+            }
+        }
+        stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
+            when { branch 'master' }
+            steps {
+                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+            }
+        }
+        stage('Shotgun Performance Regression Tests') {
+            when { branch 'master' }
+            steps {
+                sh "make clean"
+                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+            }
+        }
+        stage('Collect test results') {
+            when { branch 'master' }
+            steps {
+                junit '*.xml'
+                archiveArtifacts '*.xml'
+                perfReport compareBuildPrevious: true,
+
+                    relativeFailedThresholdPositive: 10,
+                    relativeUnstableThresholdPositive: 5,
+
+                    errorFailedThreshold: 1,
+                    failBuildIfNoResultFile: false,
+                    modePerformancePerTestCase: true,
+                    modeOfThreshold: true,
+                    sourceDataFiles: '*.xml',
+                    modeThroughput: false,
+                    configType: 'PRT'
+            }
+        }
     }
 
     post {
