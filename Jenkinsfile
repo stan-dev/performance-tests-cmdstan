@@ -120,7 +120,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                sh "./runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
@@ -129,7 +129,7 @@ pipeline {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
                 sh "cat shotgun_perf_all.tests"
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
             }
         }
         stage('Collect test results') {
@@ -137,11 +137,9 @@ pipeline {
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: true,
-
+                perfReport compareBuildPrevious: false,
                     relativeFailedThresholdPositive: 10,
                     relativeUnstableThresholdPositive: 5,
-
                     errorFailedThreshold: 1,
                     modePerformancePerTestCase: true,
                     modeOfThreshold: true,
