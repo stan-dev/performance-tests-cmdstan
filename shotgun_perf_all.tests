@@ -1,3 +1,4 @@
+example-models/bugs_examples/vol1/epil/epil.stan
 example-models/bugs_examples/vol1/inhalers/inhalers.stan, 1000
 example-models/bugs_examples/vol1/kidney/kidney.stan
 example-models/bugs_examples/vol1/litter/litter_old_param.stan
