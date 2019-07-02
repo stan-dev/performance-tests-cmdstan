@@ -120,7 +120,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
@@ -129,7 +129,7 @@ pipeline {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
                 sh "cat shotgun_perf_all.tests"
-                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
             }
         }
         stage('Collect test results') {
