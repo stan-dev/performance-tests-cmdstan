@@ -19,7 +19,7 @@ example-models/bugs_examples/vol3/hepatitis/hepatitisME.stan, 700
 example-models/regressions/matrix_indexing.stan, 700
 example-models/bugs_examples/vol3/hepatitis/hepatitis.stan, 20000
 example-models/bugs_examples/vol1/blocker/blocker.stan, 20000
-example-models/bugs_examples/vol1/bones/bones.stan, 20000
+example-models/bugs_examples/vol1/bones/bones.stan
 example-models/bugs_examples/vol1/dyes/dyes.stan, 20000
 example-models/bugs_examples/vol1/equiv/equiv.stan, 20000
 example-models/bugs_examples/vol1/leuk/leuk.stan, 20000
