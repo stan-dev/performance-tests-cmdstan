@@ -128,7 +128,6 @@ pipeline {
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
-                sh "cat shotgun_perf_all.tests"
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
             }
         }
@@ -137,12 +136,13 @@ pipeline {
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: false,
+                perfReport compareBuildPrevious: true,
 
                     relativeFailedThresholdPositive: 10,
                     relativeUnstableThresholdPositive: 5,
 
                     errorFailedThreshold: 1,
+                    failBuildIfNoResultFile: false,
                     modePerformancePerTestCase: true,
                     modeOfThreshold: true,
                     sourceDataFiles: '*.xml',
@@ -161,16 +161,16 @@ pipeline {
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
                     post_comment(comment, "cmdstan", pr_number)
                 }
-
+                
                 if(params.stan_pr.contains("PR-")){
                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
                     post_comment(comment, "stan", pr_number)
                 }
-
+                
                 if(params.math_pr.contains("PR-")){
                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
                     post_comment(comment, "math", pr_number)
-                }
+                } 
             }
         }
         unstable {
