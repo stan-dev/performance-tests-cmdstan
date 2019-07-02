@@ -224,25 +224,25 @@ pipeline {
                 sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
             }
         }
-        stage('Collect test results') {
-            when { branch 'master' }
-            steps {
-                junit '*.xml'
-                archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: true,
-
-                    relativeFailedThresholdPositive: 10,
-                    relativeUnstableThresholdPositive: 5,
-
-                    errorFailedThreshold: 1,
-                    failBuildIfNoResultFile: false,
-                    modePerformancePerTestCase: true,
-                    modeOfThreshold: true,
-                    sourceDataFiles: '*.xml',
-                    modeThroughput: false,
-                    configType: 'PRT'
-            }
-        }
+        //stage('Collect test results') {
+        //    when { branch 'master' }
+        //    steps {
+        //        junit '*.xml'
+        //        archiveArtifacts '*.xml'
+        //        perfReport compareBuildPrevious: true,
+//
+        //            relativeFailedThresholdPositive: 10,
+        //            relativeUnstableThresholdPositive: 5,
+//
+        //            errorFailedThreshold: 1,
+        //            failBuildIfNoResultFile: false,
+        //            modePerformancePerTestCase: true,
+        //            modeOfThreshold: true,
+        //            sourceDataFiles: '*.xml',
+        //            modeThroughput: false,
+        //            configType: 'PRT'
+        //    }
+        //}
     }
 
     post {
