@@ -137,7 +137,7 @@ pipeline {
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: false,
+                perfReport compareBuildPrevious: true,
 
                     relativeFailedThresholdPositive: 10,
                     relativeUnstableThresholdPositive: 5,
