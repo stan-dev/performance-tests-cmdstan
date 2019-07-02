@@ -248,8 +248,10 @@ pipeline {
     post {
         success {
             script {
+                println "post success"
                 def comment = get_results()
 
+                println "post cmdstan"
                 if(params.cmdstan_pr.contains("PR-")){
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
                     post_comment(comment, "cmdstan", pr_number)
