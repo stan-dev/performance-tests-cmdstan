@@ -90,9 +90,14 @@ def shexec(command, wd = "."):
     return returncode
 
 def make(targets, j=8):
+    for i in range(len(targets)):
+        prefix = ""
+        if not targets[i].startswith(os.sep):
+            prefix = DIR_UP
+        targets[i] = prefix + targets[i] + EXE_FILE_EXT
     try:
         shexec("make -i -j{} {}"
-            .format(j, " ".join(DIR_UP + t + EXE_FILE_EXT for t in targets)), wd = "cmdstan")
+            .format(j, " ".join(targets)), wd = "cmdstan")
     except FailedCommand:
         print("Failed to make at least some targets")
 
