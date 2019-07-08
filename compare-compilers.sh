@@ -21,4 +21,4 @@ for i in performance.*; do
 done
 
 cp "$2" cmdstan/bin/stanc # relies on cmdstan Makefile to know to update the models once stanc has been updated.
-./runPerformanceTests.py --check-golds-exact 4e-8 $1 --scorch-earth && ./comparePerformance.py "reference_performance.csv" performance.csv
+./runPerformanceTests.py --check-golds-exact 1e-8 $1 --scorch-earth && ./comparePerformance.py "reference_performance.csv" performance.csv
