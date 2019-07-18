@@ -172,10 +172,10 @@ pipeline {
             }
         }
         unstable {
-            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com") }
+            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
         }
         failure {
-            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com") }
+            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
         }
     }
 }
