@@ -337,7 +337,7 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
 
 def delete_temporary_exe_files(exes):
     for exe in exes:
-        extensions = ["", ".hpp"]
+        extensions = ["", ".hpp", ".o"]
         for ext in extensions:
             print("Removing " + exe + ext)
             if os.path.exists(exe + ext):
