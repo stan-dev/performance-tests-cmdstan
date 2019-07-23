@@ -14,6 +14,7 @@ fi
 set -e -x
 
 rm cmdstan/bin/stanc || true
+cd cmdstan; make -j4 examples/bernoulli/bernoulli; cd ..
 ./runPerformanceTests.py --overwrite-golds $1
 
 for i in performance.*; do
