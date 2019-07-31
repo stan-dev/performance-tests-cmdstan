@@ -150,8 +150,8 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
-        string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
+        string(defaultValue: 'downstream_tests', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
+        string(defaultValue: 'PR-2775', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
@@ -269,11 +269,13 @@ pipeline {
                 }
             }
         }
+        /*
         unstable {
             script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
         }
         failure {
             script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
         }
+        */
     }
 }
