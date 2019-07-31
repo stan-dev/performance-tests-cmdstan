@@ -43,6 +43,10 @@ def read_tests(filename, default_num_samples):
             else:
                 model = line
                 num_samples = default_num_samples
+            if model in bad_models:
+                print("You specified {} but we have that blacklisted; skipping"
+                      .format(model))
+                continue
             num_samples_list.append(num_samples)
             test_files.append(model)
     return test_files, num_samples_list
@@ -86,9 +90,14 @@ def shexec(command, wd = "."):
     return returncode
 
 def make(targets, j=8):
+    for i in range(len(targets)):
+        prefix = ""
+        if not targets[i].startswith(os.sep):
+            prefix = DIR_UP
+        targets[i] = prefix + targets[i] + EXE_FILE_EXT
     try:
         shexec("make -i -j{} {}"
-            .format(j, " ".join(DIR_UP + t + EXE_FILE_EXT for t in targets)), wd = "cmdstan")
+            .format(j, " ".join(targets)), wd = "cmdstan")
     except FailedCommand:
         print("Failed to make at least some targets")
 
@@ -168,7 +177,8 @@ def csv_summary(csv_file):
     return res
 
 def format_summary_lines(summary):
-    return ["{} {} {}\n".format(k, avg, stdev) for k, (avg, stdev) in summary.items()]
+    return ["{} {:.15f} {:.15f}\n".format(k, avg, stdev)
+            for k, (avg, stdev) in sorted(summary.items())]
 
 def parse_summary(f):
     d = {}
@@ -313,6 +323,7 @@ def parse_args():
     parser.add_argument("--num-samples", dest="num_samples", action="store", default=None, type=int,
                         help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
+    parser.add_argument("--scorch-earth", dest="scorch", action="store_true")
     return parser.parse_args()
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
@@ -324,6 +335,14 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
         return (model, average_time, fails, errors)
     return process_test_wrapper
 
+def delete_temporary_exe_files(exes):
+    for exe in exes:
+        extensions = ["", ".hpp", ".o"]
+        for ext in extensions:
+            print("Removing " + exe + ext)
+            if os.path.exists(exe + ext):
+                os.remove(exe + ext)
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -332,19 +351,26 @@ if __name__ == "__main__":
     default_num_samples = 1000
     if args.tests == "":
         models = find_files("*.stan", args.directories)
+        models = filter(model_name_re.match, models)
+        models = list(filter(lambda m: not m in bad_models, models))
         num_samples = [args.num_samples or default_num_samples] * len(models)
     else:
         models, num_samples = read_tests(args.tests, args.num_samples or default_num_samples)
         if args.num_samples:
             num_samples = [args.num_samples] * len(models)
 
-    models = filter(model_name_re.match, models)
-    models = list(filter(lambda m: not m in bad_models, models))
 
     executables = [m[:-5] for m in models]
-    make_time, _ = time_step("make_all_models", make, executables, args.j)
+    if args.scorch:
+        delete_temporary_exe_files(executables)
+
+    if not len(models) == len(num_samples):
+        print("Something got the models list out of sync with the num_samples list")
+        sys.exit(-10)
     tests = [(model, exe, find_data_for_model(model), ns)
              for model, exe, ns in zip(models, executables, num_samples)]
+
+    make_time, _ = time_step("make_all_models", make, executables, args.j)
     if args.runj > 1:
         tp = ThreadPool(args.runj)
         map_ = tp.imap_unordered

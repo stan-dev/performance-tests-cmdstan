@@ -3,8 +3,7 @@
 usage() {
     echo "=====!!!WARNING!!!===="
     echo "This will clean all repos involved! Use only on a clean checkout."
-    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <stan_pr> <math_pr> <extra args for runPerformanceTests.py>'"
-    echo "(those last extra args are in quotes)"
+    echo "$0 \"<arguments to runPerformanceTests.py>\" <reference-cmdstan-git-hash> <cmdstan_pr_or_hash> <stan_pr> <math_pr>"
 }
 
 write_makelocal() {
@@ -84,4 +83,4 @@ for i in performance.*; do
 done
 
 clean_checkout "$3" "$4" "$5"
-./runPerformanceTests.py --check-golds-exact 1e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv
+./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv
