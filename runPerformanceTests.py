@@ -235,7 +235,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         print("ERROR: " + msg)
         errors.append(msg)
         return fails, errors
-    for k, (mean, stdev) in gold_summary.items():
+    for k, (mean, stdev) in sorted(gold_summary.items()):
         if stdev < 0.00001: #XXX Uh...
             continue
         err = abs(summary[k][0] - mean)
