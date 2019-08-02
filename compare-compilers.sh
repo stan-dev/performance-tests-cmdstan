@@ -20,6 +20,6 @@ NAME1="reference-`date "+%y-%h-%m-%s"`"
 ./runPerformanceTests.py --overwrite-golds $1 --name="$NAME1"
 
 cp "$2" cmdstan/bin/stanc
-NAME2="comparison-`date "+%y-%h-%m-%s"`"
+NAME2="performance"
 ./runPerformanceTests.py --check-golds-exact 1e-8 $1 --scorch-earth --name="$NAME2"
 ./comparePerformance.py "$NAME1.csv" "$NAME2.csv"
