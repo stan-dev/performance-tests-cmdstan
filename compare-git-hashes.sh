@@ -76,11 +76,13 @@ set -e -x
 # First checkout the first arg cmdstan hash, assuming stan and math are as specified
 # by that cmdstan commit
 clean_checkout "$2" "false" "false"
-./runPerformanceTests.py --overwrite-golds $1
+NAME1="reference-`date "+%y-%h-%m-%s"`"
+./runPerformanceTests.py --overwrite-golds $1 --name="$NAME1"
 
-for i in *_performance.*; do
+for i in performance.*; do
     mv $i "${2}_${i}"
 done
 
 clean_checkout "$3" "$4" "$5"
-./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv
+NAME2="performance"
+./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv --name="$NAME2"
