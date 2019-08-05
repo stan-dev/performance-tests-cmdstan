@@ -78,19 +78,7 @@ set -e -x
 clean_checkout "$2" "false" "false"
 ./runPerformanceTests.py --overwrite-golds $1
 
-echo "- - - - - DEBUG"
-ls -al
-echo "- - - - - DEBUG"
-ls -al | grep performance
-echo "- - - - - DEBUG"
-
-for i in performance.*; do
-    echo $i
-    echo "- - - - - DEBUG"
-    echo $2
-    echo "- - - - - DEBUG"
-    echo "${2}_${i}"
-    echo "- - - - - DEBUG"
+for i in *_performance.*; do
     mv $i "${2}_${i}"
 done
 
