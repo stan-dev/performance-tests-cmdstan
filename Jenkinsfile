@@ -96,10 +96,16 @@ def post_comment(text, repository, pr_number) {
     println repository
     println pr_number
 
+    println "new_results"
     def new_results = results_to_obj(text)
+
+    println "old_results"
     def old_results = get_last_results(repository, pr_number)
+
+    println "final_results"
     def final_results = [:]
 
+    println "iteration"
     new_results.each{ k, v ->   
 
       println k
