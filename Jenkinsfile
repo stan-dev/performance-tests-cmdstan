@@ -4,48 +4,6 @@ import org.stan.Utils
 
 def utils = new org.stan.Utils()
 
-def branchOrPR(pr) {
-  if (pr == "downstream_tests") return "develop"
-  if (pr == "downstream_hotfix") return "master"
-  if (pr == "") return "develop"
-  return pr
-}
-
-def post_comment(text, repository, pr_number) {
-    sh """#!/bin/bash
-        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${text}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
-    """
-}
-
-@NonCPS
-def get_results(){
-    def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
-    def comment = ""
-
-    def test_matches = (performance_log =~ /\('(.*)\)/)
-    for(item in test_matches){
-        comment += item[0] + "\\r\\n"
-    }
-    def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
-    try{
-        comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
-    }
-    catch(Exception ex){
-        comment += "Result: " + "Regex did not match anything" + "\\r\\n"
-    }
-    def result_match_hash = (performance_log =~ /Merge (.*?) into/)
-    try{
-        comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
-    }
-    catch(Exception ex){
-        comment += "Commit hash: " + "Regex did not match anything" + "\\r\\n"
-    }
-
-    performance_log = null
-
-    return comment
-}
-
 pipeline {
     agent none
     environment {
@@ -61,7 +19,9 @@ pipeline {
         string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
         string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
+
         string(defaultValue: '', name: 'make_local', description: "Make/file contents")
+
         booleanParam(defaultValue: true, name: 'run_windows', description: "True/False to run tests on windows")
         booleanParam(defaultValue: true, name: 'run_linux', description: "True/False to run tests on linux")
         booleanParam(defaultValue: true, name: 'run_macosx', description: "True/False to run tests on macosx")
@@ -302,28 +262,6 @@ pipeline {
                             configType: 'PRT'
                     }
                 }       
-            }
-        }
-    }
-    post {
-        success {
-            script {
-                def comment = get_results()
-
-                if(params.cmdstan_pr.contains("PR-")){
-                    def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "cmdstan", pr_number)
-                }
-                
-                if(params.stan_pr.contains("PR-")){
-                    def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "stan", pr_number)
-                }
-                
-                if(params.math_pr.contains("PR-")){
-                    def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "math", pr_number)
-                } 
             }
         }
     }
