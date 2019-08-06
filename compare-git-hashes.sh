@@ -75,6 +75,7 @@ set -e -x
 
 # First checkout the first arg cmdstan hash, assuming stan and math are as specified
 # by that cmdstan commit
+
 clean_checkout "$2" "false" "false"
 NAME1="reference-`date "+%y-%h-%m-%s"`"
 ./runPerformanceTests.py --overwrite-golds $1 --name="$NAME1"
