@@ -198,8 +198,8 @@ pipeline {
                         archiveArtifacts '*.xml'
                         perfReport compareBuildPrevious: true,
     
-                            relativeFailedThresholdPositive: 10,
-                            relativeUnstableThresholdPositive: 5,
+                            //relativeFailedThresholdPositive: 10,
+                            //relativeUnstableThresholdPositive: 5,
     
                             errorFailedThreshold: 1,
                             failBuildIfNoResultFile: false,
@@ -250,8 +250,8 @@ pipeline {
                         archiveArtifacts '*.xml'
                         perfReport compareBuildPrevious: true,
     
-                            relativeFailedThresholdPositive: 10,
-                            relativeUnstableThresholdPositive: 5,
+                            //relativeFailedThresholdPositive: 10,
+                            //relativeUnstableThresholdPositive: 5,
     
                             errorFailedThreshold: 1,
                             failBuildIfNoResultFile: false,
