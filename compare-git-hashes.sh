@@ -79,10 +79,6 @@ clean_checkout "$2" "false" "false"
 NAME1="reference-`date "+%y-%h-%m-%s"`"
 ./runPerformanceTests.py --overwrite-golds $1 --name="$NAME1"
 
-#for i in performance.*; do
-#    mv $i "${2}_${i}"
-#done
-
 clean_checkout "$3" "$4" "$5"
 NAME2="performance"
 ./runPerformanceTests.py --check-golds-exact 2e-8 $1 --name="$NAME2"
