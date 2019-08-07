@@ -120,6 +120,7 @@ def post_comment(text, repository, pr_number) {
     def old_results = get_last_results(repository, pr_number)
 
     if(!old_results){
+      old_results = [:]
       new_results.each{ k, v ->   
         old_results[k] = v
       }
