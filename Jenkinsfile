@@ -136,7 +136,7 @@ def post_comment(text, repository, pr_number) {
 
       def new_value = v.toDouble();
       def old_value = old_results[k].toDouble();
-      def change_result = (1 - new_value) / old_value
+      def change_result = 1 - (new_value / old_value)
 
       if(change_result > 0){
           final_results[k] = ((change_result * 100).toInteger()).toString() + "% faster"
