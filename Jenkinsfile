@@ -35,7 +35,7 @@ def results_to_obj(body, state){
     if( state == "old"){
         returnMap["result"] = (body =~ /(?m)Result: (.*?)$/)[0][1] 
     }
-    else{
+    else if (state == "new"){
         returnMap["result"] = (body =~ /(?m)Result: (.*?)\\r/)[0][1] 
     }
 
@@ -70,7 +70,7 @@ def get_last_results(repository, pr_number){
 
                 println body
 
-                return results_to_obj(body);
+                return results_to_obj(body, "old");
             }    
         }
     }
@@ -119,7 +119,7 @@ def post_comment(text, repository, pr_number) {
     println pr_number
 
     println "new_results"
-    def new_results = results_to_obj(text)
+    def new_results = results_to_obj(text, "new")
 
     println "old_results"
     /* HANDLE EMPTY OLD VALUE !!! */
