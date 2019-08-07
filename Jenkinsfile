@@ -76,6 +76,7 @@ def get_last_results(repository, pr_number){
     }
     else{
         println "Something wrong happened when trying to get the last result from github."
+        return false
     }
 }
 
@@ -112,18 +113,17 @@ def get_results(){
 
 def post_comment(text, repository, pr_number) {
 
-    println "Post Comment Function"
-
-    println text
-    println repository
-    println pr_number
-
-    println "new_results"
     def new_results = results_to_obj(text, "new")
 
     println "old_results"
     /* HANDLE EMPTY OLD VALUE !!! */
     def old_results = get_last_results(repository, pr_number)
+
+    if(!old_results){
+      new_results.each{ k, v ->   
+        old_results[k] = v
+      }
+    }
 
     println old_results
 
@@ -132,7 +132,7 @@ def post_comment(text, repository, pr_number) {
 
     println "iteration"
     new_results.each{ k, v ->   
-    
+
       def new_value = v.toDouble();
       def old_value = old_results[k].toDouble();
       def change_result = (1 - new_value) / old_value
@@ -164,9 +164,6 @@ def post_comment(text, repository, pr_number) {
     def _old_value = old_results[_name]
 
     _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + "\\r\\n"
-
-    println _comment
-    
     }
 
     sh """#!/bin/bash
