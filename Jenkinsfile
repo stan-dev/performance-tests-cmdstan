@@ -141,6 +141,9 @@ def post_comment(text, repository, pr_number) {
       if(change_result > 0){
           final_results[k] = ((change_result * 100).toInteger()).toString() + "% faster"
       }
+      else if(change_result == 0){
+          final_results[k] = "-"
+      }
       else{
           final_results[k] = ((change_result * 100).toInteger()).toString() + "% slower"
       }
