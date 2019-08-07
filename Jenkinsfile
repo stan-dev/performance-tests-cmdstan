@@ -54,6 +54,9 @@ def get_last_results(repository, pr_number){
           
             def body = o.body.toString()
             if(body.contains("stat_comp_benchmarks/benchmarks")){
+
+                println body
+
                 return results_to_obj(body);
             }    
         }
