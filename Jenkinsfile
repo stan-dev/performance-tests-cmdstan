@@ -174,7 +174,7 @@ pipeline {
     }
     parameters {
         string(defaultValue: 'develop', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
-        string(defaultValue: 'PR-2761', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
+        string(defaultValue: 'PR-2763', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
