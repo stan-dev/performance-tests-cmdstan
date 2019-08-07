@@ -42,9 +42,6 @@ def results_to_obj(body, state){
     return returnMap
 }
 
-def newline(){
-    return "\\r\\n"
-}
 
 def get_last_results(repository, pr_number){
 
@@ -89,23 +86,23 @@ def get_results(){
 
     def test_matches = (performance_log =~ /\('(.*)\)/)
     for(item in test_matches){
-        comment += item[0] + newline()
+        comment += item[0] + "\\r\\n"
     }
 
     def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
     try{
-        comment += "Result: " + result_match[0][1].toString() + newline()
+        comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
     }
     catch(Exception ex){
-        comment += "Result: " + "Regex did not match anything" + newline()
+        comment += "Result: " + "Regex did not match anything" + "\\r\\n"
     }
 
     def result_match_hash = (performance_log =~ /Merge (.*?) into/)
     try{
-        comment += "Commit hash: " + result_match_hash[0][1].toString() + newline()
+        comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
     }
     catch(Exception ex){
-        comment += "Commit hash: " + "Regex did not match anything" + newline()
+        comment += "Commit hash: " + "Regex did not match anything" + "\\r\\n"
     }
 
     performance_log = null
@@ -147,13 +144,13 @@ def post_comment(text, repository, pr_number) {
 
     def _comment = ""
 
-    _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull" + newline()
-    _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"+ newline()
+    _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull" + "\\r\\n"
+    _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"+ "\\r\\n"
 
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + newline()
+    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
-    _comment += "| Name | Old Result | New Result | 1 - new / old |" + newline()
-    _comment += "| ------------- |------------- | ------------- | ------------- |" + newline()
+    _comment += "| Name | Old Result | New Result | 1 - new / old |" + "\\r\\n"
+    _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
 
     final_results.each{ k, v -> 
     
@@ -162,7 +159,7 @@ def post_comment(text, repository, pr_number) {
     def _new_value = new_results[_name]
     def _old_value = old_results[_name]
 
-    _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + newline()
+    _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + "\\r\\n"
 
     println _comment
     
