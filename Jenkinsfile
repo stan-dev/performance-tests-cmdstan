@@ -144,13 +144,13 @@ def post_comment(text, repository, pr_number) {
 
     def _comment = ""
 
-    _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull" + "\r\n"
-    _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"+ "\r\n"
+    _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull" + "\\n"
+    _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"+ "\\n"
 
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\r\n"
+    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\n"
 
-    _comment += "| Name | Old Result | New Result | 1 - new / old |" + "\r\n"
-    _comment += "| ------------- |------------- | ------------- | ------------- |" + "\r\n"
+    _comment += "| Name | Old Result | New Result | 1 - new / old |" + "\\n"
+    _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\n"
 
     final_results.each{ k, v -> 
     
@@ -159,7 +159,7 @@ def post_comment(text, repository, pr_number) {
     def _new_value = new_results[_name]
     def _old_value = old_results[_name]
 
-    _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + "\r\n"
+    _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + "\\n"
 
     println _comment
     
