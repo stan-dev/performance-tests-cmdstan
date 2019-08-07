@@ -33,10 +33,10 @@ def results_to_obj(body, state){
     returnMap["arma"] = (body =~ /arma\.stan', (.*?)\)/)[0][1] 
 
     if( state == "old"){
-        returnMap["result"] = (body =~ /(?m)Result: (.*?)\\r/)[0][1] 
+        returnMap["result"] = (body =~ /(?m)Result: (.*?)$/)[0][1] 
     }
     else if (state == "new"){
-        returnMap["result"] = (body =~ /(?m)Result: (.*?)$/)[0][1] 
+        returnMap["result"] = (body =~ /(?m)Result: (.*?)\\r\\n/)[0][1] 
     }
 
     return returnMap
