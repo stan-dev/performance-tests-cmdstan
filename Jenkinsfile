@@ -36,6 +36,7 @@ def results_to_obj(body){
     return returnMap
 }
 
+
 def get_last_results(repository, pr_number){
 
     def get = new URL("https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc").openConnection();
@@ -100,7 +101,10 @@ def post_comment(text, repository, pr_number) {
     def new_results = results_to_obj(text)
 
     println "old_results"
+    /* HANDLE EMPTY OLD VALUE !!! */
     def old_results = get_last_results(repository, pr_number)
+
+    println old_results
 
     println "final_results"
     def final_results = [:]
