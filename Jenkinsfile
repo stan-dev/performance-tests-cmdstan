@@ -132,13 +132,17 @@ def post_comment(text, repository, pr_number) {
 
     println "iteration"
     new_results.each{ k, v ->   
-
-      println k
-      println v
-
+    
       def new_value = v.toDouble();
       def old_value = old_results[k].toDouble();
-      final_results[k] = (1 - new_value) / old_value
+      def change_result = (1 - new_value) / old_value
+
+      if(change_result > 0){
+          final_results[k] = ((change_result * 100).toInteger()).toString() + "% faster"
+      }
+      else{
+          final_results[k] = ((change_result * 100).toInteger()).toString() + "% slower"
+      }
 
     }
 
@@ -149,7 +153,7 @@ def post_comment(text, repository, pr_number) {
 
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
-    _comment += "| Name | Old Result | New Result | 1 - new / old |" + "\\r\\n"
+    _comment += "| Name | Old Result | New Result | Performance change( 1 - new / old ) |" + "\\r\\n"
     _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
 
     final_results.each{ k, v -> 
