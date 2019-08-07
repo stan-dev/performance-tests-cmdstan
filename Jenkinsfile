@@ -39,12 +39,16 @@ def results_to_obj(body){
 
 def get_last_results(repository, pr_number){
 
+    println "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc"
+
     def get = new URL("https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc").openConnection();
     def getRC = get.getResponseCode();
     
     if(getRC.equals(200)) {
       
         def res = get.getInputStream().getText();
+
+        println res
       
       	def jsonSlurper = new JsonSlurper();
 
@@ -53,6 +57,9 @@ def get_last_results(repository, pr_number){
         for(o in jsonSlurper.parseText(res)){
           
             def body = o.body.toString()
+
+            println body
+
             if(body.contains("stat_comp_benchmarks/benchmarks")){
 
                 println body
@@ -60,6 +67,9 @@ def get_last_results(repository, pr_number){
                 return results_to_obj(body);
             }    
         }
+    }
+    else{
+        println "Something wrong happened when trying to get the last result from github."
     }
 }
 
