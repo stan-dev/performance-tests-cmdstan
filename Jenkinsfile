@@ -12,7 +12,7 @@ def branchOrPR(pr) {
   return pr
 }
 
-def results_to_obj(body){
+def results_to_obj(body, state){
 
     def returnMap = [:]
 
@@ -31,8 +31,14 @@ def results_to_obj(body){
     returnMap["garch"] = (body =~ /garch\.stan', (.*?)\)/)[0][1] 
     returnMap["gen_gp_data"] = (body =~ /gen_gp_data\.stan', (.*?)\)/)[0][1] 
     returnMap["arma"] = (body =~ /arma\.stan', (.*?)\)/)[0][1] 
-    returnMap["result"] = (body =~ /(?m)Result: (.*?)$/)[0][1] 
-    
+
+    if( state == "old"){
+        returnMap["result"] = (body =~ /(?m)Result: (.*?)$/)[0][1] 
+    }
+    else{
+        returnMap["result"] = (body =~ /(?m)Result: (.*?)\\r/)[0][1] 
+    }
+
     return returnMap
 }
 
@@ -82,6 +88,7 @@ def get_results(){
     for(item in test_matches){
         comment += item[0] + "\\r\\n"
     }
+
     def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
     try{
         comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
@@ -89,6 +96,7 @@ def get_results(){
     catch(Exception ex){
         comment += "Result: " + "Regex did not match anything" + "\\r\\n"
     }
+
     def result_match_hash = (performance_log =~ /Merge (.*?) into/)
     try{
         comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
