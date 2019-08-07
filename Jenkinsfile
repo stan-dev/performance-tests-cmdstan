@@ -66,7 +66,7 @@ def get_last_results(repository, pr_number){
 
             println body
 
-            if(body.contains("stat_comp_benchmarks/benchmarks")){
+            if(body.contains("low_dim_gauss_mix_collapse")){
 
                 println body
 
@@ -115,12 +115,10 @@ def post_comment(text, repository, pr_number) {
 
     def new_results = results_to_obj(text, "new")
 
-    println "old_results"
-    /* HANDLE EMPTY OLD VALUE !!! */
-    def old_results = get_last_results(repository, pr_number)
+    def old_results = [:]
+    old_results = get_last_results(repository, pr_number)
 
-    if(!old_results){
-      old_results = [:]
+    if(old_results == [:]){
       new_results.each{ k, v ->   
         old_results[k] = v
       }
