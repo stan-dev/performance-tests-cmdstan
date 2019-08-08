@@ -56,7 +56,6 @@ def results_to_obj(body, state){
     return returnMap
 }
 
-
 def get_last_results(repository, pr_number){
 
     println "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc"
@@ -127,59 +126,55 @@ def get_results(){
 
 def post_comment(text, repository, pr_number) {
 
-    def new_results = results_to_obj(text, "new")
-
     def old_results = [:]
     old_results = get_last_results(repository, pr_number)
 
-    if(old_results == [:]){
-      new_results.each{ k, v ->   
-        old_results[k] = v
-      }
-    }
-
-    println old_results
-
-    println "final_results"
+    def new_results = results_to_obj(text, "new")
     def final_results = [:]
-
-    println "iteration"
-    new_results.each{ k, v ->   
-
-      def new_value = v.toDouble();
-      def old_value = old_results[k].toDouble();
-      def change_result = 1 - (new_value / old_value)
-
-      if(change_result > 0){
-          final_results[k] = ((change_result * 100).toInteger()).toString() + "% faster"
-      }
-      else if(change_result == 0){
-          final_results[k] = "-"
-      }
-      else{
-          final_results[k] = ((change_result * 100).toInteger()).toString() + "% slower"
-      }
-
-    }
-
     def _comment = ""
 
     _comment += "Jenkins Console Log: https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull" + "\\r\\n"
     _comment += "Blue Ocean: https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline"+ "\\r\\n"
-
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
-    _comment += "| Name | Old Result | New Result | Performance change( 1 - new / old ) |" + "\\r\\n"
-    _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
+    if(old_results != [:]){
+      new_results.each{ k, v ->   
+        def new_value = v.toDouble();
+        def old_value = old_results[k].toDouble();
+        def change_result = 1 - (new_value / old_value)
 
-    final_results.each{ k, v -> 
+        if(change_result > 0){
+          final_results[k] = ((change_result * 100).toDouble()).toString() + "% faster"
+        }
+        else if(change_result == 0){
+          final_results[k] = "-"
+        }
+        else{
+          final_results[k] = ((change_result * 100).toDouble()).toString() + "% slower"
+        }
+      }
+
+      _comment += "| Name | Old Result | New Result | Performance change( 1 - new / old ) |" + "\\r\\n"
+      _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
+
+      final_results.each{ k, v -> 
     
-    def _name = "${k}"
-    def _final_value = "${v}"
-    def _new_value = new_results[_name]
-    def _old_value = old_results[_name]
+        def _name = "${k}"
+        def _final_value = "${v}"
+        def _new_value = new_results[_name]
+        def _old_value = old_results[_name]
+    
+        _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + "\\r\\n"
+      }
 
-    _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + "\\r\\n"
+    }
+    else{
+      _comment += "| Name | Result |" + "\\r\\n"
+      _comment += "| ------------- |------------- |" + "\\r\\n"
+
+      new_results.each{ k, v -> 
+        _comment += "| $k | $v |" + "\\r\\n"
+      }
     }
 
     sh """#!/bin/bash
