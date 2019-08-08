@@ -58,17 +58,12 @@ def results_to_obj(body, state){
 
 def get_last_results(repository, pr_number){
 
-    println "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc"
-
     def get = new URL("https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc").openConnection();
     def getRC = get.getResponseCode();
     
     if(getRC.equals(200)) {
-      
         def res = get.getInputStream().getText();
 
-        println res
-      
       	def jsonSlurper = new JsonSlurper();
 
         def returnMap = [:]
@@ -77,20 +72,13 @@ def get_last_results(repository, pr_number){
           
             def body = o.body.toString()
 
-            println body
-
             if(body.contains("low_dim_gauss_mix_collapse")){
-
-                println body
-
                 return results_to_obj(body, "old");
             }    
         }
     }
-    else{
-        println "Something wrong happened when trying to get the last result from github."
-        return false
-    }
+
+    return [:]
 }
 
 @NonCPS
@@ -127,7 +115,11 @@ def get_results(){
 def post_comment(text, repository, pr_number) {
 
     def old_results = [:]
+    println "last results"
     old_results = get_last_results(repository, pr_number)
+
+    println "new results"
+    println text
 
     def new_results = results_to_obj(text, "new")
     def final_results = [:]
@@ -292,10 +284,8 @@ pipeline {
     post {
         success {
             script {
-                println "post success"
                 def comment = get_results()
 
-                println "post cmdstan"
                 if(params.cmdstan_pr.contains("PR-")){
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
                     post_comment(comment, "cmdstan", pr_number)
