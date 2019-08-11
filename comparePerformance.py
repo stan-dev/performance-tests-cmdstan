@@ -21,9 +21,31 @@ if __name__ == "__main__":
     csv1 = sys.argv[1]
     csv2 = sys.argv[2]
     times1, times2 = map(get_times, [csv1, csv2])
-    ratios = [(n, times1[n]/times2[n]) for n in times1]
+    #ratios = [(n, times1[n]/times2[n]) for n in times1]
+    ratios = {}
 
+    for n in times1:
+        old = times1[n]
+        new = times2[n]
+        ratio = old / new
+
+        ratios[n] = {
+            "old": old,
+            "new": new,
+            "ratio": ratio,
+            "change": (1 - new / old) * 100
+        }
+
+    print("| Name , Old Value , New Value , Ratio , Change % |")
+    total = 0
     for r in ratios:
-        print(r[0], round(r[1], 2))
+        print(r, 
+        round(ratios[r]['old'], 2), 
+        round(ratios[r]['new'], 2), 
+        round(ratios[r]['ratio'], 2), 
+        round(ratios[r]['change'], 2)
+        )
+        total = total + ratios[r]['ratio']
 
-    print(mean([r for _, r in ratios]))
+    meanResult = total / len(ratios)
+    print("Mean: " + str(meanResult))
