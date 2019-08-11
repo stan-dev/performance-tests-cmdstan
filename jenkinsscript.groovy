@@ -1,29 +1,31 @@
 def MapBuildResult(body){
     returnMap = [:]
 
-    benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?)\)/)
-    compilation = (body =~ /compilation', (.*?)\)/)[0][1]
-    result = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
+    benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
+    compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0][1]
+    mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
 
     println benchmarks.size()
 
     for (i = 0; i < benchmarks.size(); i++) {
       name = benchmarks[i][1]
-      //filename = benchmarks[i][2]
-      value = benchmarks[i][3]
+      filename = benchmarks[i][2]
+      old_value = benchmarks[i][3]
+      new_value = benchmarks[i][4]
+      ratio = benchmarks[i][5]
+      change = benchmarks[i][6]
 
-      returnMap["$name"] = value
+      returnMap["$name"] = [
+        "old": old_value,
+        "new": new_value,
+        "ratio": ratio,
+        "change": change
+      ]
     }
 
-    println returnMap["sim_one_comp_mm_elim_abs"]
-
-    println returnMap.size()
-
-    returnMap.compilation = compilation.toString()
-    returnMap.result = result.toString()
-
-    println returnMap.size()
-
+    returnMap["compilation"] = compilation.toString()
+    returnMap["mean"] = mean.toString()
+    
     return returnMap
 }
 
