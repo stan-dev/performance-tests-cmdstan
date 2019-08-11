@@ -24,7 +24,11 @@ if __name__ == "__main__":
     #ratios = [(n, times1[n]/times2[n]) for n in times1]
     ratios = {}
 
+    print(times1)
+    print(times2)
+
     for n in times1:
+        print(n)
         old = times1[n]
         new = times2[n]
         ratio = old / new

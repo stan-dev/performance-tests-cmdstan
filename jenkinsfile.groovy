@@ -79,7 +79,7 @@ def get_last_results(repository, pr_number){
             def body = o.body.toString()
 
             if(body.contains("low_dim_gauss_mix_collapse")){
-                return mapBuildResult(body, "old");
+                return mapLastGitHubComment(body);
             }    
         }
     }
@@ -122,7 +122,7 @@ def post_comment(text, repository, pr_number) {
 
     //old_results = get_last_results(repository, pr_number)
 
-    new_results = mapBuildResult(text, "new")
+    new_results = mapBuildResult(text)
     _comment = ""
 
     _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
@@ -212,6 +212,8 @@ pipeline {
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
                         sh """
+                            #git pull
+                            git checkout print-results
                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                             bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
