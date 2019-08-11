@@ -114,6 +114,8 @@ def get_results(){
 
 def post_comment(text, repository, pr_number) {
 
+    return true
+
     def old_results = [:]
     println "last results"
     old_results = get_last_results(repository, pr_number)
