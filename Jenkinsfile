@@ -12,45 +12,51 @@ def branchOrPR(pr) {
   return pr
 }
 
-def results_to_obj(body, state){
+def mapBuildResult(body){
+    returnMap = [:]
 
-    def returnMap = [:]
+    benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
+    compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0][1]
+    mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
 
-    if( state == "old"){
-        returnMap["gp_pois_regr"] = (body =~ /gp_pois_regr \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["low_dim_corr_gauss"] = (body =~ /low_dim_corr_gauss \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["irt_2pl"] = (body =~ /irt_2pl \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["one_comp_mm_elim_abs"] = (body =~ /one_comp_mm_elim_abs \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["eight_schools"] = (body =~ /eight_schools \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["gp_regr"] = (body =~ /gp_regr \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["arK"] = (body =~ /arK \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["compilation"] = (body =~ /compilation \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["low_dim_gauss_mix_collapse"] = (body =~ /low_dim_gauss_mix_collapse \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["low_dim_gauss_mix"] = (body =~ /low_dim_gauss_mix \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["sir"] = (body =~ /sir \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["sim_one_comp_mm_elim_abs"] = (body =~ /sim_one_comp_mm_elim_abs \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["garch"] = (body =~ /garch \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["gen_gp_data"] = (body =~ /gen_gp_data \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["arma"] = (body =~ /arma \| (.*?) \| (.*?) \|/)[0][2] 
-        returnMap["result"] = (body =~ /result \| (.*?) \| (.*?) \|/)[0][2] 
+    println benchmarks.size()
+
+    for (i = 0; i < benchmarks.size(); i++) {
+      name = benchmarks[i][1]
+      filename = benchmarks[i][2]
+      old_value = benchmarks[i][3]
+      new_value = benchmarks[i][4]
+      ratio = benchmarks[i][5]
+      change = benchmarks[i][6]
+
+      returnMap["$name"] = [
+        "old": old_value,
+        "new": new_value,
+        "ratio": ratio,
+        "change": change
+      ]
     }
-    else if (state == "new"){
-        returnMap["gp_pois_regr"] = (body =~ /gp_pois_regr\.stan', (.*?)\)/)[0][1] 
-        returnMap["low_dim_corr_gauss"] = (body =~ /low_dim_corr_gauss\.stan', (.*?)\)/)[0][1] 
-        returnMap["irt_2pl"] = (body =~ /irt_2pl\.stan', (.*?)\)/)[0][1] 
-        returnMap["one_comp_mm_elim_abs"] = (body =~ /one_comp_mm_elim_abs\.stan', (.*?)\)/)[0][1] 
-        returnMap["eight_schools"] = (body =~ /eight_schools\.stan', (.*?)\)/)[0][1] 
-        returnMap["gp_regr"] = (body =~ /gp_regr\.stan', (.*?)\)/)[0][1] 
-        returnMap["arK"] = (body =~ /arK\.stan', (.*?)\)/)[0][1] 
-        returnMap["compilation"] = (body =~ /compilation', (.*?)\)/)[0][1] 
-        returnMap["low_dim_gauss_mix_collapse"] = (body =~ /low_dim_gauss_mix_collapse\.stan', (.*?)\)/)[0][1] 
-        returnMap["low_dim_gauss_mix"] = (body =~ /low_dim_gauss_mix\.stan', (.*?)\)/)[0][1] 
-        returnMap["sir"] = (body =~ /sir\.stan', (.*?)\)/)[0][1] 
-        returnMap["sim_one_comp_mm_elim_abs"] = (body =~ /sim_one_comp_mm_elim_abs\.stan', (.*?)\)/)[0][1] 
-        returnMap["garch"] = (body =~ /garch\.stan', (.*?)\)/)[0][1] 
-        returnMap["gen_gp_data"] = (body =~ /gen_gp_data\.stan', (.*?)\)/)[0][1] 
-        returnMap["arma"] = (body =~ /arma\.stan', (.*?)\)/)[0][1] 
-        returnMap["result"] = (body =~ /(?m)Result: (.*?)\\r\\n/)[0][1] 
+
+    returnMap["compilation"] = compilation.toString()
+    returnMap["mean"] = mean.toString()
+    
+    return returnMap
+}
+
+def MapLastGitHubComment(body){
+    returnMap = [:]
+
+    benchmarks = (body =~ /\| (.*?) \| (.*?) \| (.*?) \| (.*?) \| (.*?) \|/)
+
+    for (i = 0; i < benchmarks.size(); i++) {
+      name = benchmarks[i][1]
+      old_value = benchmarks[i][2]
+      new_value = benchmarks[i][3]
+      ratio = benchmarks[i][4]
+      change = benchmarks[i][5]
+
+      if(name != "Name") 
+        returnMap[name] = value
     }
 
     return returnMap
@@ -73,7 +79,7 @@ def get_last_results(repository, pr_number){
             def body = o.body.toString()
 
             if(body.contains("low_dim_gauss_mix_collapse")){
-                return results_to_obj(body, "old");
+                return mapLastGitHubComment(body);
             }    
         }
     }
@@ -114,62 +120,31 @@ def get_results(){
 
 def post_comment(text, repository, pr_number) {
 
-    return true
+    //old_results = get_last_results(repository, pr_number)
 
-    def old_results = [:]
-    println "last results"
-    old_results = get_last_results(repository, pr_number)
-
-    println "new results"
-    println text
-
-    def new_results = results_to_obj(text, "new")
-    def final_results = [:]
-    def _comment = ""
+    new_results = mapBuildResult(text)
+    _comment = ""
 
     _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
     _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)"+ "\\r\\n"
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
-    if(old_results != [:]){
-      new_results.each{ k, v ->   
-        def new_value = v.toDouble();
-        def old_value = old_results[k].toDouble();
-        def change_result = 1 - (new_value / old_value)
+    _comment += "| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |" + "\\r\\n"
+    _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
 
-        if(change_result > 0){
-          final_results[k] = ((change_result * 100).toDouble()).toString() + "% faster"
-        }
-        else if(change_result == 0){
-          final_results[k] = "-"
-        }
-        else{
-          final_results[k] = ((change_result * 100).toDouble()).toString() + "% slower"
-        }
-      }
-
-      _comment += "| Name | Old Result | New Result | Performance change( 1 - new / old ) |" + "\\r\\n"
-      _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
-
-      final_results.each{ k, v -> 
+    new_results.each{ k, v -> 
     
-        def _name = "${k}"
-        def _final_value = "${v}"
-        def _new_value = new_results[_name]
-        def _old_value = old_results[_name]
+        name = "${k}"
+        values = "${v}"
+
+        name = values[i][1]
+        old_value = values[i][2]
+        new_value = values[i][3]
+        ratio = values[i][4]
+        change = values[i][5]
     
-        _comment += "| $_name | $_old_value | $_new_value | $_final_value |" + "\\r\\n"
+        _comment += "| $name | $old_value | $new_value | $ratioe | $change | " + "\\r\\n"
       }
-
-    }
-    else{
-      _comment += "| Name | Result |" + "\\r\\n"
-      _comment += "| ------------- |------------- |" + "\\r\\n"
-
-      new_results.each{ k, v -> 
-        _comment += "| $k | $v |" + "\\r\\n"
-      }
-    }
 
     sh """#!/bin/bash
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
@@ -237,6 +212,8 @@ pipeline {
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
                         sh """
+                            #git pull
+                            git checkout print-results
                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                             bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
