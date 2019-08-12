@@ -17,9 +17,7 @@ def mapBuildResult(body){
 
     benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
     compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0][1]
-    mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
-
-    println benchmarks.size()
+    mean = (body =~ /(?s)(\d{1}\.?\d{12})/)[0][1]
 
     for (i = 0; i < benchmarks.size(); i++) {
       name = benchmarks[i][1]
@@ -97,21 +95,11 @@ def get_results(){
         comment += item[0] + "\\r\\n"
     }
 
-    def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
-    try{
-        comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
-    }
-    catch(Exception ex){
-        comment += "Result: " + "Regex did not match anything" + "\\r\\n"
-    }
+    def result_match = (performance_log =~ /(?s)(\d{1}\.?\d{12})/)[0][1].toString()
+    comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
 
     def result_match_hash = (performance_log =~ /Merge (.*?) into/)
-    try{
-        comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
-    }
-    catch(Exception ex){
-        comment += "Commit hash: " + "Regex did not match anything" + "\\r\\n"
-    }
+    comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
 
     performance_log = null
 
@@ -119,8 +107,6 @@ def get_results(){
 }
 
 def post_comment(text, repository, pr_number) {
-
-    //old_results = get_last_results(repository, pr_number)
 
     new_results = mapBuildResult(text)
     _comment = ""

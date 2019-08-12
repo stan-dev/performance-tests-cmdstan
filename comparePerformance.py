@@ -21,14 +21,7 @@ if __name__ == "__main__":
     csv1 = sys.argv[1]
     csv2 = sys.argv[2]
     times1, times2 = map(get_times, [csv1, csv2])
-    #ratios = [(n, times1[n]/times2[n]) for n in times1]
     ratios = {}
-
-    print(" - - - - - - - - - -")
-    print(times1)
-    print(" - - - - - - - - - -")
-    print(times2)
-    print(" - - - - - - - - - -")
 
     for n in times1:
         key = "performance.compilation" if "compilation" in n else n
@@ -45,6 +38,7 @@ if __name__ == "__main__":
         }
 
     print("| Name, Old Value, New Value, Ratio, Change % |")
+    
     total = 0
     for r in ratios:
         print(r, 
