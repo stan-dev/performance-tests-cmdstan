@@ -31,11 +31,9 @@ if __name__ == "__main__":
     print(" - - - - - - - - - -")
 
     for n in times1:
-        key = "compilation" if "compilation" in n else n
+        key = "performance.compilation" if "compilation" in n else n
 
-        print("Key: " + str(key))
-
-        old = times1[key]
+        old = times1[n]
         new = times2[key]
         ratio = old / new
 
