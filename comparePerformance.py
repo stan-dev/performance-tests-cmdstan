@@ -24,30 +24,27 @@ if __name__ == "__main__":
     #ratios = [(n, times1[n]/times2[n]) for n in times1]
     ratios = {}
 
-    print(times1)
-    print(times2)
-
     for n in times1:
-        print(n)
         old = times1[n]
         new = times2[n]
         ratio = old / new
+        key = "compilation" if "compilation" in n else n
 
-        ratios[n] = {
+        ratios[key] = {
             "old": old,
             "new": new,
             "ratio": ratio,
             "change": (1 - new / old) * 100
         }
 
-    print("| Name , Old Value , New Value , Ratio , Change % |")
+    print("| Name, Old Value, New Value, Ratio, Change % |")
     total = 0
     for r in ratios:
         print(r, 
-        round(ratios[r]['old'], 2), 
-        round(ratios[r]['new'], 2), 
-        round(ratios[r]['ratio'], 2), 
-        round(ratios[r]['change'], 2)
+            round(ratios[r]['old'], 2), 
+            round(ratios[r]['new'], 2), 
+            round(ratios[r]['ratio'], 2), 
+            round(ratios[r]['change'], 2)
         )
         total = total + ratios[r]['ratio']
 
