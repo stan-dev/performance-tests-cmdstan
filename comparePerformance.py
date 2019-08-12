@@ -24,6 +24,12 @@ if __name__ == "__main__":
     #ratios = [(n, times1[n]/times2[n]) for n in times1]
     ratios = {}
 
+    print(" - - - - - - - - - -")
+    print(times1)
+    print(" - - - - - - - - - -")
+    print(times2)
+    print(" - - - - - - - - - -")
+
     for n in times1:
         key = "compilation" if "compilation" in n else n
 
