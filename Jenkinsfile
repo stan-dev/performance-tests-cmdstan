@@ -16,10 +16,11 @@ def mapBuildResult(body){
     returnMap = [:]
 
     benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
-    compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0][1]
-    mean = (body =~ /(?s)(\d{1}\.?\d{12})/)[0][1]
+    compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0]
+    mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
 
     for (i = 0; i < benchmarks.size(); i++) {
+
       name = benchmarks[i][1]
       filename = benchmarks[i][2]
       old_value = benchmarks[i][3]
@@ -33,9 +34,16 @@ def mapBuildResult(body){
         "ratio": ratio,
         "change": change
       ]
+
     }
 
-    returnMap["compilation"] = compilation.toString()
+    returnMap["compilation"] = [
+        "old": compilation[1],
+        "new": compilation[2],
+        "ratio": compilation[3],
+        "change": compilation[4]
+      ]
+
     returnMap["mean"] = mean.toString()
     
     return returnMap
@@ -119,18 +127,12 @@ def post_comment(text, repository, pr_number) {
     _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
 
     new_results.each{ k, v -> 
-    
-        name = "${k}"
         values = "${v}"
+        if "${k}" != "mean":
+            _comment += "| ${k} | " + values["old"] + " | " + values["new"] + " | " + values["ratio"] + " | " + values["change"] + " | " + "\\r\\n"
+    }
 
-        name = values[i][1]
-        old_value = values[i][2]
-        new_value = values[i][3]
-        ratio = values[i][4]
-        change = values[i][5]
-    
-        _comment += "| $name | $old_value | $new_value | $ratioe | $change | " + "\\r\\n"
-      }
+    _comment += "Mean result: " + new_results["mean"]
 
     sh """#!/bin/bash
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
