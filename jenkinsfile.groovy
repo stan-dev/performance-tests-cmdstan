@@ -34,7 +34,7 @@ def mapBuildResult(body){
         "old": old_value,
         "new": new_value,
         "ratio": ratio,
-        "change": change + "%"
+        "change": change + (change.toDouble() > 0 ? "% faster" : "% slower")
       ]
 
     }
@@ -43,7 +43,7 @@ def mapBuildResult(body){
         "old": compilation[1],
         "new": compilation[2],
         "ratio": compilation[3],
-        "change": compilation[4] + "%"
+        "change": compilation[4] + (compilation[4].toDouble() > 0 ? "% faster" : "% slower")
     ]
 
     returnMap["mean"] = mean
@@ -101,32 +101,16 @@ def get_results(){
     def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
     def comment = ""
 
-    println " - - - - - "
-    println performance_log
-    println " - - - - - "
-
     def test_matches = (performance_log =~ /\('(.*)\)/)
     for(item in test_matches){
         comment += item[0] + "\\r\\n"
     }
 
-    println " - - - - - "
-    println comment
-    println " - - - - - "
-
-    def result_match = (performance_log =~ /(?s)(\d{1}\.?\d{11})/)[0][1].toString()
+    def result_match = (performance_log =~ /Mean: (\d{1}\.?\d{11})/)[0][1].toString()
     comment += "Result: " + result_match + "\\r\\n"
-
-    println " - - - - - "
-    println comment
-    println " - - - - - "
 
     def result_match_hash = (performance_log =~ /Merge (.*?) into/)[0][1].toString()
     comment += "Commit hash: " + result_match_hash + "\\r\\n"
-
-    println " - - - - - "
-    println comment
-    println " - - - - - "
 
     performance_log = null
 
@@ -138,8 +122,6 @@ def post_comment(text, repository, pr_number) {
     def new_results = mapBuildResult(text)
     def _comment = ""
 
-    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
-    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)"+ "\\r\\n"
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
     _comment += "| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |" + "\\r\\n"
@@ -148,13 +130,18 @@ def post_comment(text, repository, pr_number) {
     new_results.each{ k, v -> 
         name = "${k}"
 
-        if (name != "mean"){
+        if (name != "mean" && name != "hash"){
             _comment += "| " + name + " | " + v["old"] + " | " + v["new"] + " | " + v["ratio"] + " | " + v["change"] + " | " + "\\r\\n"
         }
     }
 
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
+
     _comment += "Mean result: " + new_results["mean"] + "\\r\\n"
+    _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
+
+    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
+    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)"+ "\\r\\n"
 
     sh """#!/bin/bash
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
@@ -162,7 +149,7 @@ def post_comment(text, repository, pr_number) {
 }
 
 pipeline {
-    agent { label 'old-imac' }
+    agent { label 'gelman-group-mac' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -222,8 +209,6 @@ pipeline {
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
                         sh """
-                            #git pull
-                            git checkout print-results
                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                             bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
@@ -249,25 +234,22 @@ pipeline {
                 sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
             }
         }
-        //stage('Collect test results') {
-        //    when { branch 'master' }
-        //    steps {
-        //        junit '*.xml'
-        //        archiveArtifacts '*.xml'
-        //        perfReport compareBuildPrevious: true,
-//
-        //            relativeFailedThresholdPositive: 10,
-        //            relativeUnstableThresholdPositive: 5,
-//
-        //            errorFailedThreshold: 1,
-        //            failBuildIfNoResultFile: false,
-        //            modePerformancePerTestCase: true,
-        //            modeOfThreshold: true,
-        //            sourceDataFiles: '*.xml',
-        //            modeThroughput: false,
-        //            configType: 'PRT'
-        //    }
-        //}
+        stage('Collect test results') {
+            when { branch 'master' }
+            steps {
+                junit '*.xml'
+                archiveArtifacts '*.xml'
+                perfReport compareBuildPrevious: true,
+                    relativeFailedThresholdPositive: 10,
+                    relativeUnstableThresholdPositive: 5,
+                    errorFailedThreshold: 1,
+                    modePerformancePerTestCase: true,
+                    modeOfThreshold: true,
+                    sourceDataFiles: '*.xml',
+                    modeThroughput: false,
+                    configType: 'PRT'
+            }
+        }
     }
 
     post {
@@ -290,14 +272,12 @@ pipeline {
                     post_comment(comment, "math", pr_number)
                 }
             }
-        }
-        /*
+        }    
         unstable {
             script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
         }
         failure {
             script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
-        }
-        */
+        }      
     }
 }
