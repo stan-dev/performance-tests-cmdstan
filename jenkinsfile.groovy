@@ -13,15 +13,16 @@ def branchOrPR(pr) {
 }
 
 def mapBuildResult(body){
-    returnMap = [:]
 
-    benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
-    compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0][1]
-    mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
+    def returnMap = [:]
 
-    println benchmarks.size()
+    def benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
+    def compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0]
+    def mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
+    def hash = (body =~ /hash: (.*?)\\r\\n/)[0][1]
 
     for (i = 0; i < benchmarks.size(); i++) {
+
       name = benchmarks[i][1]
       filename = benchmarks[i][2]
       old_value = benchmarks[i][3]
@@ -29,17 +30,25 @@ def mapBuildResult(body){
       ratio = benchmarks[i][5]
       change = benchmarks[i][6]
 
-      returnMap["$name"] = [
+      returnMap[name] = [
         "old": old_value,
         "new": new_value,
         "ratio": ratio,
-        "change": change
+        "change": change + "%"
       ]
+
     }
 
-    returnMap["compilation"] = compilation.toString()
-    returnMap["mean"] = mean.toString()
-    
+    returnMap["compilation"] = [
+        "old": compilation[1],
+        "new": compilation[2],
+        "ratio": compilation[3],
+        "change": compilation[4] + "%"
+    ]
+
+    returnMap["mean"] = mean
+    returnMap["hash"] = hash
+
     return returnMap
 }
 
@@ -92,26 +101,32 @@ def get_results(){
     def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
     def comment = ""
 
+    println " - - - - - "
+    println performance_log
+    println " - - - - - "
+
     def test_matches = (performance_log =~ /\('(.*)\)/)
     for(item in test_matches){
         comment += item[0] + "\\r\\n"
     }
 
-    def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
-    try{
-        comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
-    }
-    catch(Exception ex){
-        comment += "Result: " + "Regex did not match anything" + "\\r\\n"
-    }
+    println " - - - - - "
+    println comment
+    println " - - - - - "
 
-    def result_match_hash = (performance_log =~ /Merge (.*?) into/)
-    try{
-        comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
-    }
-    catch(Exception ex){
-        comment += "Commit hash: " + "Regex did not match anything" + "\\r\\n"
-    }
+    def result_match = (performance_log =~ /(?s)(\d{1}\.?\d{11})/)[0][1].toString()
+    comment += "Result: " + result_match + "\\r\\n"
+
+    println " - - - - - "
+    println comment
+    println " - - - - - "
+
+    def result_match_hash = (performance_log =~ /Merge (.*?) into/)[0][1].toString()
+    comment += "Commit hash: " + result_match_hash + "\\r\\n"
+
+    println " - - - - - "
+    println comment
+    println " - - - - - "
 
     performance_log = null
 
@@ -120,31 +135,26 @@ def get_results(){
 
 def post_comment(text, repository, pr_number) {
 
-    //old_results = get_last_results(repository, pr_number)
-
-    new_results = mapBuildResult(text)
-    _comment = ""
+    def new_results = mapBuildResult(text)
+    def _comment = ""
 
     _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
     _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)"+ "\\r\\n"
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
     _comment += "| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |" + "\\r\\n"
-    _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
+    _comment += "| ------------- |------------- | ------------- | ------------- | ------------- |" + "\\r\\n"
 
     new_results.each{ k, v -> 
-    
         name = "${k}"
-        values = "${v}"
 
-        name = values[i][1]
-        old_value = values[i][2]
-        new_value = values[i][3]
-        ratio = values[i][4]
-        change = values[i][5]
-    
-        _comment += "| $name | $old_value | $new_value | $ratioe | $change | " + "\\r\\n"
-      }
+        if (name != "mean"){
+            _comment += "| " + name + " | " + v["old"] + " | " + v["new"] + " | " + v["ratio"] + " | " + v["change"] + " | " + "\\r\\n"
+        }
+    }
+
+    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
+    _comment += "Mean result: " + new_results["mean"] + "\\r\\n"
 
     sh """#!/bin/bash
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
@@ -152,7 +162,7 @@ def post_comment(text, repository, pr_number) {
 }
 
 pipeline {
-    agent { label 'gelman-group-mac' }
+    agent { label 'old-imac' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')

@@ -13,6 +13,9 @@ def branchOrPR(pr) {
 }
 
 def mapBuildResult(body){
+
+    println body
+
     returnMap = [:]
 
     benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
@@ -20,6 +23,8 @@ def mapBuildResult(body){
     mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
 
     for (i = 0; i < benchmarks.size(); i++) {
+
+      println benchmarks[i]
 
       name = benchmarks[i][1]
       filename = benchmarks[i][2]
@@ -127,9 +132,10 @@ def post_comment(text, repository, pr_number) {
     _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
 
     new_results.each{ k, v -> 
+        name = "${k}"
         values = "${v}"
-        if "${k}" != "mean":
-            _comment += "| ${k} | " + values["old"] + " | " + values["new"] + " | " + values["ratio"] + " | " + values["change"] + " | " + "\\r\\n"
+        if (name != "mean")
+            _comment += "| $name | " + values["old"] + " | " + values["new"] + " | " + values["ratio"] + " | " + values["change"] + " | " + "\\r\\n"
     }
 
     _comment += "Mean result: " + new_results["mean"]
