@@ -12,32 +12,73 @@ def branchOrPR(pr) {
   return pr
 }
 
+def checkOs(){
+    if (isUnix()) {
+        def uname = sh script: 'uname', returnStdout: true
+        if (uname.startsWith("Darwin")) {
+            return "macos"
+        }
+        else {
+            return "linux"
+        }
+    }
+    else {
+        return "windows"
+    }
+}
+
+def escapeStringForJson(inputString){
+    return inputString.trim().replace("\r","\\r").replace("\n","\\n").replace("\t"," ").replace("\"","\\\"").replace("\\", "\\\\")
+}
+
 def mapBuildResult(body){
 
-    println body
+    def returnMap = [:]
 
-    returnMap = [:]
+    def benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
+    def compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0]
+    def mean = (body =~ /Mean: (\d{1}\.?\d{11})/)[0][1]
+    def hash = (body =~ /Merge (.*?) into/)[0][1]
+    def current_os = (body =~ /Current OS: (.*?) !/)[0][1]
 
-    benchmarks = (body =~ /\/benchmarks\/(\w+)\/(.*?)', (.*?), (.*?), (.*?), (.*?)\)/)
-    compilation = (body =~ /compilation', (.*?), (.*?), (.*?), (.*?)\)/)[0]
-    mean = (body =~ /(?s)(\d{1}\.?\d{11})/)[0][1]
+    def cpu = ""
+    def gpp = ""
+    def clang = ""
+    def sys_ver = ""
+
+    if(current_os == "windows"){
+        cpu = (body =~ /(?s)wmic CPU get NAME(.*?)(C:|J:|Z:)/)[0][1]
+        sys_ver = (body =~ /(?s)>ver(.*?)(C:|J:|Z:)/)[0][1]
+        gpp = (body =~ /(?s)g\+\+ --version(.*?)(C:|J:|Z:)/)[0][1]
+        clang = (body =~ /(?s)clang --version(.*?)(C:|J:|Z:)/)[0][1]
+    }
+    else if(current_os == "macos"){
+        cpu = (body =~ /(?s)sysctl -n machdep\.cpu\.brand_string(.*?)\+ sw_vers/)[0][1]
+        sys_ver = (body =~ /(?s)sw_vers(.*?)\+ g\+\+/)[0][1]
+        gpp = (body =~ /(?s)g\+\+ --version(.*?)\+ clang/)[0][1]
+        clang = (body =~ /(?s)clang --version(.*?)\+ echo/)[0][1]
+    }
+    else{
+        cpu = (body =~ /(?s)lscpu(.*?)\+ lsb_release/)[0][1]
+        sys_ver = (body =~ /(?s)lsb_release -a(.*?)\+ g\+\+/)[0][1]   
+        gpp = (body =~ /(?s)g\+\+ --version(.*?)\+ clang/)[0][1]
+        clang = (body =~ /(?s)clang --version(.*?)\+ echo/)[0][1]
+    }
 
     for (i = 0; i < benchmarks.size(); i++) {
 
-      println benchmarks[i]
-
-      name = benchmarks[i][1]
-      filename = benchmarks[i][2]
-      old_value = benchmarks[i][3]
-      new_value = benchmarks[i][4]
-      ratio = benchmarks[i][5]
-      change = benchmarks[i][6]
+      def name = benchmarks[i][1]
+      def filename = benchmarks[i][2]
+      def old_value = benchmarks[i][3]
+      def new_value = benchmarks[i][4]
+      def ratio = benchmarks[i][5]
+      def change = benchmarks[i][6]
 
       returnMap["$name"] = [
         "old": old_value,
         "new": new_value,
         "ratio": ratio,
-        "change": change
+        "change": change + (change.toDouble() > 0 ? "% faster" : "% slower")
       ]
 
     }
@@ -46,11 +87,19 @@ def mapBuildResult(body){
         "old": compilation[1],
         "new": compilation[2],
         "ratio": compilation[3],
-        "change": compilation[4]
+        "change": compilation[4] + (compilation[4].toDouble() > 0 ? "% faster" : "% slower")
       ]
 
     returnMap["mean"] = mean.toString()
-    
+    returnMap["hash"] = hash
+
+    returnMap["system"] = [
+        "cpu": escapeStringForJson(cpu),
+        "sys_ver": escapeStringForJson(sys_ver),
+        "gpp": escapeStringForJson(gpp),
+        "clang": escapeStringForJson(clang)
+      ]
+
     return returnMap
 }
 
@@ -101,44 +150,53 @@ def get_last_results(repository, pr_number){
 @NonCPS
 def get_results(){
     def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
-    def comment = ""
-
-    def test_matches = (performance_log =~ /\('(.*)\)/)
-    for(item in test_matches){
-        comment += item[0] + "\\r\\n"
-    }
-
-    def result_match = (performance_log =~ /(?s)(\d{1}\.?\d{12})/)[0][1].toString()
-    comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
-
-    def result_match_hash = (performance_log =~ /Merge (.*?) into/)
-    comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
-
-    performance_log = null
-
-    return comment
+    return performance_log
 }
 
 def post_comment(text, repository, pr_number) {
 
-    new_results = mapBuildResult(text)
+    def new_results = mapBuildResult(text)
     _comment = ""
 
-    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
-    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)"+ "\\r\\n"
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
     _comment += "| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |" + "\\r\\n"
-    _comment += "| ------------- |------------- | ------------- | ------------- |" + "\\r\\n"
+    _comment += "| ------------- |------------- | ------------- | ------------- | ------------- |" + "\\r\\n"
 
     new_results.each{ k, v -> 
         name = "${k}"
-        values = "${v}"
-        if (name != "mean")
-            _comment += "| $name | " + values["old"] + " | " + values["new"] + " | " + values["ratio"] + " | " + values["change"] + " | " + "\\r\\n"
+
+        if (name != "mean" && name != "hash" && name != "system"){
+            _comment += "| " + name + " | " + v["old"] + " | " + v["new"] + " | " + v["ratio"] + " | " + v["change"] + " | " + "\\r\\n"
+        }
     }
 
-    _comment += "Mean result: " + new_results["mean"]
+    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
+
+    _comment += "Mean result: " + new_results["mean"] + "\\r\\n"
+    _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
+
+    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
+    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)" + "\\r\\n"
+    
+    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
+
+    _comment += "<details><summary>Machine information</summary>"
+
+    _comment += "\\r\\n" + new_results["system"]["sys_ver"] + "\\r\\n" + "\\r\\n"
+
+    _comment += "CPU: " + "\\r\\n"
+    _comment += new_results["system"]["cpu"] + "\\r\\n" + "\\r\\n"
+
+    _comment += "G++: " + "\\r\\n"
+    _comment += new_results["system"]["gpp"] + "\\r\\n" + "\\r\\n"
+
+    _comment += "Clang: " + "\\r\\n"
+    _comment += new_results["system"]["clang"] + "\\r\\n" + "\\r\\n"
+
+    _comment += "</details>"
+
+    println _comment
 
     sh """#!/bin/bash
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
@@ -177,6 +235,51 @@ pipeline {
                           userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
                                                credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                     ]]])
+            }
+        }
+        stage('Gather machine information') {
+            steps {
+                script {
+
+                    current_os = checkOs()
+
+                    def command = """
+                            echo "--- Machine Information ---"
+                            echo "Current OS: ${current_os} !"
+                    """
+
+                    if(current_os == "windows"){
+                        command += """
+                                wmic CPU get NAME
+                                ver
+                        """
+                    }
+                    else if(current_os == "macos"){
+                        command += """ 
+                                sysctl -n machdep.cpu.brand_string 
+                                sw_vers
+                        """
+                    }
+                    else{
+                        command += """ 
+                                lscpu 
+                                lsb_release -a
+                        """
+                    }
+
+                    command += """
+                            g++ --version || true
+                            clang --version || true
+                            echo "--- Machine Information ---"
+                    """
+
+                    if(current_os == "windows"){
+                        bat command
+                    }
+                    else{
+                        sh command
+                    }
+                }
             }
         }
         stage('Update CmdStan pointer to latest develop') {
