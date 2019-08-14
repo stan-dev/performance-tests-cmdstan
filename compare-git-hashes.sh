@@ -82,6 +82,7 @@ NAME1="reference-`date "+%y-%h-%m-%s"`"
 
 clean_checkout "$3" "$4" "$5"
 NAME2="performance"
+
 ./runPerformanceTests.py --check-golds-exact 2e-8 $1 --name="$NAME2"
 
 ./comparePerformance.py "$NAME1.csv" "$NAME2.csv"

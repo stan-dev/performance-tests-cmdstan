@@ -173,7 +173,10 @@ def csv_summary(csv_file):
         if k.endswith("__"):
             continue
         mean = avg(v)
-        res[k] = (mean, stdev(v, mean))
+        try:
+            res[k] = (mean, stdev(v, mean))
+        except OverflowError as e:
+            raise OverflowError("calculating stdev for " + k)
     return res
 
 def format_summary_lines(summary):
@@ -232,7 +235,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         print("ERROR: " + msg)
         errors.append(msg)
         return fails, errors
-    for k, (mean, stdev) in gold_summary.items():
+    for k, (mean, stdev) in sorted(gold_summary.items()):
         if stdev < 0.00001: #XXX Uh...
             continue
         err = abs(summary[k][0] - mean)
@@ -318,7 +321,7 @@ def parse_args():
                         help="Number of runs per benchmark.", default=1)
     parser.add_argument("-j", dest="j", action="store", type=int, default=multiprocessing.cpu_count())
     parser.add_argument("--runj", dest="runj", action="store", type=int, default=1)
-    parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
+    parser.add_argument("--name", dest="name", action="store", type=str, default=None)
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
     parser.add_argument("--num-samples", dest="num_samples", action="store", default=None, type=int,
@@ -346,6 +349,9 @@ def delete_temporary_exe_files(exes):
 
 if __name__ == "__main__":
     args = parse_args()
+    if args.name is None:
+        args.name = str(time()) + "_performance"
+    print("Generating {}".format(args.name))
 
     models = None
 
@@ -382,14 +388,17 @@ if __name__ == "__main__":
                                 args.method),
                     tests)
     results = list(results)
-    results.append(("{}.compilation".format(args.name), make_time, [], []))
+
+    results.append(("compilation", make_time, [], []))
     test_results_xml(results).write("{}.xml".format(args.name))
-    with open("{}.csv".format(args.name), "w") as f:
+    csv_name = "{}.csv".format(args.name)
+    with open(csv_name, "w") as f:
         f.write(test_results_csv(results))
     failed = False
     for model, _, fails, errors in results:
         if fails or errors:
             print("'{}' had fails '{}' and errors '{}'".format(model, fails, errors))
             failed = True
+    print(csv_name)
     if failed:
         sys.exit(-1)
