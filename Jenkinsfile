@@ -305,12 +305,9 @@ pipeline {
             when { not { branch 'master' } }
             steps {
                 script{
-                        /* Handle cmdstan_pr */
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
                         sh """
-                            #git pull
-                            git checkout print-results
                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                             bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
@@ -336,25 +333,25 @@ pipeline {
                 sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
             }
         }
-        //stage('Collect test results') {
-        //    when { branch 'master' }
-        //    steps {
-        //        junit '*.xml'
-        //        archiveArtifacts '*.xml'
-        //        perfReport compareBuildPrevious: true,
-//
-        //            relativeFailedThresholdPositive: 10,
-        //            relativeUnstableThresholdPositive: 5,
-//
-        //            errorFailedThreshold: 1,
-        //            failBuildIfNoResultFile: false,
-        //            modePerformancePerTestCase: true,
-        //            modeOfThreshold: true,
-        //            sourceDataFiles: '*.xml',
-        //            modeThroughput: false,
-        //            configType: 'PRT'
-        //    }
-        //}
+        stage('Collect test results') {
+            when { branch 'master' }
+            steps {
+                junit '*.xml'
+                archiveArtifacts '*.xml'
+                perfReport compareBuildPrevious: true,
+
+                    relativeFailedThresholdPositive: 10,
+                    relativeUnstableThresholdPositive: 5,
+
+                    errorFailedThreshold: 1,
+                    failBuildIfNoResultFile: false,
+                    modePerformancePerTestCase: true,
+                    modeOfThreshold: true,
+                    sourceDataFiles: '*.xml',
+                    modeThroughput: false,
+                    configType: 'PRT'
+            }
+        }
     }
 
     post {
@@ -378,13 +375,11 @@ pipeline {
                 }
             }
         }
-        /*
         unstable {
             script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
         }
         failure {
             script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, sean.talts@gmail.com, serban.nicusor@toptal.com") }
         }
-        */
     }
 }
