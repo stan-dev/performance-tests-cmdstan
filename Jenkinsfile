@@ -153,7 +153,7 @@ def get_results(){
     return performance_log
 }
 
-def post_comment(text, repository, pr_number) {
+def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     def new_results = mapBuildResult(text)
     _comment = ""
@@ -177,7 +177,7 @@ def post_comment(text, repository, pr_number) {
     _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
 
     _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
-    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)" + "\\r\\n"
+    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$blue_ocean_repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)" + "\\r\\n"
     
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
@@ -361,17 +361,17 @@ pipeline {
 
                 if(params.cmdstan_pr.contains("PR-")){
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "cmdstan", pr_number)
+                    post_comment(comment, "cmdstan", pr_number, "CmdStan")
                 }
 
                 if(params.stan_pr.contains("PR-")){
                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "stan", pr_number)
+                    post_comment(comment, "stan", pr_number, "Stan")
                 }
 
                 if(params.math_pr.contains("PR-")){
                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "math", pr_number)
+                    post_comment(comment, "math", pr_number, "Math Pipeline")
                 }
             }
         }
