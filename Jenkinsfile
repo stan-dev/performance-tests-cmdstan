@@ -147,6 +147,7 @@ pipeline {
                     modeThroughput: false,
                     configType: 'PRT'
             }
+            post { always { deleteDir() }}
         }
     }
 
