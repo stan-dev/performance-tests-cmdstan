@@ -1,10 +1,9 @@
-#!/bin/bash
+#!/bin/bash -e
 
 usage() {
     echo "=====!!!WARNING!!!===="
     echo "This will clean all repos involved! Use only on a clean checkout."
-    echo "$0 <git-hash-1> <git-hash-2> <directories of models> <stan_pr> <math_pr> <extra args for runPerformanceTests.py>'"
-    echo "(those last extra args are in quotes)"
+    echo "$0 \"<arguments to runPerformanceTests.py>\" <reference-cmdstan-git-hash> <cmdstan_pr_or_hash> <stan_pr> <math_pr>"
 }
 
 write_makelocal() {
@@ -22,7 +21,7 @@ clean_checkout() {
         git fetch https://github.com/stan-dev/cmdstan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
     else
-        git checkout "$1" && git pull origin "$1"
+        git fetch && git checkout "$1" && git pull origin "$1"
     fi
     git reset --hard HEAD
     git clean -xffd
@@ -35,7 +34,7 @@ clean_checkout() {
         git fetch https://github.com/stan-dev/stan +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
     elif [ "$2" != "false" ] ; then
-        git checkout "$2" && git pull origin "$2"
+        git fetch && git checkout "$2" && git pull origin "$2"
     fi
     git reset --hard HEAD
     git clean -xffd
@@ -48,7 +47,7 @@ clean_checkout() {
         git fetch https://github.com/stan-dev/math +refs/pull/$prNumber/merge:refs/remotes/origin/pr/$prNumber/merge
         git checkout refs/remotes/origin/pr/$prNumber/merge
     elif [ "$3" != "false" ] ; then
-        git checkout "$3" && git pull origin "$3"
+        git fetch && git checkout "$3" && git pull origin "$3"
     fi
     git reset --hard HEAD
     git clean -xffd
@@ -82,6 +81,7 @@ NAME1="reference-`date "+%y-%h-%m-%s"`"
 
 clean_checkout "$3" "$4" "$5"
 NAME2="performance"
-./runPerformanceTests.py --check-golds-exact 1e-8 $1
+./runPerformanceTests.py --check-golds-exact 1e-8 $1 --name="$NAME2"
 
 ./comparePerformance.py "$NAME1.csv" "$NAME2.csv"
+

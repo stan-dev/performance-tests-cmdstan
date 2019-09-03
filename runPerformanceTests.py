@@ -4,6 +4,8 @@ import argparse
 import csv
 from collections import defaultdict
 import os
+import os.path
+import sys
 import re
 import subprocess
 from difflib import SequenceMatcher
@@ -29,10 +31,25 @@ def find_files(pattern, dirs):
                     res.append(os.path.join(d, f))
     return res
 
-def read_tests(filename):
-    test_files = [line.rstrip('\n') for line in open(filename)
-                  if not line.startswith("#")]
-    return test_files
+def read_tests(filename, default_num_samples):
+    test_files = []
+    num_samples_list = []
+    with open(filename) as f:
+        for line in f:
+            line = line.strip()
+            if line.startswith("#"): continue
+            if ", " in line:
+                model, num_samples = line.split(", ")
+            else:
+                model = line
+                num_samples = default_num_samples
+            if model in bad_models:
+                print("You specified {} but we have that blacklisted; skipping"
+                      .format(model))
+                continue
+            num_samples_list.append(num_samples)
+            test_files.append(model)
+    return test_files, num_samples_list
 
 def str_dist(target):
     def str_dist_internal(candidate):
@@ -73,8 +90,16 @@ def shexec(command, wd = "."):
     return returncode
 
 def make(targets, j=8):
-    shexec("make -j{} {}"
-          .format(j, " ".join(DIR_UP + t + EXE_FILE_EXT for t in targets)), wd = "cmdstan")
+    for i in range(len(targets)):
+        prefix = ""
+        if not targets[i].startswith(os.sep):
+            prefix = DIR_UP
+        targets[i] = prefix + targets[i] + EXE_FILE_EXT
+    try:
+        shexec("make -i -j{} {}"
+            .format(j, " ".join(targets)), wd = "cmdstan")
+    except FailedCommand:
+        print("Failed to make at least some targets")
 
 model_name_re = re.compile(".*"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
 
@@ -148,11 +173,15 @@ def csv_summary(csv_file):
         if k.endswith("__"):
             continue
         mean = avg(v)
-        res[k] = (mean, stdev(v, mean))
+        try:
+            res[k] = (mean, stdev(v, mean))
+        except OverflowError as e:
+            raise OverflowError("calculating stdev for " + k)
     return res
 
 def format_summary_lines(summary):
-    return ["{} {} {}\n".format(k, avg, stdev) for k, (avg, stdev) in summary.items()]
+    return ["{} {:.15f} {:.15f}\n".format(k, avg, stdev)
+            for k, (avg, stdev) in sorted(summary.items())]
 
 def parse_summary(f):
     d = {}
@@ -161,7 +190,7 @@ def parse_summary(f):
         d[param] = (float(avg), float(stdev))
     return d
 
-def run_model(exe, method, data, tmp, runs):
+def run_model(exe, method, data, tmp, runs, num_samples):
     def run_as_fixed_param():
         shexec("{} method=sample algorithm='fixed_param' random seed=1234 output file={}"
                .format(exe, tmp))
@@ -174,8 +203,11 @@ def run_model(exe, method, data, tmp, runs):
             run_as_fixed_param()
         else:
             try:
-                shexec("{} method={} {} random seed=1234 output file={}"
-                    .format(exe, method, data_str, tmp))
+                num_samples_str = ""
+                if method == "sample":
+                    num_samples_str = "num_samples={} num_warmup={}".format(num_samples, num_samples)
+                shexec("{} method={} {} {} random seed=1234 output file={}"
+                    .format(exe, method, num_samples_str, data_str, tmp))
             except FailedCommand as e:
                 if e.returncode == 78:
                     run_as_fixed_param()
@@ -203,7 +235,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         print("ERROR: " + msg)
         errors.append(msg)
         return fails, errors
-    for k, (mean, stdev) in gold_summary.items():
+    for k, (mean, stdev) in sorted(gold_summary.items()):
         if stdev < 0.00001: #XXX Uh...
             continue
         err = abs(summary[k][0] - mean)
@@ -219,13 +251,16 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         print("SUCCESS: Gold {} passed.".format(gold))
     return fails, errors
 
-def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method):
+def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, num_samples):
+    if not os.path.isfile(exe):
+        return 0, ([], ["Did not compile!"])
+
     fails, errors = [], []
     gold = os.path.join(GOLD_OUTPUT_DIR,
                         exe.replace(DIR_UP, "").replace(os.sep, "_") + ".gold")
     tmp = gold + ".tmp"
     try:
-        total_time = run_model(exe, method, data, tmp, runs)
+        total_time = run_model(exe, method, data, tmp, runs, num_samples)
     except Exception as e:
         print("Encountered exception while running {}:".format(exe))
         print(e)
@@ -285,39 +320,63 @@ def parse_args():
                         help="Number of runs per benchmark.", default=1)
     parser.add_argument("-j", dest="j", action="store", type=int, default=multiprocessing.cpu_count())
     parser.add_argument("--runj", dest="runj", action="store", type=int, default=1)
-    parser.add_argument("--name", dest="name", action="store", type=str, default="performance")
+    parser.add_argument("--name", dest="name", action="store", type=str, default=None)
     parser.add_argument("--method", dest="method", action="store", default="sample",
                         help="Inference method to ask Stan to use for all models.")
+    parser.add_argument("--num-samples", dest="num_samples", action="store", default=None, type=int,
+                        help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
+    parser.add_argument("--scorch-earth", dest="scorch", action="store_true")
     return parser.parse_args()
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
     def process_test_wrapper(tup):
-        # TODO: figure out the right place to compute the average or maybe don't compute the average.
-        model, exe, data = tup
+        model, exe, data, num_samples = tup
         time_, (fails, errors) = run(exe, data, overwrite, check_golds,
-                                     check_golds_exact, runs, method)
+                                     check_golds_exact, runs, method, num_samples)
         average_time = time_ / runs
         return (model, average_time, fails, errors)
     return process_test_wrapper
 
+def delete_temporary_exe_files(exes):
+    for exe in exes:
+        extensions = ["", ".hpp", ".o"]
+        for ext in extensions:
+            print("Removing " + exe + ext)
+            if os.path.exists(exe + ext):
+                os.remove(exe + ext)
+
 if __name__ == "__main__":
     args = parse_args()
+    if args.name is None:
+        args.name = str(time()) + "_performance"
+    print("Generating {}".format(args.name))
 
     models = None
 
+    default_num_samples = 1000
     if args.tests == "":
         models = find_files("*.stan", args.directories)
+        models = filter(model_name_re.match, models)
+        models = list(filter(lambda m: not m in bad_models, models))
+        num_samples = [args.num_samples or default_num_samples] * len(models)
     else:
-        models = read_tests(args.tests)
+        models, num_samples = read_tests(args.tests, args.num_samples or default_num_samples)
+        if args.num_samples:
+            num_samples = [args.num_samples] * len(models)
 
-    models = filter(model_name_re.match, models)
-    models = list(filter(lambda m: not m in bad_models, models))
 
     executables = [m[:-5] for m in models]
+    if args.scorch:
+        delete_temporary_exe_files(executables)
+
+    if not len(models) == len(num_samples):
+        print("Something got the models list out of sync with the num_samples list")
+        sys.exit(-10)
+    tests = [(model, exe, find_data_for_model(model), ns)
+             for model, exe, ns in zip(models, executables, num_samples)]
+
     make_time, _ = time_step("make_all_models", make, executables, args.j)
-    tests = [(model, exe, find_data_for_model(model))
-             for model, exe in zip(models, executables)]
     if args.runj > 1:
         tp = ThreadPool(args.runj)
         map_ = tp.imap_unordered
@@ -328,10 +387,17 @@ if __name__ == "__main__":
                                 args.method),
                     tests)
     results = list(results)
-    results.append(("{}.compilation".format(args.name), make_time, [], []))
+
+    results.append(("compilation", make_time, [], []))
     test_results_xml(results).write("{}.xml".format(args.name))
-    with open("{}.csv".format(args.name), "w") as f:
+    csv_name = "{}.csv".format(args.name)
+    with open(csv_name, "w") as f:
         f.write(test_results_csv(results))
+    failed = False
     for model, _, fails, errors in results:
         if fails or errors:
             print("'{}' had fails '{}' and errors '{}'".format(model, fails, errors))
+            failed = True
+    print(csv_name)
+    if failed:
+        sys.exit(-1)
