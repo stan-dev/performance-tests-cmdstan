@@ -138,8 +138,8 @@ pipeline {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
                 perfReport compareBuildPrevious: true,
-                    //relativeFailedThresholdPositive: 10,
-                    //relativeUnstableThresholdPositive: 5,
+                    relativeFailedThresholdPositive: 10,
+                    relativeUnstableThresholdPositive: 5,
                     errorFailedThreshold: 1,
                     modePerformancePerTestCase: true,
                     modeOfThreshold: true,
