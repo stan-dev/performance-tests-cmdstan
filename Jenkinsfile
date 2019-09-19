@@ -103,50 +103,6 @@ def mapBuildResult(body){
     return returnMap
 }
 
-def MapLastGitHubComment(body){
-    returnMap = [:]
-
-    benchmarks = (body =~ /\| (.*?) \| (.*?) \| (.*?) \| (.*?) \| (.*?) \|/)
-
-    for (i = 0; i < benchmarks.size(); i++) {
-      name = benchmarks[i][1]
-      old_value = benchmarks[i][2]
-      new_value = benchmarks[i][3]
-      ratio = benchmarks[i][4]
-      change = benchmarks[i][5]
-
-      if(name != "Name") 
-        returnMap[name] = value
-    }
-
-    return returnMap
-}
-
-def get_last_results(repository, pr_number){
-
-    def get = new URL("https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments?direction=desc").openConnection();
-    def getRC = get.getResponseCode();
-    
-    if(getRC.equals(200)) {
-        def res = get.getInputStream().getText();
-
-      	def jsonSlurper = new JsonSlurper();
-
-        def returnMap = [:]
-      
-        for(o in jsonSlurper.parseText(res)){
-          
-            def body = o.body.toString()
-
-            if(body.contains("low_dim_gauss_mix_collapse")){
-                return mapLastGitHubComment(body);
-            }    
-        }
-    }
-
-    return [:]
-}
-
 @NonCPS
 def get_results(){
     def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
