@@ -14,12 +14,12 @@ fi
 set -e -x
 
 rm cmdstan/bin/stanc || true
-# cd cmdstan; make -j4 examples/bernoulli/bernoulli; cd ..
-cd cmdstan; make -j4 build; cd ..
-NAME1="reference-`date "+%y-%h-%m-%s"`"
-./runPerformanceTests.py --overwrite-golds $1 --name="$NAME1"
+cd cmdstan; make -j4 examples/bernoulli/bernoulli; cd ..
+./runPerformanceTests.py --overwrite-golds $1
 
-cp "$2" cmdstan/bin/stanc
-NAME2="performance"
-./runPerformanceTests.py --check-golds-exact 1e-8 $1 --scorch-earth --name="$NAME2"
-./comparePerformance.py "$NAME1.csv" "$NAME2.csv"
+for i in performance.*; do
+    mv $i "reference_${i}"
+done
+
+cp "$2" cmdstan/bin/stanc # relies on cmdstan Makefile to know to update the models once stanc has been updated.
+./runPerformanceTests.py --check-golds-exact 1e-8 $1 --scorch-earth && ./comparePerformance.py "reference_performance.csv" performance.csv
