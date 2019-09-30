@@ -17,6 +17,26 @@ def get_times(csv):
             times[name] = float(time_)
     return times
 
+def print_output(ratios):
+
+    print("---RESULTS---")
+
+    print("| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |")
+    print("| ------------- |------------- | ------------- | ------------- | ------------- |")
+
+    total = 0
+    for r in ratios:
+        print("| " + r + " | " +  
+            str(round(ratios[r]['old'], 2)) + " | " +
+            str(round(ratios[r]['new'], 2)) + " | " +
+            str(round(ratios[r]['ratio'], 2)) + " | " +
+            str(round(ratios[r]['change'], 2)) + ("% faster" if round(ratios[r]['change'], 2) > 0 else "% slower" ) + " |"
+        )
+        total = total + ratios[r]['ratio']
+
+    print("Mean result: " + str(total / len(ratios)))
+    print("---RESULTS---")
+
 if __name__ == "__main__":
     csv1 = sys.argv[1]
     csv2 = sys.argv[2]
@@ -37,17 +57,4 @@ if __name__ == "__main__":
             "change": (1 - new / old) * 100
         }
 
-    print("| Name, Old Value, New Value, Ratio, Change % |")
-    
-    total = 0
-    for r in ratios:
-        print(r, 
-            round(ratios[r]['old'], 2), 
-            round(ratios[r]['new'], 2), 
-            round(ratios[r]['ratio'], 2), 
-            round(ratios[r]['change'], 2)
-        )
-        total = total + ratios[r]['ratio']
-
-    meanResult = total / len(ratios)
-    print("Mean: " + str(meanResult))
+    print_output(ratios)
