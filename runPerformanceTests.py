@@ -334,7 +334,7 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
         model, exe, data, num_samples = tup
         time_, (fails, errors) = run(exe, data, overwrite, check_golds,
                                      check_golds_exact, runs, method, num_samples)
-        average_time = time_ / runs
+        average_time = runs and time_ / runs or 0
         return (model, average_time, fails, errors)
     return process_test_wrapper
 
