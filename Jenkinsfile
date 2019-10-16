@@ -163,7 +163,7 @@ pipeline {
                             params.run_macosx == true
                         }
                     }
-                    agent { label 'osx' }
+                    agent { label 'gelman-group-mac' }
                     steps {
                         
                         cleanCheckout()
