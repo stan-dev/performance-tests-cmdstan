@@ -188,11 +188,11 @@ pipeline {
                         }
     
                         writeFile(file: "cmdstan/make/local", text: make_local_macosx)
-                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                        sh "./runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
     
                         sh "make clean"
                         writeFile(file: "cmdstan/make/local", text: make_local_macosx)
-                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                        sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
