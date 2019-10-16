@@ -45,7 +45,9 @@ pipeline {
         string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
 
-        string(defaultValue: '', name: 'make_local', description: "Make/file contents")
+        string(defaultValue: '', name: 'make_local_windows', description: "Make/file contents")
+        string(defaultValue: '', name: 'make_local_linux', description: "Make/file contents")
+        string(defaultValue: 'CXXFLAGS += -march=core2', name: 'make_local_macosx', description: "Make/file contents")
 
         booleanParam(defaultValue: true, name: 'run_windows', description: "True/False to run tests on windows")
         booleanParam(defaultValue: true, name: 'run_linux', description: "True/False to run tests on linux")
@@ -71,6 +73,7 @@ pipeline {
     
                                 bat """
                                     bash -c "cd cmdstan"
+                                    bash -c "git submodule update --init --recursive"
                                     bash -c "git pull origin ${params.cmdstan_origin_pr}"
                                     bash -c "git submodule update --init --recursive"
                                 """
@@ -83,22 +86,17 @@ pipeline {
                                     bash -c "make revert clean"
                                 """
                         }
-    
-                        bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
-                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                        bat "bash -c \"echo ${make_local_windows} > cmdstan/make/local\""
+                        bat "bash -c \"python runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests\""
     
                         bat "bash -c \"make clean\""
     
-                        bat "bash -c \"echo ${make_local} > cmdstan/make/local\""
-                        bat "python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\\bugs_examples example-models\\regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                        bat "bash -c \"echo ${make_local_windows} > cmdstan/make/local\""
+                        bat "bash -c \"python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\\bugs_examples example-models\\regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests\""
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
                         perfReport compareBuildPrevious: true,
-    
-                            //relativeFailedThresholdPositive: 10,
-                            //relativeUnstableThresholdPositive: 5,
-    
                             errorFailedThreshold: 1,
                             failBuildIfNoResultFile: false,
                             modePerformancePerTestCase: true,
@@ -139,20 +137,16 @@ pipeline {
                                 """
                         }
     
-                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        writeFile(file: "cmdstan/make/local", text: make_local_linux)
                         sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
     
                         sh "make clean"
-                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        writeFile(file: "cmdstan/make/local", text: make_local_linux)
                         sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
                         perfReport compareBuildPrevious: true,
-    
-                            //relativeFailedThresholdPositive: 10,
-                            //relativeUnstableThresholdPositive: 5,
-    
                             errorFailedThreshold: 1,
                             failBuildIfNoResultFile: false,
                             modePerformancePerTestCase: true,
@@ -193,20 +187,16 @@ pipeline {
                                 """
                         }
     
-                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        writeFile(file: "cmdstan/make/local", text: make_local_macosx)
                         sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
     
                         sh "make clean"
-                        writeFile(file: "cmdstan/make/local", text: make_local)
+                        writeFile(file: "cmdstan/make/local", text: make_local_macosx)
                         sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
                         perfReport compareBuildPrevious: true,
-    
-                            //relativeFailedThresholdPositive: 10,
-                            //relativeUnstableThresholdPositive: 5,
-    
                             errorFailedThreshold: 1,
                             failBuildIfNoResultFile: false,
                             modePerformancePerTestCase: true,
