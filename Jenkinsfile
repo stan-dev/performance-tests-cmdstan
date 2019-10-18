@@ -41,9 +41,9 @@ pipeline {
     }
     parameters {
         string(defaultValue: 'develop', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch")
-        string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
-        string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
-        string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
+        string(defaultValue: 'develop', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
+        string(defaultValue: 'develop', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
+        string(defaultValue: 'develop', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
 
         string(defaultValue: '', name: 'make_local_windows', description: "Make/file contents")
         string(defaultValue: '', name: 'make_local_linux', description: "Make/file contents")
