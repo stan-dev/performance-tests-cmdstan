@@ -87,12 +87,12 @@ pipeline {
                                 """
                         }
                         bat "bash -c \"echo ${make_local_windows} > cmdstan/make/local\""
-                        bat "bash -c \"python runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests\""
+                        bat "bash -c \"python runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=windows_known_good_perf --tests-file=known_good_perf_all.tests\""
     
                         bat "bash -c \"make clean\""
     
                         bat "bash -c \"echo ${make_local_windows} > cmdstan/make/local\""
-                        bat "bash -c \"python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\\bugs_examples example-models\\regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests\""
+                        bat "bash -c \"python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\\bugs_examples example-models\\regressions --name=windows_shotgun_perf --tests-file=shotgun_perf_all.tests\""
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
@@ -138,11 +138,11 @@ pipeline {
                         }
     
                         writeFile(file: "cmdstan/make/local", text: make_local_linux)
-                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runs 3 stat_comp_benchmarks --check-golds --name=linux_known_good_perf --tests-file=known_good_perf_all.tests"
     
                         sh "make clean"
                         writeFile(file: "cmdstan/make/local", text: make_local_linux)
-                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=shotgun_perf --tests-file=shotgun_perf_all.tests"
+                        sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=linux_shotgun_perf --tests-file=shotgun_perf_all.tests"
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
@@ -188,11 +188,11 @@ pipeline {
                         }
     
                         writeFile(file: "cmdstan/make/local", text: make_local_macosx)
-                        sh "./runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                        sh "./runPerformanceTests.py --runs 3 --check-golds --name=macos_known_good_perf --tests-file=known_good_perf_all.tests"
     
                         sh "make clean"
                         writeFile(file: "cmdstan/make/local", text: make_local_macosx)
-                        sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
+                        sh "./runPerformanceTests.py --name=macos_shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
     
                         junit '*.xml'
                         archiveArtifacts '*.xml'
