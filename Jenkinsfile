@@ -132,6 +132,8 @@ pipeline {
                                     old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                                     ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} linux
+                                    ls -al
+                                    cat comparePerformance.py
                                     mv linux_performance.xml linux_\$cmdstan_hash.xml
                                     make revert clean
                                 """
