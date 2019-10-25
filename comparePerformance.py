@@ -20,10 +20,11 @@ def get_times(csv):
 if __name__ == "__main__":
     csv1 = sys.argv[1]
     csv2 = sys.argv[2]
+    os = sys.argv[3]
     times1, times2 = map(get_times, [csv1, csv2])
     ratios = [(n, times1[n]/times2[n]) for n in times1]
 
-    f = open(csv1 + " - " + csv2 + ".xml", "w+")
+    f = open(os + "_compare_results.xml", "w+")
 
     for r in ratios:
         f.write(str(r[0]) + ", " + str(round(r[1], 2)))

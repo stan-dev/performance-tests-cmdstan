@@ -82,7 +82,7 @@ pipeline {
                                     bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')"
                                     bash -c "cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)"
                                     bash -c "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows" 
-                                    bash -c "mv performance.xml \$cmdstan_hash.xml"
+                                    bash -c "mv windows_performance.xml windows_\$cmdstan_hash.xml"
                                     bash -c "make revert clean"
                                 """
                         }
@@ -132,7 +132,7 @@ pipeline {
                                     old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                                     ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} linux
-                                    mv performance.xml \$cmdstan_hash.xml
+                                    mv linux_performance.xml linux_\$cmdstan_hash.xml
                                     make revert clean
                                 """
                         }
@@ -182,7 +182,7 @@ pipeline {
                                     old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                                     ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} macos
-                                    mv performance.xml \$cmdstan_hash.xml
+                                    mv macos_performance.xml macos_\$cmdstan_hash.xml
                                     make revert clean
                                 """
                         }

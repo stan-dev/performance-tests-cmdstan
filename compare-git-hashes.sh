@@ -83,5 +83,5 @@ clean_checkout "$3" "$4" "$5"
 NAME2="$6_performance"
 ./runPerformanceTests.py --check-golds-exact 1e-8 $1 --name="$NAME2"
 
-./comparePerformance.py "$NAME1.csv" "$NAME2.csv"
+./comparePerformance.py "$NAME1.csv" "$NAME2.csv" "$6"
 
