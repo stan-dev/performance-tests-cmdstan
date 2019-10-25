@@ -40,10 +40,10 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: 'develop', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch")
-        string(defaultValue: 'develop', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
-        string(defaultValue: 'develop', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
-        string(defaultValue: 'develop', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
+        string(defaultValue: 'develop', name: 'cmdstan_origin_pr', description: "CmdStan hash/branch to base hash/branch. Example: PR-123 OR e6c3010fd0168ef961a531d56b2330fd64728523 OR develop")
+        string(defaultValue: 'develop', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against. Example: PR-123 OR e6c3010fd0168ef961a531d56b2330fd64728523 OR develop")
+        string(defaultValue: 'develop', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo. Example: PR-123 OR e6c3010fd0168ef961a531d56b2330fd64728523 OR develop")
+        string(defaultValue: 'develop', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo. Example: PR-123 OR e6c3010fd0168ef961a531d56b2330fd64728523 OR develop")
 
         string(defaultValue: '', name: 'make_local_windows', description: "Make/file contents")
         string(defaultValue: '', name: 'make_local_linux', description: "Make/file contents")
