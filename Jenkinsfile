@@ -79,9 +79,9 @@ pipeline {
                                 """
     
                                 bat """
-                                    bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')""
-                                    bash -c "cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)""
-                                    bash -c "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}""
+                                    bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')"
+                                    bash -c "cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)"
+                                    bash -c "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows" 
                                     bash -c "mv performance.xml \$cmdstan_hash.xml"
                                     bash -c "make revert clean"
                                 """
@@ -131,7 +131,7 @@ pipeline {
                                 sh """
                                     old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                                    ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                                    ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} linux
                                     mv performance.xml \$cmdstan_hash.xml
                                     make revert clean
                                 """
@@ -181,7 +181,7 @@ pipeline {
                                 sh """
                                     old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                                    ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                                    ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} macos
                                     mv performance.xml \$cmdstan_hash.xml
                                     make revert clean
                                 """
