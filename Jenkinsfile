@@ -93,17 +93,8 @@ pipeline {
     
                         bat "bash -c \"echo ${make_local_windows} > cmdstan/make/local\""
                         bat "bash -c \"python runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models\\bugs_examples example-models\\regressions --name=windows_shotgun_perf --tests-file=shotgun_perf_all.tests\""
-    
-                        junit '*.xml'
+
                         archiveArtifacts '*.xml'
-                        perfReport compareBuildPrevious: true,
-                            errorFailedThreshold: 1,
-                            failBuildIfNoResultFile: false,
-                            modePerformancePerTestCase: true,
-                            modeOfThreshold: true,
-                            sourceDataFiles: '*.xml',
-                            modeThroughput: false,
-                            configType: 'PRT'
                     }
                 }
     
@@ -146,16 +137,7 @@ pipeline {
                         writeFile(file: "cmdstan/make/local", text: make_local_linux)
                         sh "./runPerformanceTests.py -j${env.PARALLEL} --runj 1 example-models/bugs_examples example-models/regressions --name=linux_shotgun_perf --tests-file=shotgun_perf_all.tests"
     
-                        junit '*.xml'
                         archiveArtifacts '*.xml'
-                        perfReport compareBuildPrevious: true,
-                            errorFailedThreshold: 1,
-                            failBuildIfNoResultFile: false,
-                            modePerformancePerTestCase: true,
-                            modeOfThreshold: true,
-                            sourceDataFiles: '*.xml',
-                            modeThroughput: false,
-                            configType: 'PRT'
                     }
                 }
     
@@ -195,17 +177,8 @@ pipeline {
                         sh "make clean"
                         writeFile(file: "cmdstan/make/local", text: make_local_macosx)
                         sh "./runPerformanceTests.py --name=macos_shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
-    
-                        junit '*.xml'
+
                         archiveArtifacts '*.xml'
-                        perfReport compareBuildPrevious: true,
-                            errorFailedThreshold: 1,
-                            failBuildIfNoResultFile: false,
-                            modePerformancePerTestCase: true,
-                            modeOfThreshold: true,
-                            sourceDataFiles: '*.xml',
-                            modeThroughput: false,
-                            configType: 'PRT'
                     }
                 }       
             }
