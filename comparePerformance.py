@@ -26,9 +26,8 @@ if __name__ == "__main__":
 
     f = open(os + "_compare_results.xml", "w+")
 
-    #<testcase name="compilation" result="99.7739980221"/>
     for r in ratios:
-        f.write("<testcase name=\"" + str(r[0]) + "\" time=\"" + str(round(r[1], 2)) + "\"/>")
+        f.write(str(r[0]) + ", " + str(round(r[1], 2)))
 
     f.write(str(mean([r for _, r in ratios])))
 
