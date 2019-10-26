@@ -15,7 +15,7 @@ def cleanCheckout() {
 
     deleteDir()
     checkout([$class: 'GitSCM',
-        branches: [[name: '*/master']],
+        branches: [[name: '*/custom']],
         doGenerateSubmoduleConfigurations: false,
         extensions: [[$class: 'SubmoduleOption',
                     disableSubmodules: false,
