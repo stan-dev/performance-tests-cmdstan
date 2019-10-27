@@ -24,8 +24,8 @@ def write_output(ratios):
     # Keep this print so Jenkins can extract what's in between for GitHub
     #f.write("---RESULTS---")
 
-    f.write("| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |")
-    f.write("| ------------- |------------- | ------------- | ------------- | ------------- |")
+    f.write("| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) | \n")
+    f.write("| ------------- |------------- | ------------- | ------------- | ------------- | \n")
 
     total = 0
     for r in ratios:
@@ -33,11 +33,11 @@ def write_output(ratios):
             str(round(ratios[r]['old'], 2)) + " | " +
             str(round(ratios[r]['new'], 2)) + " | " +
             str(round(ratios[r]['ratio'], 2)) + " | " +
-            str(round(ratios[r]['change'], 2)) + ("% faster" if round(ratios[r]['change'], 2) > 0 else "% slower" ) + " |"
+            str(round(ratios[r]['change'], 2)) + ("% faster" if round(ratios[r]['change'], 2) > 0 else "% slower" ) + " | \n"
         )
         total = total + ratios[r]['ratio']
 
-    f.write("Mean result: " + str(total / len(ratios)))
+    f.write("Mean result: " + str(total / len(ratios)) + "\n")
 
     f.close()
 
@@ -52,7 +52,11 @@ if __name__ == "__main__":
     ratios = {}
 
     for n in times1:
-        key = "performance.compilation" if "compilation" in n else n
+        print("---")
+        print(n)
+        print("---")
+        #key = "performance.compilation" if "compilation" in n else n
+        key = n
 
         old = times1[n]
         new = times2[key]
