@@ -17,18 +17,52 @@ def get_times(csv):
             times[name] = float(time_)
     return times
 
+def write_output(ratios):
+
+    f = open(os + "_compare_results.xml", "w+")
+
+    # Keep this print so Jenkins can extract what's in between for GitHub
+    #f.write("---RESULTS---")
+
+    f.write("| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |")
+    f.write("| ------------- |------------- | ------------- | ------------- | ------------- |")
+
+    total = 0
+    for r in ratios:
+        f.write("| " + r + " | " +  
+            str(round(ratios[r]['old'], 2)) + " | " +
+            str(round(ratios[r]['new'], 2)) + " | " +
+            str(round(ratios[r]['ratio'], 2)) + " | " +
+            str(round(ratios[r]['change'], 2)) + ("% faster" if round(ratios[r]['change'], 2) > 0 else "% slower" ) + " |"
+        )
+        total = total + ratios[r]['ratio']
+
+    f.write("Mean result: " + str(total / len(ratios)))
+
+    f.close()
+
+    # Keep this print so Jenkins can extract what's in between for GitHub
+    #f.write("---RESULTS---")
+
 if __name__ == "__main__":
     csv1 = sys.argv[1]
     csv2 = sys.argv[2]
     os = sys.argv[3]
     times1, times2 = map(get_times, [csv1, csv2])
-    ratios = [(n, times1[n]/times2[n]) for n in times1]
+    ratios = {}
 
-    f = open(os + "_compare_results.xml", "w+")
+    for n in times1:
+        key = "performance.compilation" if "compilation" in n else n
 
-    for r in ratios:
-        f.write(str(r[0]) + ", " + str(round(r[1], 2)))
+        old = times1[n]
+        new = times2[key]
+        ratio = old / new
 
-    f.write(str(mean([r for _, r in ratios])))
+        ratios[key] = {
+            "old": old,
+            "new": new,
+            "ratio": ratio,
+            "change": (1 - new / old) * 100
+        }
 
-    f.close()
+    write_output(ratios)
