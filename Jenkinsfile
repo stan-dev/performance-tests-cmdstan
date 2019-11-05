@@ -87,13 +87,11 @@ pipeline {
                                 """
     
                                 bat """
-                                    bash -c "export old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}') \\
-                                        export cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi) \\
-                                        echo \$cmdstan_hash \\
-                                        compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows \\
-                                        mv windows_performance.xml windows_\$cmdstan_hash.xml \\
-                                        make revert clean \\
-                                        ls -lart"
+                                    bash -cl "export old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}') && export cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)"
+                                    bash -cl "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows"
+                                    bash -cl "mv windows_performance.xml windows_\$cmdstan_hash.xml"
+                                    bash -cl "make revert clean"
+                                    bash -cl "ls -lart"
                                 """
                         }
                         bat "bash -c \"echo ${make_local_windows} > cmdstan/make/local\""
