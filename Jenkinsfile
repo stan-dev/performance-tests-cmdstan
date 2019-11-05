@@ -81,16 +81,14 @@ pipeline {
                                 cmdstan_pr = branchOrPR(params.cmdstan_pr)
     
                                 bat """
-                                    bash -c "#!/bin/bash \\
-                                        cd cmdstan \\
+                                    bash -c "cd cmdstan \\
                                         git submodule update --init --recursive \\
                                         git pull origin ${params.cmdstan_origin_pr} \\
                                         git submodule update --init --recursive"
                                 """
     
                                 bat """
-                                    bash -c "#!/bin/bash \\
-                                        old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}') \\
+                                    bash -c " export old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}') \\
                                         cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi) \\
                                         echo \$cmdstan_hash \\
                                         compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows \\
