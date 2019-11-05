@@ -81,20 +81,20 @@ pipeline {
                                 cmdstan_pr = branchOrPR(params.cmdstan_pr)
     
                                 bat """
-                                    bash -c "cd cmdstan"
-                                    bash -c "git submodule update --init --recursive"
-                                    bash -c "git pull origin ${params.cmdstan_origin_pr}"
-                                    bash -c "git submodule update --init --recursive"
+                                    bash -c "cd cmdstan \\
+                                        git submodule update --init --recursive \\
+                                        git pull origin ${params.cmdstan_origin_pr} \\
+                                        git submodule update --init --recursive"
                                 """
     
                                 bat """
-                                    bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')"
-                                    bash -c "cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)"
-                                    bash -c "echo \$cmdstan_hash"
-                                    bash -c "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows" 
-                                    bash -c "mv windows_performance.xml windows_\$cmdstan_hash.xml"
-                                    bash -c "make revert clean"
-                                    bash -c "ls -lart"
+                                    bash -c "old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}') \\
+                                        cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi) \\
+                                        echo \$cmdstan_hash \\
+                                        compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows \\
+                                        mv windows_performance.xml windows_\$cmdstan_hash.xml \\
+                                        make revert clean \\
+                                        ls -lart"
                                 """
                         }
                         bat "bash -c \"echo ${make_local_windows} > cmdstan/make/local\""
