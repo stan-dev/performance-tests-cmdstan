@@ -81,3 +81,5 @@ if __name__ == "__main__":
         print_output_markdown(ratios)
     elif output_type == "csv":
         print_output_csv(ratios)
+    elif not output_type:
+        print_output_csv(ratios)
