@@ -17,7 +17,7 @@ def get_times(csv):
             times[name] = float(time_)
     return times
 
-def print_output(ratios):
+def print_output_markdown(ratios):
 
     # Keep this print so Jenkins can extract what's in between for GitHub
     print("---RESULTS---")
@@ -40,9 +40,26 @@ def print_output(ratios):
     # Keep this print so Jenkins can extract what's in between for GitHub
     print("---RESULTS---")
 
+def print_output_csv(ratios):
+
+    print("Name, Old Result, New Result, Ratio, Performance change( 1 - new / old )")
+
+    total = 0
+    for r in ratios:
+        print(r + ", " +
+            str(round(ratios[r]['old'], 2)) + ", " +
+            str(round(ratios[r]['new'], 2)) + ", " +
+            str(round(ratios[r]['ratio'], 2)) + ", " +
+            str(round(ratios[r]['change'], 2)) + ("% faster" if round(ratios[r]['change'], 2) > 0 else "% slower" )
+        )
+        total = total + ratios[r]['ratio']
+
+    print("Mean result: " + str(total / len(ratios)))
+    
 if __name__ == "__main__":
     csv1 = sys.argv[1]
     csv2 = sys.argv[2]
+    output_type = sys.argv[3]
     times1, times2 = map(get_times, [csv1, csv2])
     ratios = {}
 
@@ -60,4 +77,7 @@ if __name__ == "__main__":
             "change": (1 - new / old) * 100
         }
 
-    print_output(ratios)
+    if output_type == "markdown":
+        print_output_markdown(ratios)
+    elif output_type == "csv":
+        print_output_csv(ratios)

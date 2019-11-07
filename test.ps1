@@ -1,0 +1,3 @@
+$env:VAR_NAME="VALUE2"
+
+$env:VAR_NAME
