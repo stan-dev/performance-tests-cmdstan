@@ -84,4 +84,4 @@ for i in performance.*; do
 done
 
 clean_checkout "$3" "$4" "$5"
-./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv
+./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv markdown
