@@ -1,68 +1,68 @@
-# example-models/bugs_examples/vol1/epil/epil.stan
-# example-models/bugs_examples/vol1/inhalers/inhalers.stan, 1000
-# example-models/bugs_examples/vol1/kidney/kidney.stan
-# example-models/bugs_examples/vol1/litter/litter_old_param.stan
-# example-models/bugs_examples/vol1/lsat/lsat.stan, 700
-# example-models/bugs_examples/vol1/oxford/oxford.stan
-# example-models/bugs_examples/vol2/birats/birats.stan, 300
-# example-models/bugs_examples/vol2/cervix/cervix2.stan, 700
-# example-models/bugs_examples/vol2/jaws/jaws.stan
-# example-models/bugs_examples/vol2/mvn_orange/mvn_orange.stan, 300
-# example-models/bugs_examples/vol2/pines/pines-independent.stan, 20000
-# example-models/bugs_examples/vol2/schools/schools-1.stan, 100
-# example-models/bugs_examples/vol2/schools/schools-2.stan, 100
-# example-models/bugs_examples/vol2/schools/schools-3.stan, 100
-# example-models/bugs_examples/vol2/schools/schools-4.stan, 100
-# example-models/bugs_examples/vol2/schools/schools.stan, 100
-# example-models/bugs_examples/vol2/stagnant/stagnant.stan
-# example-models/bugs_examples/vol2/t_df/simt4.stan
+example-models/bugs_examples/vol1/epil/epil.stan
+example-models/bugs_examples/vol1/inhalers/inhalers.stan, 1000
+example-models/bugs_examples/vol1/kidney/kidney.stan
+example-models/bugs_examples/vol1/litter/litter_old_param.stan
+example-models/bugs_examples/vol1/lsat/lsat.stan, 700
+example-models/bugs_examples/vol1/oxford/oxford.stan
+example-models/bugs_examples/vol2/birats/birats.stan, 300
+example-models/bugs_examples/vol2/cervix/cervix2.stan, 700
+example-models/bugs_examples/vol2/jaws/jaws.stan
+example-models/bugs_examples/vol2/mvn_orange/mvn_orange.stan, 300
+example-models/bugs_examples/vol2/pines/pines-independent.stan, 20000
+example-models/bugs_examples/vol2/schools/schools-1.stan, 100
+example-models/bugs_examples/vol2/schools/schools-2.stan, 100
+example-models/bugs_examples/vol2/schools/schools-3.stan, 100
+example-models/bugs_examples/vol2/schools/schools-4.stan, 100
+example-models/bugs_examples/vol2/schools/schools.stan, 100
+example-models/bugs_examples/vol2/stagnant/stagnant.stan
+example-models/bugs_examples/vol2/t_df/simt4.stan
 example-models/bugs_examples/vol3/hepatitis/hepatitisME.stan, 700
-# example-models/regression_tests/matrix_indexing.stan, 700
-# example-models/bugs_examples/vol3/hepatitis/hepatitis.stan, 20000
-# example-models/bugs_examples/vol1/blocker/blocker.stan, 20000
-# example-models/bugs_examples/vol1/bones/bones.stan
-# example-models/bugs_examples/vol1/dyes/dyes.stan, 20000
-# example-models/bugs_examples/vol1/equiv/equiv.stan, 20000
-# example-models/bugs_examples/vol1/leuk/leuk.stan, 20000
-# example-models/bugs_examples/vol1/leukfr/leukfr.stan, 4000
-# example-models/bugs_examples/vol1/litter/litter.stan, 20000
-# example-models/bugs_examples/vol1/magnesium/magnesium.stan, 5000
-# example-models/bugs_examples/vol1/mice/mice.stan, 10000
-# example-models/bugs_examples/vol1/pump/pump.stan, 40000
-# example-models/bugs_examples/vol1/rats/rats.stan, 20000
-# example-models/bugs_examples/vol1/rats/rats_vec.stan, 20000
-# example-models/bugs_examples/vol1/rats/rats_vec_unit.stan, 20000
-# example-models/bugs_examples/vol1/salm/salm.stan, 10000
-# example-models/bugs_examples/vol1/salm/salm2.stan, 7000
-# example-models/bugs_examples/vol1/seeds/seeds.stan, 20000
-# example-models/bugs_examples/vol1/seeds/seeds_centered.stan, 20000
-# example-models/bugs_examples/vol1/seeds/seeds_stanified.stan, 20000
-# example-models/bugs_examples/vol1/stacks/stacks_a_normal.stan, 40000
-# example-models/bugs_examples/vol1/stacks/stacks_b_dexp.stan, 30000
-# example-models/bugs_examples/vol1/stacks/stacks_c_t4.stan, 40000
-# example-models/bugs_examples/vol1/stacks/stacks_d_normal_ridge.stan, 40000
-# example-models/bugs_examples/vol1/stacks/stacks_e_dexp_ridge.stan, 20000
-# example-models/bugs_examples/vol1/stacks/stacks_f_t4_ridge.stan, 20000
-# example-models/bugs_examples/vol1/surgical/surgical.stan, 20000
-# example-models/bugs_examples/vol1/surgical/surgical_stanified.stan, 20000
-# example-models/bugs_examples/vol2/air/air.stan, 20000
-# example-models/bugs_examples/vol2/alli/alli2.stan, 20000
-# example-models/bugs_examples/vol2/beetles/beetles_cloglog.stan, 20000
-# example-models/bugs_examples/vol2/beetles/beetles_logit.stan, 20000
-# example-models/bugs_examples/vol2/beetles/beetles_probit.stan, 20000
-# example-models/bugs_examples/vol2/dugongs/dugongs.stan, 20000
-# example-models/bugs_examples/vol2/endo/endo1.stan, 20000
-# example-models/bugs_examples/vol2/endo/endo2.stan, 20000
-# example-models/bugs_examples/vol2/endo/endo3.stan, 20000
-# example-models/bugs_examples/vol2/eyes/eyes.stan, 20000
-# example-models/bugs_examples/vol2/hearts/hearts.stan, 20000
-# example-models/bugs_examples/vol2/ice/ice.stan, 10000
-# example-models/bugs_examples/vol2/orange/orange.stan, 10000
-# example-models/bugs_examples/vol2/pines/pines-2.stan, 20000
-# example-models/bugs_examples/vol2/pines/pines.stan, 20000
-# example-models/bugs_examples/vol2/stagnant/stagnant2.stan, 20000
-# example-models/bugs_examples/vol2/t_df/estdof.stan, 20000
-# example-models/bugs_examples/vol3/data_cloning/seeds.stan, 7000
+example-models/regression_tests/matrix_indexing.stan, 700
+example-models/bugs_examples/vol3/hepatitis/hepatitis.stan, 20000
+example-models/bugs_examples/vol1/blocker/blocker.stan, 20000
+example-models/bugs_examples/vol1/bones/bones.stan
+example-models/bugs_examples/vol1/dyes/dyes.stan, 20000
+example-models/bugs_examples/vol1/equiv/equiv.stan, 20000
+example-models/bugs_examples/vol1/leuk/leuk.stan, 20000
+example-models/bugs_examples/vol1/leukfr/leukfr.stan, 4000
+example-models/bugs_examples/vol1/litter/litter.stan, 20000
+example-models/bugs_examples/vol1/magnesium/magnesium.stan, 5000
+example-models/bugs_examples/vol1/mice/mice.stan, 10000
+example-models/bugs_examples/vol1/pump/pump.stan, 40000
+example-models/bugs_examples/vol1/rats/rats.stan, 20000
+example-models/bugs_examples/vol1/rats/rats_vec.stan, 20000
+example-models/bugs_examples/vol1/rats/rats_vec_unit.stan, 20000
+example-models/bugs_examples/vol1/salm/salm.stan, 10000
+example-models/bugs_examples/vol1/salm/salm2.stan, 7000
+example-models/bugs_examples/vol1/seeds/seeds.stan, 20000
+example-models/bugs_examples/vol1/seeds/seeds_centered.stan, 20000
+example-models/bugs_examples/vol1/seeds/seeds_stanified.stan, 20000
+example-models/bugs_examples/vol1/stacks/stacks_a_normal.stan, 40000
+example-models/bugs_examples/vol1/stacks/stacks_b_dexp.stan, 30000
+example-models/bugs_examples/vol1/stacks/stacks_c_t4.stan, 40000
+example-models/bugs_examples/vol1/stacks/stacks_d_normal_ridge.stan, 40000
+example-models/bugs_examples/vol1/stacks/stacks_e_dexp_ridge.stan, 20000
+example-models/bugs_examples/vol1/stacks/stacks_f_t4_ridge.stan, 20000
+example-models/bugs_examples/vol1/surgical/surgical.stan, 20000
+example-models/bugs_examples/vol1/surgical/surgical_stanified.stan, 20000
+example-models/bugs_examples/vol2/air/air.stan, 20000
+example-models/bugs_examples/vol2/alli/alli2.stan, 20000
+example-models/bugs_examples/vol2/beetles/beetles_cloglog.stan, 20000
+example-models/bugs_examples/vol2/beetles/beetles_logit.stan, 20000
+example-models/bugs_examples/vol2/beetles/beetles_probit.stan, 20000
+example-models/bugs_examples/vol2/dugongs/dugongs.stan, 20000
+example-models/bugs_examples/vol2/endo/endo1.stan, 20000
+example-models/bugs_examples/vol2/endo/endo2.stan, 20000
+example-models/bugs_examples/vol2/endo/endo3.stan, 20000
+example-models/bugs_examples/vol2/eyes/eyes.stan, 20000
+example-models/bugs_examples/vol2/hearts/hearts.stan, 20000
+example-models/bugs_examples/vol2/ice/ice.stan, 10000
+example-models/bugs_examples/vol2/orange/orange.stan, 10000
+example-models/bugs_examples/vol2/pines/pines-2.stan, 20000
+example-models/bugs_examples/vol2/pines/pines.stan, 20000
+example-models/bugs_examples/vol2/stagnant/stagnant2.stan, 20000
+example-models/bugs_examples/vol2/t_df/estdof.stan, 20000
+example-models/bugs_examples/vol3/data_cloning/seeds.stan, 7000
 # example-models/knitr/bandits/bernoulli-bandits.stan
 # example-models/knitr/bradley-terry/individual-hierarchical.stan
 # example-models/knitr/bradley-terry/individual-uniform.stan
