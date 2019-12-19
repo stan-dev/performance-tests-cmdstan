@@ -253,10 +253,12 @@ def run_golds(gold, tmp, summary, check_golds_exact):
     return fails, errors
 
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, num_samples):
-    if not os.path.isfile(exe):
-        return 0, ([], ["Did not compile!"])
-
     fails, errors = [], []
+    if not os.path.isfile(exe):
+        return 0, (fails, errors + ["Did not compile!"])
+    if runs <= 0:
+        return 0, (fails, errors)
+
     gold = os.path.join(GOLD_OUTPUT_DIR,
                         exe.replace(DIR_UP, "").replace(os.sep, "_") + ".gold")
     tmp = gold + ".tmp"
@@ -285,6 +287,8 @@ def test_results_xml(tests):
             tests=str(len(tests)), time=str(time_),
             timestamp=str(datetime.now()))
     for model, time_, fails, errors in tests:
+        if time_ <= 0 and (not fails and not errors):
+            continue
         name = model.replace(".stan", "").replace(os.sep, ".")
         classname = name
         last_dot = name.rfind(".")
@@ -335,7 +339,7 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
         model, exe, data, num_samples = tup
         time_, (fails, errors) = run(exe, data, overwrite, check_golds,
                                      check_golds_exact, runs, method, num_samples)
-        average_time = time_ / runs
+        average_time = runs and time_ / runs or 0
         return (model, average_time, fails, errors)
     return process_test_wrapper
 
