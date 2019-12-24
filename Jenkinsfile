@@ -1,7 +1,6 @@
 #!/usr/bin/env groovy
 @Library('StanUtils')
 import org.stan.Utils
-import groovy.json.JsonSlurper
 
 def utils = new org.stan.Utils()
 
@@ -12,112 +11,39 @@ def branchOrPR(pr) {
   return pr
 }
 
-def checkOs(){
-    if (isUnix()) {
-        def uname = sh script: 'uname', returnStdout: true
-        if (uname.startsWith("Darwin")) {
-            return "macos"
-        }
-        else {
-            return "linux"
-        }
-    }
-    else {
-        return "windows"
-    }
-}
-
-def escapeStringForJson(inputString){
-    return inputString.trim().replace("\r","\\r").replace("\n","\\n").replace("\t"," ").replace("\"","\\\"").replace("\\", "\\\\")
-}
-
-def mapBuildResult(body){
-
-    def returnMap = [:]
-
-    returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
-    returnMap["hash"] = (body =~ /Merge (.*?) into/)[0][1]
-
-    def current_os = (body =~ /Current OS: (.*?) !/)[0][1]
-
-    def cpu = ""
-    def gpp = ""
-    def clang = ""
-    def sys_ver = ""
-
-    if(current_os == "windows"){
-        cpu = (body =~ /(?s)wmic CPU get NAME(.*?)(C:|J:|Z:)/)[0][1]
-        sys_ver = (body =~ /(?s)>ver(.*?)(C:|J:|Z:)/)[0][1]
-        gpp = (body =~ /(?s)g\+\+ --version(.*?)(C:|J:|Z:)/)[0][1]
-        clang = (body =~ /(?s)clang --version(.*?)(C:|J:|Z:)/)[0][1]
-    }
-    else if(current_os == "macos"){
-        cpu = (body =~ /(?s)sysctl -n machdep\.cpu\.brand_string(.*?)\+ sw_vers/)[0][1]
-        sys_ver = (body =~ /(?s)sw_vers(.*?)\+ g\+\+/)[0][1]
-        gpp = (body =~ /(?s)g\+\+ --version(.*?)\+ clang/)[0][1]
-        clang = (body =~ /(?s)clang --version(.*?)\+ echo/)[0][1]
-    }
-    else{
-        cpu = (body =~ /(?s)lscpu(.*?)\+ lsb_release/)[0][1]
-        sys_ver = (body =~ /(?s)lsb_release -a(.*?)\+ g\+\+/)[0][1]   
-        gpp = (body =~ /(?s)g\+\+ --version(.*?)\+ clang/)[0][1]
-        clang = (body =~ /(?s)clang --version(.*?)\+ echo/)[0][1]
-    }
-
-    
-
-    returnMap["system"] = [
-        "cpu": escapeStringForJson(cpu),
-        "sys_ver": escapeStringForJson(sys_ver),
-        "gpp": escapeStringForJson(gpp),
-        "clang": escapeStringForJson(clang)
-      ]
-
-    return returnMap
+def post_comment(text, repository, pr_number) {
+    sh """#!/bin/bash
+        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${text}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
+    """
 }
 
 @NonCPS
 def get_results(){
     def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
-    return performance_log
-}
+    def comment = ""
 
-def post_comment(text, repository, pr_number, blue_ocean_repository) {
+    def test_matches = (performance_log =~ /\('(.*)\)/)
+    for(item in test_matches){
+        comment += item[0] + "\\r\\n"
+    }
+    def result_match = (performance_log =~ /(?s)\).(\d{1}\.?\d{11})/)
+    try{
+        comment += "Result: " + result_match[0][1].toString() + "\\r\\n"
+    }
+    catch(Exception ex){
+        comment += "Result: " + "Regex did not match anything" + "\\r\\n"
+    }
+    def result_match_hash = (performance_log =~ /Merge (.*?) into/)
+    try{
+        comment += "Commit hash: " + result_match_hash[0][1].toString() + "\\r\\n"
+    }
+    catch(Exception ex){
+        comment += "Commit hash: " + "Regex did not match anything" + "\\r\\n"
+    }
 
-    def new_results = mapBuildResult(text)
-    _comment = ""
+    performance_log = null
 
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
-    _comment += new_results[table] + "\\r\\n"
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
-
-    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
-    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$blue_ocean_repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)" + "\\r\\n"
-
-    _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
-    
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
-
-    _comment += "<details><summary>Machine information</summary>"
-
-    _comment += "\\r\\n" + new_results["system"]["sys_ver"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "CPU: " + "\\r\\n"
-    _comment += new_results["system"]["cpu"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "G++: " + "\\r\\n"
-    _comment += new_results["system"]["gpp"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "Clang: " + "\\r\\n"
-    _comment += new_results["system"]["clang"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "</details>"
-
-    println _comment
-
-    sh """#!/bin/bash
-        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
-    """
+    return comment
 }
 
 pipeline {
@@ -131,8 +57,8 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: 'develop', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
-        string(defaultValue: 'PR-2761', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
+        string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
+        string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
@@ -152,51 +78,6 @@ pipeline {
                           userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
                                                credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                     ]]])
-            }
-        }
-        stage('Gather machine information') {
-            steps {
-                script {
-
-                    current_os = checkOs()
-
-                    def command = """
-                            echo "--- Machine Information ---"
-                            echo "Current OS: ${current_os} !"
-                    """
-
-                    if(current_os == "windows"){
-                        command += """
-                                wmic CPU get NAME
-                                ver
-                        """
-                    }
-                    else if(current_os == "macos"){
-                        command += """ 
-                                sysctl -n machdep.cpu.brand_string 
-                                sw_vers
-                        """
-                    }
-                    else{
-                        command += """ 
-                                lscpu 
-                                lsb_release -a
-                        """
-                    }
-
-                    command += """
-                            g++ --version || true
-                            clang --version || true
-                            echo "--- Machine Information ---"
-                    """
-
-                    if(current_os == "windows"){
-                        bat command
-                    }
-                    else{
-                        sh command
-                    }
-                }
             }
         }
         stage('Update CmdStan pointer to latest develop') {
@@ -222,6 +103,7 @@ pipeline {
             when { not { branch 'master' } }
             steps {
                 script{
+                        /* Handle cmdstan_pr */
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
                         sh """
@@ -256,12 +138,9 @@ pipeline {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
                 perfReport compareBuildPrevious: true,
-
                     relativeFailedThresholdPositive: 10,
                     relativeUnstableThresholdPositive: 5,
-
                     errorFailedThreshold: 1,
-                    failBuildIfNoResultFile: false,
                     modePerformancePerTestCase: true,
                     modeOfThreshold: true,
                     sourceDataFiles: '*.xml',
@@ -279,17 +158,17 @@ pipeline {
 
                 if(params.cmdstan_pr.contains("PR-")){
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "cmdstan", pr_number, "CmdStan")
+                    post_comment(comment, "cmdstan", pr_number)
                 }
 
                 if(params.stan_pr.contains("PR-")){
                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "stan", pr_number, "Stan")
+                    post_comment(comment, "stan", pr_number)
                 }
 
                 if(params.math_pr.contains("PR-")){
                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "math", pr_number, "Math Pipeline")
+                    post_comment(comment, "math", pr_number)
                 }
             }
         }

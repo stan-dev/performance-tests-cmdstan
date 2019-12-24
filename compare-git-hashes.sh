@@ -75,7 +75,6 @@ set -e -x
 
 # First checkout the first arg cmdstan hash, assuming stan and math are as specified
 # by that cmdstan commit
-
 clean_checkout "$2" "false" "false"
 ./runPerformanceTests.py --overwrite-golds $1
 
@@ -84,4 +83,4 @@ for i in performance.*; do
 done
 
 clean_checkout "$3" "$4" "$5"
-./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv markdown
+./runPerformanceTests.py --check-golds-exact 2e-8 $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv

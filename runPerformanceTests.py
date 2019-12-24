@@ -239,7 +239,6 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         if stdev < 0.00001: #XXX Uh...
             continue
         err = abs(summary[k][0] - mean)
-        
         if check_golds_exact and err > check_golds_exact:
             print("FAIL: {} param {} |{} - {}| not within {}"
                     .format(gold, k, summary[k][0], mean, check_golds_exact))
