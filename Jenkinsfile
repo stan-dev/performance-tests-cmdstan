@@ -36,7 +36,10 @@ def mapBuildResult(body){
     def returnMap = [:]
 
     returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
+    returnMap["table"] = escapeStringForJson(returnMap["table"]).replace("stat_comp_benchmarks/benchmarks/","")
+
     returnMap["hash"] = (body =~ /Merge (.*?) into/)[0][1]
+    returnMap["hash"] = escapeStringForJson(returnMap["hash"])
 
     def current_os = (body =~ /Current OS: (.*?) !/)[0][1]
 
@@ -85,10 +88,11 @@ def get_results(){
 def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     def new_results = mapBuildResult(text)
+
     _comment = ""
 
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
-    _comment += new_results[table] + "\\r\\n"
+    _comment += new_results["table"] + "\\r\\n"
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
     _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
@@ -112,10 +116,12 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment += new_results["system"]["clang"] + "\\r\\n" + "\\r\\n"
 
     _comment += "</details>"
+    _comment = _comment.replace("\\\\","\\")
 
     println _comment
 
     sh """#!/bin/bash
+        echo "${_comment}" >> /tmp/github.test
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
     """
 }
@@ -131,8 +137,8 @@ pipeline {
         preserveStashes(buildCount: 7)
     }
     parameters {
-        string(defaultValue: 'develop', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
-        string(defaultValue: 'PR-2761', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
+        string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
+        string(defaultValue: 'PR-2870', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
     }
     stages {
@@ -140,7 +146,7 @@ pipeline {
             steps {
                 deleteDir()
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/master']],
+                          branches: [[name: '*/print-results']],
                           doGenerateSubmoduleConfigurations: false,
                           extensions: [[$class: 'SubmoduleOption',
                                         disableSubmodules: false,
@@ -275,21 +281,21 @@ pipeline {
     post {
         success {
             script {
-                def comment = get_results()
+                def job_log = get_results()
 
                 if(params.cmdstan_pr.contains("PR-")){
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "cmdstan", pr_number, "CmdStan")
+                    post_comment(job_log, "cmdstan", pr_number, "CmdStan")
                 }
 
                 if(params.stan_pr.contains("PR-")){
                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "stan", pr_number, "Stan")
+                    post_comment(job_log, "stan", pr_number, "Stan")
                 }
 
                 if(params.math_pr.contains("PR-")){
                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(comment, "math", pr_number, "Math Pipeline")
+                    post_comment(job_log, "math", pr_number, "Math Pipeline")
                 }
             }
         }
