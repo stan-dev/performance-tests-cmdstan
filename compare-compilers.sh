@@ -14,7 +14,7 @@ fi
 set -e -x
 
 rm cmdstan/bin/stanc || true
-cd cmdstan; make -j4 examples/bernoulli/bernoulli; cd ..
+cd cmdstan; make -j4 examples/bernoulli/bernoulli; ./bin/stanc --version; cd ..
 ./runPerformanceTests.py --overwrite-golds $1
 
 for i in performance.*; do
@@ -22,4 +22,5 @@ for i in performance.*; do
 done
 
 cp "$2" cmdstan/bin/stanc # relies on cmdstan Makefile to know to update the models once stanc has been updated.
+cmdstan/bin/stanc --version
 ./runPerformanceTests.py --check-golds-exact 1e-8 $1 --scorch-earth && ./comparePerformance.py "reference_performance.csv" performance.csv
