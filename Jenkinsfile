@@ -95,7 +95,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment += new_results["table"] + "\\r\\n"
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
-    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/$BUILD_NUMBER/consoleFull)" + "\\r\\n"
+    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/lastBuild/consoleFull)" + "\\r\\n"
     _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$blue_ocean_repository/detail/PR-$pr_number/$BUILD_NUMBER/pipeline)" + "\\r\\n"
 
     _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
