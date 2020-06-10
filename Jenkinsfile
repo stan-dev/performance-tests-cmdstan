@@ -24,6 +24,7 @@ def cleanCheckout() {
                     reference: '',
                     trackingSubmodules: false]],
         submoduleCfg: [],
+        //git submodule update --init --recursive --remote --merge
         userRemoteConfigs: [[url: "https://github.com/stan-dev/performance-tests-cmdstan.git", credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b']]
     ])
 
