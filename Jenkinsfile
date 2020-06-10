@@ -30,7 +30,7 @@ def cleanCheckout() {
 }
 
 pipeline {
-    agent none
+  agent { label 'gelman-group-mac' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -63,6 +63,24 @@ pipeline {
 
     }
     stages {
+       stage('Update CmdStan pointer to latest develop') {
+            steps {
+                script {
+                    sh """
+                        cd cmdstan
+                        git pull origin develop
+                        git submodule update --init --recursive
+                        cd ..
+                        if [ -n "\$(git status --porcelain cmdstan)" ]; then
+                            git checkout custom
+                            git pull
+                            git commit cmdstan -m "Update submodules"
+                            git push origin custom
+                        fi
+                        """
+                }
+            }
+        }
         stage('Parallel tests') {
             parallel {
                 stage("Test cmdstan base against cmdstan pointer in this branch on windows") {
