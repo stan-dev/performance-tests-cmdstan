@@ -72,8 +72,6 @@ pipeline {
                         git submodule update --init --recursive
                         cd ..
                         if [ -n "\$(git status --porcelain cmdstan)" ]; then
-                            git checkout custom
-                            git pull
                             git commit cmdstan -m "Update submodules"
                             git push origin custom
                         fi
