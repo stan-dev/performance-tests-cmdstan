@@ -11,9 +11,12 @@ def branchOrPR(pr) {
   return pr
 }
 
-def cleanCheckout() {
+def cleanCheckout(useSsh = false) {
 
     deleteDir()
+
+    def gitUrl = useSsh ? "git@github.com:stan-dev/performance-tests-cmdstan.git" : "https://github.com/stan-dev/performance-tests-cmdstan.git"
+
     checkout([$class: 'GitSCM',
         branches: [[name: '*/custom']],
         doGenerateSubmoduleConfigurations: false,
@@ -24,14 +27,13 @@ def cleanCheckout() {
                     reference: '',
                     trackingSubmodules: false]],
         submoduleCfg: [],
-        //git submodule update --init --recursive --remote --merge
-        userRemoteConfigs: [[url: "https://github.com/stan-dev/performance-tests-cmdstan.git", credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b']]
+        userRemoteConfigs: [[url: gitUrl, credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b']]
     ])
 
 }
 
 pipeline {
-    agent none
+  agent { label 'gelman-group-mac' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -64,6 +66,23 @@ pipeline {
 
     }
     stages {
+       stage('Update CmdStan pointer to latest develop') {
+            steps {
+                cleanCheckout(true)
+                script {
+                    sh """
+                        cd cmdstan
+                        git pull origin develop
+                        git submodule update --init --recursive
+                        cd ..
+                        if [ -n "\$(git status --porcelain cmdstan)" ]; then
+                            git commit cmdstan -m "Update submodules"
+                            git push origin custom
+                        fi
+                        """
+                }
+            }
+        }
         stage('Parallel tests') {
             parallel {
                 stage("Test cmdstan base against cmdstan pointer in this branch on windows") {
