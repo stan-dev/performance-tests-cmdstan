@@ -33,7 +33,7 @@ def cleanCheckout(useSsh = false) {
 }
 
 pipeline {
-  agent { label 'gelman-group-mac' }
+  agent none
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -67,6 +67,7 @@ pipeline {
     }
     stages {
        stage('Update CmdStan pointer to latest develop') {
+           agent { label 'gelman-group-mac' }
             steps {
                 cleanCheckout(true)
                 script {
