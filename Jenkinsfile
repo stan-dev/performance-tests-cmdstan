@@ -112,7 +112,7 @@ pipeline {
                                 bat """
                                     bash -cl "export old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}') && export cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)"
                                     bash -cl "compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} windows"
-                                    bash -cl "mv windows_performance.xml windows_\$cmdstan_hash.xml"
+                                    bash -cl "mv windows_performance.xml windows_compare_target.xml"
                                     bash -cl "make revert clean"
                                     bash -cl "ls -lart"
                                 """
@@ -155,7 +155,7 @@ pipeline {
                                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                                     echo \$cmdstan_hash
                                     ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} linux
-                                    mv linux_performance.xml linux_\$cmdstan_hash.xml
+                                    mv linux_performance.xml linux_compare_target.xml
                                     make revert clean
                                     ls -lart
                                 """
@@ -198,7 +198,7 @@ pipeline {
                                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
                                     echo \$cmdstan_hash
                                     ./compare-git-hashes.sh stat_comp_benchmarks ${cmdstan_origin_pr} \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} macos
-                                    mv macos_performance.xml macos_\$cmdstan_hash.xml
+                                    mv macos_performance.xml macos_compare_target.xml
                                     make revert clean
                                     ls -lart
                                 """
