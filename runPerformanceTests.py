@@ -416,7 +416,7 @@ if __name__ == "__main__":
              for model, exe, ns in zip(models, executables, num_samples)]
 
     for batch in batched(executables):
-        make_time, _ = time_step("make_all_models", make, executables, args.j)
+        make_time, _ = time_step("make_all_models", make, batch, args.j)
 
     if args.runj > 1:
         tp = ThreadPool(args.runj)
