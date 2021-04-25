@@ -340,6 +340,7 @@ def parse_args():
                         help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
     parser.add_argument("--scorch-earth", dest="scorch", action="store_true")
+    parser.add_argument("--no-ignore-models", dest="no_ignore_models", action="store_true")
     return parser.parse_args()
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
@@ -381,11 +382,13 @@ if __name__ == "__main__":
         models = find_files("*.stan", args.directories)
         models = filter(model_name_re.match, models)
         models = list(filter(lambda m: not m in bad_models, models))
-        models = filter_out_weekly_models(models)
+        if not args.no_ignore_models:
+            models = filter_out_weekly_models(models)
         num_samples = [args.num_samples or default_num_samples] * len(models)
     else:
         models, num_samples = read_tests(args.tests, args.num_samples or default_num_samples)
-        models = filter_out_weekly_models(models)
+        if not args.no_ignore_models:
+            models = filter_out_weekly_models(models)
         if args.num_samples:
             num_samples = [args.num_samples] * len(models)
 
