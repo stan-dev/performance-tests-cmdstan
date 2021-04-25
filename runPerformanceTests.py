@@ -148,6 +148,14 @@ bad_models = frozenset(
      , os.path.join("example-models","BPA","Ch.07","cjs_group_raneff.stan")
     ])
 
+weekly_test_only = frozenset(
+    [os.path.join("good","function-signatures","distributions","univariate","continuous", "exp_mod_normal")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "pareto_type_2")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "skew_normal")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "student_t")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "wiener")
+    ])
+
 def avg(coll):
     return float(sum(coll)) / len(coll)
 
@@ -351,6 +359,18 @@ def delete_temporary_exe_files(exes):
             if os.path.exists(exe + ext):
                 os.remove(exe + ext)
 
+def filter_out_weekly_models(models):
+    ret_models = []
+    for m in models:
+        out = False
+        for i in weekly_test_only:
+            if i in m:
+                out = True
+                break
+        if not out:
+            ret_models.append(m)
+    return ret_models
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -361,12 +381,13 @@ if __name__ == "__main__":
         models = find_files("*.stan", args.directories)
         models = filter(model_name_re.match, models)
         models = list(filter(lambda m: not m in bad_models, models))
+        models = filter_out_weekly_models(models)
         num_samples = [args.num_samples or default_num_samples] * len(models)
     else:
         models, num_samples = read_tests(args.tests, args.num_samples or default_num_samples)
+        models = filter_out_weekly_models(models)
         if args.num_samples:
             num_samples = [args.num_samples] * len(models)
-
 
     executables = [m[:-5] for m in models]
     if args.scorch:
