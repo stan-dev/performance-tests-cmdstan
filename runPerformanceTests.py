@@ -7,6 +7,7 @@ import os
 import os.path
 import sys
 import re
+import platform
 import subprocess
 from difflib import SequenceMatcher
 from fnmatch import fnmatch
@@ -148,6 +149,14 @@ bad_models = frozenset(
      , os.path.join("example-models","BPA","Ch.07","cjs_group_raneff.stan")
     ])
 
+weekly_test_only = frozenset(
+    [os.path.join("good","function-signatures","distributions","univariate","continuous", "exp_mod_normal")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "pareto_type_2")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "skew_normal")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "student_t")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "wiener")
+    ])
+
 def avg(coll):
     return float(sum(coll)) / len(coll)
 
@@ -254,6 +263,8 @@ def run_golds(gold, tmp, summary, check_golds_exact):
 
 def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, num_samples):
     fails, errors = [], []
+    if sys.platform.startswith('win'):
+        exe = exe + ".exe"
     if not os.path.isfile(exe):
         return 0, (fails, errors + ["Did not compile!"])
     if runs <= 0:
@@ -332,6 +343,7 @@ def parse_args():
                         help="Number of samples to ask Stan programs for if we're sampling.")
     parser.add_argument("--tests-file", dest="tests", action="store", type=str, default="")
     parser.add_argument("--scorch-earth", dest="scorch", action="store_true")
+    parser.add_argument("--no-ignore-models", dest="no_ignore_models", action="store_true")
     return parser.parse_args()
 
 def process_test(overwrite, check_golds, check_golds_exact, runs, method):
@@ -351,6 +363,28 @@ def delete_temporary_exe_files(exes):
             if os.path.exists(exe + ext):
                 os.remove(exe + ext)
 
+def filter_out_weekly_models(models):
+    ret_models = []
+    for m in models:
+        out = False
+        for i in weekly_test_only:
+            if i in m:
+                out = True
+                break
+        if not out:
+            ret_models.append(m)
+    return ret_models
+
+def isWin():
+    return platform.system().lower().startswith(
+        "windows"
+    ) or os.name.lower().startswith("windows")
+
+batchSize = 20 if isWin() else 200
+
+def batched(tests):
+    return [tests[i : i + batchSize] for i in range(0, len(tests), batchSize)]
+
 if __name__ == "__main__":
     args = parse_args()
 
@@ -361,12 +395,15 @@ if __name__ == "__main__":
         models = find_files("*.stan", args.directories)
         models = filter(model_name_re.match, models)
         models = list(filter(lambda m: not m in bad_models, models))
+        if not args.no_ignore_models:
+            models = filter_out_weekly_models(models)
         num_samples = [args.num_samples or default_num_samples] * len(models)
     else:
         models, num_samples = read_tests(args.tests, args.num_samples or default_num_samples)
+        if not args.no_ignore_models:
+            models = filter_out_weekly_models(models)
         if args.num_samples:
             num_samples = [args.num_samples] * len(models)
-
 
     executables = [m[:-5] for m in models]
     if args.scorch:
@@ -378,7 +415,9 @@ if __name__ == "__main__":
     tests = [(model, exe, find_data_for_model(model), ns)
              for model, exe, ns in zip(models, executables, num_samples)]
 
-    make_time, _ = time_step("make_all_models", make, executables, args.j)
+    for batch in batched(executables):
+        make_time, _ = time_step("make_all_models", make, batch, args.j)
+
     if args.runj > 1:
         tp = ThreadPool(args.runj)
         map_ = tp.imap_unordered
