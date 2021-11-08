@@ -414,7 +414,8 @@ if __name__ == "__main__":
         sys.exit(-10)
     tests = [(model, exe, find_data_for_model(model), ns)
              for model, exe, ns in zip(models, executables, num_samples)]
-
+    
+    make_time = 0
     for batch in batched(executables):
         make_time, _ = time_step("make_all_models", make, batch, args.j)
 
