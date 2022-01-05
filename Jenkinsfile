@@ -128,7 +128,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 }
 
 pipeline {
-    agent { label 'gelman-group-mac' }
+    agent { label 'osx' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -156,7 +156,7 @@ pipeline {
                                         reference: '',
                                         trackingSubmodules: false]],
                           submoduleCfg: [],
-                          userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
+                          userRemoteConfigs: [[url: "https://github.com/stan-dev/performance-tests-cmdstan.git",
                                                credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                     ]]])
             }
@@ -300,11 +300,11 @@ pipeline {
                 }
             }
         }
-        unstable {
-            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        }
-        failure {
-            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        }
+//         unstable {
+//             script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+//         }
+//         failure {
+//             script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+//         }
     }
 }
