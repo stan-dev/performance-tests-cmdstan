@@ -167,6 +167,10 @@ def stdev(coll, mean):
 
 def csv_summary(csv_file):
     d = defaultdict(list)
+    print("--- --- --- --- ---")
+    print(csv_file)
+    print(list)
+    print("--- --- --- --- ---")
     with open(csv_file, 'rb') as raw:
         headers = None
         for row in csv.reader(raw):
