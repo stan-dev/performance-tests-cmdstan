@@ -167,13 +167,7 @@ def stdev(coll, mean):
 
 def csv_summary(csv_file):
     d = defaultdict(list)
-    print("--- --- --- --- ---")
-    print(csv_file)
-    if csv_file == "golds/example-models_regression_tests_mother.gold.tmp":
-        with open('golds/example-models_regression_tests_mother.gold.tmp', 'r') as f:
-            print(f.read())
-    print("--- --- --- --- ---")
-    with open(csv_file, 'rb') as raw:
+    with open(csv_file, 'rb', encoding = 'utf-8') as raw:
         headers = None
         for row in csv.reader(raw):
             if row[0].startswith("#"):
