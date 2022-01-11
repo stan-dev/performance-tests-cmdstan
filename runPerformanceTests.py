@@ -167,7 +167,7 @@ def stdev(coll, mean):
 
 def csv_summary(csv_file):
     d = defaultdict(list)
-    with open(csv_file, 'rb', encoding = 'utf-8') as raw:
+    with open(csv_file, 'r', encoding = 'utf-8') as raw:
         headers = None
         for row in csv.reader(raw):
             if row[0].startswith("#"):
