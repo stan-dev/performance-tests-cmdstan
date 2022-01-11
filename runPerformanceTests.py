@@ -169,7 +169,9 @@ def csv_summary(csv_file):
     d = defaultdict(list)
     print("--- --- --- --- ---")
     print(csv_file)
-    print(list)
+    if csv_file == "golds/example-models_regression_tests_mother.gold.tmp":
+        with open('golds/example-models_regression_tests_mother.gold.tmp', 'r') as f:
+            print(f.read())
     print("--- --- --- --- ---")
     with open(csv_file, 'rb') as raw:
         headers = None
