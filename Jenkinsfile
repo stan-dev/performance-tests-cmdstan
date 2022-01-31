@@ -128,7 +128,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 }
 
 pipeline {
-    agent { label 'osx' }
+    agent { label 'triqs' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -144,10 +144,17 @@ pipeline {
     }
     stages {
         stage('Clean checkout') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             steps {
                 deleteDir()
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/master']],
+                          branches: [[name: '*/move-ci-to-flatiron-institute']],
                           doGenerateSubmoduleConfigurations: false,
                           extensions: [[$class: 'SubmoduleOption',
                                         disableSubmodules: false,
@@ -162,6 +169,13 @@ pipeline {
             }
         }
         stage('Gather machine information') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             steps {
                 script {
 
@@ -187,7 +201,8 @@ pipeline {
                     else{
                         command += """ 
                                 lscpu 
-                                lsb_release -a
+                                lsb_release -a || true
+                                cat /etc/centos-release || true
                         """
                     }
 
@@ -206,27 +221,41 @@ pipeline {
                 }
             }
         }
-        stage('Update CmdStan pointer to latest develop') {
-            when { branch 'master' }
-            steps {
-                script {
-                    sh """
-                        cd cmdstan
-                        git pull origin develop
-                        git submodule update --init --recursive
-                        cd ..
-                        if [ -n "\$(git status --porcelain cmdstan)" ]; then
-                            git checkout master
-                            git pull
-                            git commit cmdstan -m "Update submodules"
-                            git push origin master
-                        fi
-                        """
+//         stage('Update CmdStan pointer to latest develop') {
+//             agent {
+//                 docker {
+//                     image 'stanorg/ci:gpu'
+//                     label 'linux'
+//                     reuseNode true
+//                 }
+//             }
+//             when { branch 'master' }
+//             steps {
+//                 script {
+//                     sh """
+//                         cd cmdstan
+//                         git pull origin develop
+//                         git submodule update --init --recursive
+//                         cd ..
+//                         if [ -n "\$(git status --porcelain cmdstan)" ]; then
+//                             git checkout master
+//                             git pull
+//                             git commit cmdstan -m "Update submodules"
+//                             git push origin master
+//                         fi
+//                         """
+//                 }
+//             }
+//         }
+        stage("Test cmdstan develop against cmdstan pointer in this branch") {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
                 }
             }
-        }
-        stage("Test cmdstan develop against cmdstan pointer in this branch") {
-            when { not { branch 'master' } }
+            //when { not { branch 'master' } }
             steps {
                 script{
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
@@ -242,6 +271,13 @@ pipeline {
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
@@ -249,6 +285,13 @@ pipeline {
             }
         }
         stage('Shotgun Performance Regression Tests') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             when { branch 'master' }
             steps {
                 sh "make clean"
@@ -258,6 +301,13 @@ pipeline {
             }
         }
         stage('Collect test results') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             when { branch 'master' }
             steps {
                 junit '*.xml'
