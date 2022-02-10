@@ -166,6 +166,7 @@ pipeline {
                           userRemoteConfigs: [[url: "https://github.com/stan-dev/performance-tests-cmdstan.git",
                                                credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                     ]]])
+                stash 'PerfSetup'
             }
         }
         stage('Gather machine information') {
@@ -271,17 +272,19 @@ pipeline {
 //             }
 //         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'linux'
-                    reuseNode true
-                }
-            }
+//             agent {
+//                 docker {
+//                     image 'stanorg/ci:gpu'
+//                     label 'linux'
+//                     reuseNode true
+//                 }
+//             }
+            agent { label 'osx' }
             when { branch 'master' }
             steps {
-                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+               unstash "PerfSetup"
+               writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
+               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
