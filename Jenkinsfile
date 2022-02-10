@@ -247,29 +247,29 @@ pipeline {
 //                 }
 //             }
 //         }
-        stage("Test cmdstan develop against cmdstan pointer in this branch") {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'linux'
-                    reuseNode true
-                }
-            }
-            //when { not { branch 'master' } }
-            steps {
-                script{
-                        cmdstan_pr = branchOrPR(params.cmdstan_pr)
-
-                        sh """
-                            old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                            cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
-                            mv performance.xml \$cmdstan_hash.xml
-                            make revert clean
-                        """
-                }
-            }
-        }
+//         stage("Test cmdstan develop against cmdstan pointer in this branch") {
+//             agent {
+//                 docker {
+//                     image 'stanorg/ci:gpu'
+//                     label 'linux'
+//                     reuseNode true
+//                 }
+//             }
+//             //when { not { branch 'master' } }
+//             steps {
+//                 script{
+//                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
+//
+//                         sh """
+//                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+//                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+//                             bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+//                             mv performance.xml \$cmdstan_hash.xml
+//                             make revert clean
+//                         """
+//                 }
+//             }
+//         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
             agent {
                 docker {
@@ -281,7 +281,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+                sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
             }
         }
         stage('Shotgun Performance Regression Tests') {
