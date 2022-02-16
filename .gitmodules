@@ -1,9 +1,9 @@
 [submodule "cmdstan"]
 	path = cmdstan
-	url = https://github.com/stan-dev/cmdstan
+	url = https://github.com/stan-dev/cmdstan.git
 [submodule "example-models"]
 	path = example-models
-	url = https://github.com/stan-dev/example-models
+	url = https://github.com/stan-dev/example-models.git
 [submodule "stat_comp_benchmarks"]
 	path = stat_comp_benchmarks
 	url = https://github.com/stan-dev/stat_comp_benchmarks.git

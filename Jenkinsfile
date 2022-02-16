@@ -128,7 +128,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 }
 
 pipeline {
-    agent { label 'gelman-group-mac' }
+    agent { label 'triqs' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -144,6 +144,13 @@ pipeline {
     }
     stages {
         stage('Clean checkout') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             steps {
                 deleteDir()
                 checkout([$class: 'GitSCM',
@@ -156,12 +163,20 @@ pipeline {
                                         reference: '',
                                         trackingSubmodules: false]],
                           submoduleCfg: [],
-                          userRemoteConfigs: [[url: "git@github.com:stan-dev/performance-tests-cmdstan.git",
+                          userRemoteConfigs: [[url: "https://github.com/stan-dev/performance-tests-cmdstan.git",
                                                credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                     ]]])
+                stash 'PerfSetup'
             }
         }
         stage('Gather machine information') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             steps {
                 script {
 
@@ -187,7 +202,8 @@ pipeline {
                     else{
                         command += """ 
                                 lscpu 
-                                lsb_release -a
+                                lsb_release -a || true
+                                cat /etc/centos-release || true
                         """
                     }
 
@@ -207,6 +223,13 @@ pipeline {
             }
         }
         stage('Update CmdStan pointer to latest develop') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             when { branch 'master' }
             steps {
                 script {
@@ -226,6 +249,13 @@ pipeline {
             }
         }
         stage("Test cmdstan develop against cmdstan pointer in this branch") {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             when { not { branch 'master' } }
             steps {
                 script{
@@ -242,13 +272,24 @@ pipeline {
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
+            agent { label 'osx' }
             when { branch 'master' }
             steps {
-                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
-                sh "./runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+               unstash "PerfSetup"
+               writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
+               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+               junit '*.xml'
+               archiveArtifacts '*.xml'
             }
         }
         stage('Shotgun Performance Regression Tests') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             when { branch 'master' }
             steps {
                 sh "make clean"
@@ -258,6 +299,13 @@ pipeline {
             }
         }
         stage('Collect test results') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
             when { branch 'master' }
             steps {
                 junit '*.xml'
