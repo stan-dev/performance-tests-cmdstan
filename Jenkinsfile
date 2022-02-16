@@ -248,7 +248,7 @@ pipeline {
                                 git checkout master
                                 git pull
                                 git commit cmdstan -m "Update submodules"
-                                git push origin master
+                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/cmdstan.git master
                             fi
                         """
                     }
