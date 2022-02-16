@@ -237,8 +237,8 @@ pipeline {
                         sh """#!/bin/bash
                             set -e
     
-                            git config --global user.email "mc.stanislaw@gmail.com"
-                            git config --global user.name "Stan Jenkins"
+                            git config user.email "mc.stanislaw@gmail.com"
+                            git config user.name "Stan Jenkins"
     
                             cd cmdstan
                             git pull origin develop
