@@ -154,7 +154,7 @@ pipeline {
             steps {
                 deleteDir()
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/move-ci-to-flatiron-institute']],
+                          branches: [[name: '*/master']],
                           doGenerateSubmoduleConfigurations: false,
                           extensions: [[$class: 'SubmoduleOption',
                                         disableSubmodules: false,
@@ -222,69 +222,64 @@ pipeline {
                 }
             }
         }
-//         stage('Update CmdStan pointer to latest develop') {
-//             agent {
-//                 docker {
-//                     image 'stanorg/ci:gpu'
-//                     label 'linux'
-//                     reuseNode true
-//                 }
-//             }
-//             when { branch 'master' }
-//             steps {
-//                 script {
-//                     sh """
-//                         cd cmdstan
-//                         git pull origin develop
-//                         git submodule update --init --recursive
-//                         cd ..
-//                         if [ -n "\$(git status --porcelain cmdstan)" ]; then
-//                             git checkout master
-//                             git pull
-//                             git commit cmdstan -m "Update submodules"
-//                             git push origin master
-//                         fi
-//                         """
-//                 }
-//             }
-//         }
-//         stage("Test cmdstan develop against cmdstan pointer in this branch") {
-//             agent {
-//                 docker {
-//                     image 'stanorg/ci:gpu'
-//                     label 'linux'
-//                     reuseNode true
-//                 }
-//             }
-//             //when { not { branch 'master' } }
-//             steps {
-//                 script{
-//                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
-//
-//                         sh """
-//                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-//                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-//                             bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
-//                             mv performance.xml \$cmdstan_hash.xml
-//                             make revert clean
-//                         """
-//                 }
-//             }
-//         }
+        stage('Update CmdStan pointer to latest develop') {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
+            when { branch 'master' }
+            steps {
+                script {
+                    sh """
+                        cd cmdstan
+                        git pull origin develop
+                        git submodule update --init --recursive
+                        cd ..
+                        if [ -n "\$(git status --porcelain cmdstan)" ]; then
+                            git checkout master
+                            git pull
+                            git commit cmdstan -m "Update submodules"
+                            git push origin master
+                        fi
+                        """
+                }
+            }
+        }
+        stage("Test cmdstan develop against cmdstan pointer in this branch") {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'linux'
+                    reuseNode true
+                }
+            }
+            when { not { branch 'master' } }
+            steps {
+                script{
+                        cmdstan_pr = branchOrPR(params.cmdstan_pr)
+
+                        sh """
+                            old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                            cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                            mv performance.xml \$cmdstan_hash.xml
+                            make revert clean
+                        """
+                }
+            }
+        }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-//             agent {
-//                 docker {
-//                     image 'stanorg/ci:gpu'
-//                     label 'linux'
-//                     reuseNode true
-//                 }
-//             }
             agent { label 'osx' }
             when { branch 'master' }
             steps {
                unstash "PerfSetup"
                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
                sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+               junit '*.xml'
+               archiveArtifacts '*.xml'
             }
         }
         stage('Shotgun Performance Regression Tests') {
@@ -353,11 +348,11 @@ pipeline {
                 }
             }
         }
-//         unstable {
-//             script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-//         }
-//         failure {
-//             script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-//         }
+        unstable {
+            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        }
+        failure {
+            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        }
     }
 }
