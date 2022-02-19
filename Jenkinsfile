@@ -88,7 +88,7 @@ def get_results(){
 def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     def new_results = mapBuildResult(text)
-    def upstream_build_no = new URL("https://jenkins.mc-stan.org/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/lastBuild/buildNumber").text
+    def upstream_build_no = new URL("https://jenkins.flatironinstitute.org/job/Stan/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/lastBuild/buildNumber").text
 
     _comment = ""
 
@@ -96,8 +96,8 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment += new_results["table"] + "\\r\\n"
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
-    _comment += "[Jenkins Console Log](https://jenkins.mc-stan.org/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/$upstream_build_no/consoleFull)" + "\\r\\n"
-    _comment += "[Blue Ocean](https://jenkins.mc-stan.org/blue/organizations/jenkins/$blue_ocean_repository/detail/PR-$pr_number/$upstream_build_no/pipeline)" + "\\r\\n"
+    _comment += "[Jenkins Console Log](https://jenkins.flatironinstitute.org/job/Stan/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/$upstream_build_no/consoleFull)" + "\\r\\n"
+    _comment += "[Blue Ocean](https://jenkins.flatironinstitute.org/blue/organizations/jenkins/Stan%2F$blue_ocean_repository/detail/PR-$pr_number/$upstream_build_no/pipeline)" + "\\r\\n"
 
     _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
     
