@@ -2,6 +2,7 @@
 @Library('StanUtils')
 import org.stan.Utils
 import groovy.json.JsonSlurper
+import groovy.json.*
 
 def utils = new org.stan.Utils()
 
@@ -62,12 +63,11 @@ def mapBuildResult(body){
     }
     else{
         cpu = (body =~ /(?s)lscpu(.*?)\+ lsb_release/)[0][1]
-        sys_ver = (body =~ /(?s)lsb_release -a(.*?)\+ g\+\+/)[0][1]   
+        sys_ver = (body =~ /(?s)lsb_release -a(.*?)\+ g\+\+/)[0][1]
         gpp = (body =~ /(?s)g\+\+ --version(.*?)\+ clang/)[0][1]
         clang = (body =~ /(?s)clang --version(.*?)\+ echo/)[0][1]
     }
 
-    
 
     returnMap["system"] = [
         "cpu": escapeStringForJson(cpu),
@@ -85,12 +85,28 @@ def get_results(){
     return performance_log
 }
 
+@NonCPS
 def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     def new_results = mapBuildResult(text)
-    def upstream_build_no = new URL("https://jenkins.flatironinstitute.org/job/Stan/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/lastBuild/buildNumber").text
 
-    _comment = ""
+    def j = Jenkins.getInstance();
+
+    def stanDir = j.getItem("Stan");
+    def proj = stanDir.getItem("$blue_ocean_repository");
+    def jobs = proj.getItems()
+
+    def upstream_build_no = null
+    def masterJob = null
+
+    (jobs).each { job ->
+    	if (job.displayName == "PR-$pr_number") {
+    		upstream_build_no = job.getLastBuild().getNumber().toString()
+    		println "Upstream Build No. $upstream_build_no"
+    	}
+    }
+
+    def _comment = ""
 
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
     _comment += new_results["table"] + "\\r\\n"
@@ -100,7 +116,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment += "[Blue Ocean](https://jenkins.flatironinstitute.org/blue/organizations/jenkins/Stan%2F$blue_ocean_repository/detail/PR-$pr_number/$upstream_build_no/pipeline)" + "\\r\\n"
 
     _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
-    
+
     _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
 
     _comment += "<details><summary>Machine information</summary>"
@@ -118,8 +134,6 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     _comment += "</details>"
     _comment = _comment.replace("\\\\","\\")
-
-    println _comment
 
     sh """#!/bin/bash
         echo "${_comment}" >> /tmp/github.test
@@ -166,6 +180,7 @@ pipeline {
                           userRemoteConfigs: [[url: "https://github.com/stan-dev/performance-tests-cmdstan.git",
                                                credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
                     ]]])
+
                 stash 'PerfSetup'
             }
         }
@@ -180,7 +195,7 @@ pipeline {
             steps {
                 script {
 
-                    current_os = checkOs()
+                    def current_os = checkOs()
 
                     def command = """
                             echo "--- Machine Information ---"
@@ -194,16 +209,15 @@ pipeline {
                         """
                     }
                     else if(current_os == "macos"){
-                        command += """ 
-                                sysctl -n machdep.cpu.brand_string 
+                        command += """
+                                sysctl -n machdep.cpu.brand_string
                                 sw_vers
                         """
                     }
                     else{
-                        command += """ 
-                                lscpu 
+                        command += """
+                                lscpu
                                 lsb_release -a || true
-                                cat /etc/centos-release || true
                         """
                     }
 
@@ -236,10 +250,10 @@ pipeline {
                     withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                         sh """#!/bin/bash
                             set -e
-    
+
                             git config user.email "mc.stanislaw@gmail.com"
                             git config user.name "Stan Jenkins"
-    
+
                             cd cmdstan
                             git pull origin develop
                             git submodule update --init --recursive
@@ -351,7 +365,7 @@ pipeline {
 
                 if(params.math_pr.contains("PR-")){
                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(job_log, "math", pr_number, "Math%20Pipeline")
+                    post_comment(job_log, "math", pr_number, "Math")
                 }
             }
         }
