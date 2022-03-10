@@ -251,6 +251,8 @@ pipeline {
                         sh """#!/bin/bash
                             set -e
                             cd cmdstan
+                            git config user.email "mc.stanislaw@gmail.com"
+                            git config user.name "Stan Jenkins"
                             git pull origin develop
                             git submodule update --init --recursive
                             cd ..
