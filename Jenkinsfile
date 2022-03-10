@@ -257,7 +257,7 @@ pipeline {
                             if [ -n "\$(git status --porcelain cmdstan)" ]; then
                                 git checkout master
                                 git pull
-                                git commit cmdstan --author='Stan BuildBot <mc.stanislaw@gmail.com>' -m "Update submodules"
+                                git commit cmdstan --author="Stan BuildBot <mc.stanislaw@gmail.com>" -m "Update submodules"
                                 git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/performance-tests-cmdstan.git master
                             fi
                         """
