@@ -22,8 +22,6 @@ for i in performance.*; do
     mv $i "reference_${i}"
 done
 
-# run develop version of cmdstan with the stanc3 binary at the provided path
-cd cmdstan; make clean-all; make -j4 build; 
-echo "STANCFLAGS += $2" >> make/local
-cd ..
+# run develop version of cmdstan with the nightly stanc3 binary and STANCFLAGS set to the flags provided in the second commandline argument
+echo "STANCFLAGS += $2" >> cmdstan/make/local
 ./runPerformanceTests.py --check-golds-exact 1e-8 $1 --scorch-earth && ./comparePerformance.py "reference_performance.csv" performance.csv csv
