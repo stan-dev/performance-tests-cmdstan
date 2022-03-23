@@ -14,7 +14,7 @@ example-models/bugs_examples/vol2/schools/schools-2.stan, 100
 example-models/bugs_examples/vol2/schools/schools-3.stan, 100
 example-models/bugs_examples/vol2/schools/schools-4.stan, 100
 example-models/bugs_examples/vol2/schools/schools.stan, 100
-example-models/bugs_examples/vol2/stagnant/stagnant.stan
+# example-models/bugs_examples/vol2/stagnant/stagnant.stan
 example-models/bugs_examples/vol2/t_df/simt4.stan
 example-models/bugs_examples/vol3/hepatitis/hepatitisME.stan, 700
 example-models/regression_tests/matrix_indexing.stan, 700
