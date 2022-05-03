@@ -16,8 +16,8 @@ set -e -x
 # run with the default optimization level
 cd cmdstan; make clean-all; make -j4 build;
 if [ -n "$3" ] ; then
-    rm cmdstan/bin/stanc
-    cp "$3" cmdstan/bin/stanc
+    rm bin/stanc
+    cp "$3" bin/stanc
 fi
 make -j4 examples/bernoulli/bernoulli; ./bin/stanc --version; cd ..
 ./runPerformanceTests.py --overwrite-golds $1
