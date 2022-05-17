@@ -11,12 +11,13 @@ import platform
 import subprocess
 from difflib import SequenceMatcher
 from fnmatch import fnmatch
-from functools import wraps
 from multiprocessing.pool import ThreadPool
 from time import time
 from datetime import datetime
 import xml.etree.ElementTree as ET
 import multiprocessing
+from statistics import stdev
+from statistics import mean as avg
 
 GOLD_OUTPUT_DIR = os.path.join("golds","")
 DIR_UP = os.path.join("..","")
@@ -157,14 +158,6 @@ weekly_test_only = frozenset(
      , os.path.join("good","function-signatures","distributions","univariate","continuous", "wiener")
     ])
 
-def avg(coll):
-    return float(sum(coll)) / len(coll)
-
-def stdev(coll, mean):
-    if len(coll ) < 2:
-        return 0
-    return (sum((x - mean)**2 for x in coll) / (len(coll) - 1)**0.5)
-
 def csv_summary(csv_file):
     d = defaultdict(list)
     with open(csv_file, 'r', encoding = 'utf-8') as raw:
@@ -183,7 +176,7 @@ def csv_summary(csv_file):
             continue
         mean = avg(v)
         try:
-            res[k] = (mean, stdev(v, mean))
+            res[k] = (mean, stdev(v))
         except OverflowError as e:
             raise OverflowError("calculating stdev for " + k)
     return res
@@ -248,7 +241,7 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         if stdev < 0.00001: #XXX Uh...
             continue
         err = abs(summary[k][0] - mean)
-        
+
         if check_golds_exact and err > check_golds_exact:
             print("FAIL: {} param {} |{} - {}| not within {}"
                     .format(gold, k, summary[k][0], mean, check_golds_exact))
@@ -414,7 +407,7 @@ if __name__ == "__main__":
         sys.exit(-10)
     tests = [(model, exe, find_data_for_model(model), ns)
              for model, exe, ns in zip(models, executables, num_samples)]
-    
+
     make_time = 0
     for batch in batched(executables):
         make_time, _ = time_step("make_all_models", make, batch, args.j)
