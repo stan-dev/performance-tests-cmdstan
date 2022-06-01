@@ -39,7 +39,7 @@ def read_tests(filename, default_num_samples):
     with open(filename) as f:
         for line in f:
             line = line.strip()
-            if line.startswith("#"): continue
+            if not line or line.startswith("#"): continue
             if ", " in line:
                 model, num_samples = line.split(", ")
             else:
