@@ -142,7 +142,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 }
 
 pipeline {
-    agent { label 'triqs' }
+    agent { label 'linux && triqs' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
