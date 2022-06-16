@@ -142,7 +142,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 }
 
 pipeline {
-    agent { label 'linux && triqs' }
+    agent { label 'docker' }
     environment {
         cmdstan_pr = ""
         GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
@@ -161,7 +161,7 @@ pipeline {
             agent {
                 docker {
                     image 'stanorg/ci:gpu'
-                    label 'linux'
+                    label 'docker'
                     reuseNode true
                 }
             }
@@ -188,7 +188,7 @@ pipeline {
             agent {
                 docker {
                     image 'stanorg/ci:gpu'
-                    label 'linux'
+                    label 'docker'
                     reuseNode true
                 }
             }
@@ -240,7 +240,7 @@ pipeline {
             agent {
                 docker {
                     image 'stanorg/ci:gpu'
-                    label 'linux'
+                    label 'docker'
                     reuseNode true
                 }
             }
@@ -274,7 +274,7 @@ pipeline {
             agent {
                 docker {
                     image 'stanorg/ci:gpu'
-                    label 'linux'
+                    label 'docker'
                     reuseNode true
                 }
             }
@@ -308,7 +308,7 @@ pipeline {
             agent {
                 docker {
                     image 'stanorg/ci:gpu'
-                    label 'linux'
+                    label 'docker'
                     reuseNode true
                 }
             }
@@ -324,7 +324,7 @@ pipeline {
             agent {
                 docker {
                     image 'stanorg/ci:gpu'
-                    label 'linux'
+                    label 'docker'
                     reuseNode true
                 }
             }
