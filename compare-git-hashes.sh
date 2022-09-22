@@ -61,7 +61,7 @@ clean_checkout() {
     #    echo "ERROR: Git repo isn't clean - I'd recommend you make a separate recursive clone of CmdStan for this."
     #    exit
     #fi
-    write_makelocal
+    #write_makelocal
     git status
     cd ..
 }
