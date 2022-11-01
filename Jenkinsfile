@@ -332,18 +332,18 @@ pipeline {
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
-                perfReport compareBuildPrevious: true,
-
-                    relativeFailedThresholdPositive: 10,
-                    relativeUnstableThresholdPositive: 5,
-
-                    errorFailedThreshold: 1,
-                    failBuildIfNoResultFile: false,
-                    modePerformancePerTestCase: true,
-                    modeOfThreshold: true,
-                    sourceDataFiles: '*.xml',
-                    modeThroughput: false,
-                    configType: 'PRT'
+//                 perfReport compareBuildPrevious: true,
+//
+//                     relativeFailedThresholdPositive: 10,
+//                     relativeUnstableThresholdPositive: 5,
+//
+//                     errorFailedThreshold: 1,
+//                     failBuildIfNoResultFile: false,
+//                     modePerformancePerTestCase: true,
+//                     modeOfThreshold: true,
+//                     sourceDataFiles: '*.xml',
+//                     modeThroughput: false,
+//                     configType: 'PRT'
             }
             post { always { deleteDir() }}
         }
