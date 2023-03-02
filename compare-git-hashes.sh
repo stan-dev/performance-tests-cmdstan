@@ -63,7 +63,7 @@ clean_checkout() {
     #fi
     # If we're not checking develop for cmdstan, use custom stanc3 binary url
     if [[ "$1" != "develop" ]] ; then
-      write_makelocal "$6"
+      write_makelocal "$4"
     else
       write_makelocal ""
     fi
@@ -79,7 +79,7 @@ fi
 set -e -x
 
 # Checkout base cmdstan
-clean_checkout "$2" "false" "false"
+clean_checkout "$2" "false" "false" ""
 ./runPerformanceTests.py --overwrite-golds $1
 
 for i in performance.*; do
@@ -87,5 +87,5 @@ for i in performance.*; do
 done
 
 # Checkout cmdstan PR ( will use
-clean_checkout "$3" "$4" "$5"
+clean_checkout "$3" "$4" "$5" "$6"
 ./runPerformanceTests.py --check-golds $1 && ./comparePerformance.py "${2}_performance.csv" performance.csv markdown
