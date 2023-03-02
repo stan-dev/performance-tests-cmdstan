@@ -3,11 +3,11 @@
 usage() {
     echo "=====!!!WARNING!!!===="
     echo "This will clean all repos involved! Use only on a clean checkout."
-    echo "$0 \"<arguments to runPerformanceTests.py>\" <reference-cmdstan-git-hash> <cmdstan_pr_or_hash> <stan_pr> <math_pr>"
+    echo "$0 \"<arguments to runPerformanceTests.py>\" <reference-cmdstan-git-hash> <cmdstan_pr_or_hash> <stan_pr> <math_pr> <stanc3_bin_url>"
 }
 
 write_makelocal() {
-    echo "CXXFLAGS += -march=native" > make/local
+    echo "CXXFLAGS += -march=native \n${4}" > make/local
 }
 
 clean_checkout() {

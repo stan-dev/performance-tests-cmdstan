@@ -141,6 +141,8 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     """
 }
 
+String stanc3_bin_url() { params.stanc3_bin_url != "nightly" ? "\nSTANC3_TEST_BIN_URL=${params.stanc3_bin_url}\n" : "" }
+
 pipeline {
     agent { label 'docker' }
     environment {
@@ -287,7 +289,7 @@ pipeline {
                         sh """
                             old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
                             cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)}
+                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} ${stanc3_bin_url()}
                             mv performance.xml \$cmdstan_hash.xml
                             make revert clean
                         """
@@ -299,7 +301,7 @@ pipeline {
             when { branch 'master' }
             steps {
                unstash "PerfSetup"
-               writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2")
+               writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
                sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
                junit '*.xml'
                archiveArtifacts '*.xml'
@@ -316,7 +318,7 @@ pipeline {
             when { branch 'master' }
             steps {
                 sh "make clean"
-                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native")
+                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native \n${stanc3_bin_url()}")
                 sh "cat shotgun_perf_all.tests"
                 sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
             }
