@@ -63,13 +63,7 @@ clean_checkout() {
     #    exit
     #fi
     # If we're not checking develop for cmdstan, use custom stanc3 binary url
-    if [[ "$1" != "develop" ]] ; then
-      echo "We're currently on $1 branch for cmdstan, using custom stanc3 binary url."
-      write_makelocal "$4"
-    else
-      echo "We're currently on $1 (develop) branch for cmdstan, using empty stanc3 binary url."
-      write_makelocal ""
-    fi
+    write_makelocal "$4"
     git status
     cd ..
 }
