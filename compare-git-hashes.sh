@@ -7,6 +7,7 @@ usage() {
 }
 
 write_makelocal() {
+    echo "Writing to make/local, stanc3 binary url $1"
     echo -e "CXXFLAGS += -march=native \n${1}" > make/local
 }
 
@@ -63,8 +64,10 @@ clean_checkout() {
     #fi
     # If we're not checking develop for cmdstan, use custom stanc3 binary url
     if [[ "$1" != "develop" ]] ; then
+      echo "We're currently on $1 branch for cmdstan, using custom stanc3 binary url."
       write_makelocal "$4"
     else
+      echo "We're currently on $1 (develop) branch for cmdstan, using empty stanc3 binary url."
       write_makelocal ""
     fi
     git status
