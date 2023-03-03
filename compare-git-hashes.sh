@@ -7,7 +7,7 @@ usage() {
 }
 
 write_makelocal() {
-    echo "CXXFLAGS += -march=native \n${1}" > make/local
+    echo -e "CXXFLAGS += -march=native \n${1}" > make/local
 }
 
 clean_checkout() {
