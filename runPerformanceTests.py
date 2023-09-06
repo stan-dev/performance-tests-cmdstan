@@ -7,10 +7,6 @@ import os
 import os.path
 import sys
 import re
-import platform
-import subprocess
-from difflib import SequenceMatcher
-from fnmatch import fnmatch
 from multiprocessing.pool import ThreadPool
 from time import time
 from datetime import datetime
@@ -19,19 +15,10 @@ import multiprocessing
 from statistics import stdev
 from statistics import mean as avg
 
+from cmdstan_perf_util import *
+
 GOLD_OUTPUT_DIR = os.path.join("golds","")
-DIR_UP = os.path.join("..","")
-CURR_DIR = os.path.join(".","")
-SEP_RE = "\\\\" if os.sep == "\\" else "/"
-EXE_FILE_EXT = ".exe" if os.name == "nt" else ""
-def find_files(pattern, dirs):
-    res = []
-    for pd in dirs:
-        for d, _, flist in os.walk(pd):
-            for f in flist:
-                if fnmatch(f, pattern):
-                    res.append(os.path.join(d, f))
-    return res
+
 
 def read_tests(filename, default_num_samples):
     test_files = []
@@ -53,14 +40,6 @@ def read_tests(filename, default_num_samples):
             test_files.append(model)
     return test_files, num_samples_list
 
-def str_dist(target):
-    def str_dist_internal(candidate):
-        return SequenceMatcher(None, candidate, target).ratio()
-    return str_dist_internal
-
-def closest_string(target, candidates):
-    if candidates:
-        return max(candidates, key=str_dist(target))
 
 def find_data_for_model(model):
     d = os.path.dirname(model)
@@ -70,38 +49,6 @@ def find_data_for_model(model):
     else:
         return closest_string(model, data_files)
 
-def time_step(name, fn, *args, **kwargs):
-    start = time()
-    res = fn(*args, **kwargs)
-    end = time()
-    return end-start, res
-
-class FailedCommand(Exception):
-    def __init__(self, returncode, command):
-        self.returncode = returncode
-        self.command = command
-        Exception(self, "return code '{}' from command '{}'!"
-                  .format(returncode, command))
-
-
-def shexec(command, wd = "."):
-    print(command)
-    returncode = subprocess.call(command, shell=True, cwd=wd)
-    if returncode != 0:
-        raise FailedCommand(returncode, command)
-    return returncode
-
-def make(targets, j=8):
-    for i in range(len(targets)):
-        prefix = ""
-        if not targets[i].startswith(os.sep):
-            prefix = DIR_UP
-        targets[i] = prefix + targets[i] + EXE_FILE_EXT
-    try:
-        shexec("make -i -j{} {}"
-            .format(j, " ".join(targets)), wd = "cmdstan")
-    except FailedCommand:
-        print("Failed to make at least some targets")
 
 model_name_re = re.compile(".*"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
 
@@ -348,13 +295,6 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
         return (model, average_time, fails, errors)
     return process_test_wrapper
 
-def delete_temporary_exe_files(exes):
-    for exe in exes:
-        extensions = ["", ".hpp", ".o"]
-        for ext in extensions:
-            print("Removing " + exe + ext)
-            if os.path.exists(exe + ext):
-                os.remove(exe + ext)
 
 def filter_out_weekly_models(models):
     ret_models = []
@@ -368,15 +308,6 @@ def filter_out_weekly_models(models):
             ret_models.append(m)
     return ret_models
 
-def isWin():
-    return platform.system().lower().startswith(
-        "windows"
-    ) or os.name.lower().startswith("windows")
-
-batchSize = 20 if isWin() else 200
-
-def batched(tests):
-    return [tests[i : i + batchSize] for i in range(0, len(tests), batchSize)]
 
 if __name__ == "__main__":
     args = parse_args()
