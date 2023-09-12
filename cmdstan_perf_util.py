@@ -1,10 +1,29 @@
 import os
-import os.path
 from fnmatch import fnmatch
 from difflib import SequenceMatcher
 import subprocess
 import platform
 from time import time
+
+weekly_test_only = frozenset(
+    [os.path.join("good","function-signatures","distributions","univariate","continuous", "exp_mod_normal")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "pareto_type_2")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "skew_normal")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "student_t")
+     , os.path.join("good","function-signatures","distributions","univariate","continuous", "wiener")
+    ])
+
+def filter_out_weekly_models(models):
+    ret_models = []
+    for m in models:
+        out = False
+        for i in weekly_test_only:
+            if i in m:
+                out = True
+                break
+        if not out:
+            ret_models.append(m)
+    return ret_models
 
 def isWin():
     return platform.system().lower().startswith(
@@ -78,6 +97,8 @@ batchSize = 20 if isWin() else 200
 
 def batched(tests):
     return [tests[i : i + batchSize] for i in range(0, len(tests), batchSize)]
+
+
 
 def delete_temporary_exe_files(exes):
     for exe in exes:
