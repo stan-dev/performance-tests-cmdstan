@@ -46,6 +46,8 @@ if __name__ == "__main__":
     else:
         ext = EXE_FILE_EXT
 
-    for batch in batched(executables):
-        make(batch, args.j, ext=ext, allow_failure=False)
-
+    try:
+        for batch in batched(executables):
+            make(batch, args.j, ext=ext, allow_failure=False)
+    finally:
+        delete_temporary_exe_files(executables)
