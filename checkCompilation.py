@@ -40,14 +40,12 @@ if __name__ == "__main__":
     executables = [m[:-5] for m in models]
     delete_temporary_exe_files(executables)
 
-    try:
-        if args.syntax_only:
-            os.environ["CXXFLAGS"] = os.getenv("CXXFLAGS","") + " -fsyntax-only"
-            ext = ".o"
-        else:
-            ext = EXE_FILE_EXT
+    if args.syntax_only:
+        os.environ["CXXFLAGS"] = os.getenv("CXXFLAGS","") + " -fsyntax-only"
+        ext = ".o"
+    else:
+        ext = EXE_FILE_EXT
 
-        for batch in batched(executables):
-            make(batch, args.j, ext=ext, allow_failure=False)
-    finally:
-        delete_temporary_exe_files(executables)
+    for batch in batched(executables):
+        make(batch, args.j, ext=ext, allow_failure=False)
+
