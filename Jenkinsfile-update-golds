@@ -50,7 +50,6 @@ pipeline {
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
             agent { label 'osx && intel' }
-            when { branch 'master' }
             steps {
 
                unstash "PerfSetup"
