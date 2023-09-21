@@ -97,14 +97,6 @@ bad_models = frozenset(
      , os.path.join("example-models","BPA","Ch.07","cjs_group_raneff.stan")
     ])
 
-weekly_test_only = frozenset(
-    [os.path.join("good","function-signatures","distributions","univariate","continuous", "exp_mod_normal")
-     , os.path.join("good","function-signatures","distributions","univariate","continuous", "pareto_type_2")
-     , os.path.join("good","function-signatures","distributions","univariate","continuous", "skew_normal")
-     , os.path.join("good","function-signatures","distributions","univariate","continuous", "student_t")
-     , os.path.join("good","function-signatures","distributions","univariate","continuous", "wiener")
-    ])
-
 def csv_summary(csv_file):
     d = defaultdict(list)
     with open(csv_file, 'r', encoding = 'utf-8') as raw:
@@ -294,19 +286,6 @@ def process_test(overwrite, check_golds, check_golds_exact, runs, method):
         average_time = runs and time_ / runs or 0
         return (model, average_time, fails, errors)
     return process_test_wrapper
-
-
-def filter_out_weekly_models(models):
-    ret_models = []
-    for m in models:
-        out = False
-        for i in weekly_test_only:
-            if i in m:
-                out = True
-                break
-        if not out:
-            ret_models.append(m)
-    return ret_models
 
 
 if __name__ == "__main__":
