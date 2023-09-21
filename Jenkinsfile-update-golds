@@ -58,7 +58,7 @@ pipeline {
 
                sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
 
-               ls -lhart
+               sh "ls -lhart"
 
                 /* Create a merge request */
                 withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b',
