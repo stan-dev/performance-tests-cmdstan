@@ -66,9 +66,9 @@ pipeline {
                     sh """
                         git config user.email "mc.stanislaw@gmail.com"
                         git config user.name "Stan Jenkins"
-                        git config auth.token ${GITHUB_TOKEN}
+                        git config auth.token "${GITHUB_TOKEN}"
 
-                        CURR_DATE=$(date +%F)
+                        CURR_DATE=\$(date +%F)
                         BRANCH_NAME="update-golds-test/${CURR_DATE}"
 
                         git checkout -b "${BRANCH_NAME}"
