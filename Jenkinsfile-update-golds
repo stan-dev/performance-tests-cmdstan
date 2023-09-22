@@ -1,5 +1,7 @@
 #!/usr/bin/env groovy
+
 @Library('StanUtils')
+
 import org.stan.Utils
 import groovy.json.JsonSlurper
 import groovy.json.*
@@ -55,7 +57,7 @@ pipeline {
                unstash "PerfSetup"
                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
 
-               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+               sh "python3 runPerformanceTests.py -j8 --runj 8 --overwrite --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
 
                sh "ls -lhart"
 
