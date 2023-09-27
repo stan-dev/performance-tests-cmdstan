@@ -297,11 +297,11 @@ pipeline {
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            agent { label 'osx' }
+            agent { label 'osx && intel' }
             when { branch 'master' }
             steps {
                unstash "PerfSetup"
-               writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
+               writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
                sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
                junit '*.xml'
                archiveArtifacts '*.xml'
