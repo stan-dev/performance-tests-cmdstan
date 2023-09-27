@@ -77,15 +77,15 @@ pipeline {
             }
         }
     }
-    // post {
-    //     success {
-    //         script { utils.mailBuildResults("SUCCESS", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-    //     }
-    //     unstable {
-    //         script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-    //     }
-    //     failure {
-    //         script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-    //     }
-    // }
+    post {
+        success {
+            script { utils.mailBuildResults("SUCCESS", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        }
+        unstable {
+            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        }
+        failure {
+            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        }
+    }
 }
