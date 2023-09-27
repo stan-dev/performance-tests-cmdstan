@@ -24,12 +24,7 @@ pipeline {
     }
     stages {
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'linux'
-                }
-            }
+            agent { label 'osx && intel' }
             steps {
 
             /* Checkout source code */
@@ -48,7 +43,7 @@ pipeline {
                 ]]])
 
                 /* Write CXX flags for cmdstan*/
-               writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
+               writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
 
                 /* Run tests */
                sh "python3 runPerformanceTests.py -j8 --runj 8 --overwrite --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
@@ -64,10 +59,10 @@ pipeline {
                         CURR_DATE=\$(date '+%d-%m-%Y-%H-%M-%S')
                         BRANCH_NAME="update-golds-test/\$CURR_DATE"
 
-                        echo \$CURR_DATE
-                        echo \$BRANCH_NAME
-
                         git checkout -b "\$BRANCH_NAME"
+
+                        rm -rf known_good_perf.xml
+                        rm -rf known_good_perf.csv
 
                         git add .
                         git commit -m "Update-golds test results for \$CURR_DATE"
