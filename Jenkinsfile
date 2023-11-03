@@ -302,7 +302,7 @@ pipeline {
             steps {
                unstash "PerfSetup"
                writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
-               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests -j4"
                junit '*.xml'
                archiveArtifacts '*.xml'
             }
@@ -320,7 +320,7 @@ pipeline {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native \n${stanc3_bin_url()}")
                 sh "cat shotgun_perf_all.tests"
-                sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
+                sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2 -j4"
             }
         }
         stage('Collect test results') {
