@@ -28,10 +28,12 @@ def checkOs(){
     }
 }
 
+@NonCPS
 def escapeStringForJson(inputString){
     return inputString.trim().replace("\r","\\r").replace("\n","\\n").replace("\t"," ").replace("\"","\\\"").replace("\\", "\\\\")
 }
 
+@NonCPS
 def mapBuildResult(body){
 
     def returnMap = [:]
