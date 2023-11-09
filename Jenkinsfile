@@ -357,22 +357,23 @@ pipeline {
     post {
         success {
             script {
-                def job_log = get_results()
-
-                if(params.cmdstan_pr.contains("PR-")){
-                    def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(job_log, "cmdstan", pr_number, "CmdStan")
-                }
-
-                if(params.stan_pr.contains("PR-")){
-                    def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(job_log, "stan", pr_number, "Stan")
-                }
-
-                if(params.math_pr.contains("PR-")){
-                    def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(job_log, "math", pr_number, "Math")
-                }
+//                 def job_log = get_results()
+//
+//                 if(params.cmdstan_pr.contains("PR-")){
+//                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+//                     post_comment(job_log, "cmdstan", pr_number, "CmdStan")
+//                 }
+//
+//                 if(params.stan_pr.contains("PR-")){
+//                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+//                     post_comment(job_log, "stan", pr_number, "Stan")
+//                 }
+//
+//                 if(params.math_pr.contains("PR-")){
+//                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
+//                     post_comment(job_log, "math", pr_number, "Math")
+//                 }
+                println("Done!")
             }
         }
         unstable {
