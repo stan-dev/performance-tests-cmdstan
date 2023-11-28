@@ -1,0 +1,2 @@
+optimizer-stress-models/inline-tdata.stan
+optimizer-stress-models/soa-index.stan, 1000
