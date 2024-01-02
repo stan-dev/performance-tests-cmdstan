@@ -204,7 +204,7 @@ def run(exe, data, overwrite, check_golds, check_golds_exact, runs, method, num_
 
     gold = os.path.join(GOLD_OUTPUT_DIR,
                         exe.replace(DIR_UP, "").replace(os.sep, "_") + ".gold")
-    tmp = gold + ".tmp"
+    tmp = gold + ".tmp.csv"
     try:
         total_time = run_model(exe, method, data, tmp, runs, num_samples)
     except Exception as e:
