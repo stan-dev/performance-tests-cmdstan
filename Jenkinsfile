@@ -28,10 +28,12 @@ def checkOs(){
     }
 }
 
+@NonCPS
 def escapeStringForJson(inputString){
     return inputString.trim().replace("\r","\\r").replace("\n","\\n").replace("\t"," ").replace("\"","\\\"").replace("\\", "\\\\")
 }
 
+@NonCPS
 def mapBuildResult(body){
 
     def returnMap = [:]
@@ -297,12 +299,12 @@ pipeline {
             }
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            agent { label 'osx' }
+            agent { label 'osx && intel' }
             when { branch 'master' }
             steps {
                unstash "PerfSetup"
-               writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
-               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests"
+               writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
+               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests -j4"
                junit '*.xml'
                archiveArtifacts '*.xml'
             }
@@ -320,7 +322,7 @@ pipeline {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native \n${stanc3_bin_url()}")
                 sh "cat shotgun_perf_all.tests"
-                sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2"
+                sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2 -j4"
             }
         }
         stage('Collect test results') {
@@ -355,22 +357,23 @@ pipeline {
     post {
         success {
             script {
-                def job_log = get_results()
-
-                if(params.cmdstan_pr.contains("PR-")){
-                    def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(job_log, "cmdstan", pr_number, "CmdStan")
-                }
-
-                if(params.stan_pr.contains("PR-")){
-                    def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(job_log, "stan", pr_number, "Stan")
-                }
-
-                if(params.math_pr.contains("PR-")){
-                    def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    post_comment(job_log, "math", pr_number, "Math")
-                }
+//                 def job_log = get_results()
+//
+//                 if(params.cmdstan_pr.contains("PR-")){
+//                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+//                     post_comment(job_log, "cmdstan", pr_number, "CmdStan")
+//                 }
+//
+//                 if(params.stan_pr.contains("PR-")){
+//                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+//                     post_comment(job_log, "stan", pr_number, "Stan")
+//                 }
+//
+//                 if(params.math_pr.contains("PR-")){
+//                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
+//                     post_comment(job_log, "math", pr_number, "Math")
+//                 }
+                println("Done!")
             }
         }
         unstable {
