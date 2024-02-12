@@ -359,7 +359,9 @@ pipeline {
     post {
         success {
             script {
-                def job_log = get_results()
+                //def job_log = get_results()
+                def job_log = new File("${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/log").collect {it}
+
 
                 if(params.cmdstan_pr.contains("PR-")){
                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
