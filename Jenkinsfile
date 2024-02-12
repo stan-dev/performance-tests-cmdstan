@@ -361,7 +361,7 @@ pipeline {
             script {
 
                 def job_log = sh (
-                    script: 'curl -s -S "https://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"',
+                    script: 'curl -s -S "http://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"',
                     returnStdout: true
                 ).trim()
 
