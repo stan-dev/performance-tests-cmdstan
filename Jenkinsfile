@@ -251,7 +251,14 @@ pipeline {
                     reuseNode true
                 }
             }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+             }
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
@@ -277,32 +284,46 @@ pipeline {
                 }
             }
         }
-        stage("Test cmdstan develop against cmdstan pointer in this branch") {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'docker'
-                    reuseNode true
-                }
-            }
-            when { not { branch 'master' } }
-            steps {
-                script{
-                        cmdstan_pr = branchOrPR(params.cmdstan_pr)
+        // stage("Test cmdstan develop against cmdstan pointer in this branch") {
+        //     agent {
+        //         docker {
+        //             image 'stanorg/ci:gpu'
+        //             label 'docker'
+        //             reuseNode true
+        //         }
+        //     }
+        //     when { 
+        //         anyOf {
+        //             not { branch 'master' } 
+        //             expression {
+        //                 params.perf_branch != "master"
+        //             }
+        //         }
+        //     }
+        //     steps {
+        //         script{
+        //                 cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
-                        sh """
-                            old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                            cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} "${stanc3_bin_url()}"
-                            mv performance.xml \$cmdstan_hash.xml
-                            make revert clean
-                        """
-                }
-            }
-        }
+        //                 sh """
+        //                     old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+        //                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+        //                     bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} "${stanc3_bin_url()}"
+        //                     mv performance.xml \$cmdstan_hash.xml
+        //                     make revert clean
+        //                 """
+        //         }
+        //     }
+        // }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
             agent { label 'osx && intel' }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+             }
             steps {
                unstash "PerfSetup"
                writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
@@ -335,7 +356,14 @@ pipeline {
                     reuseNode true
                 }
             }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+             }
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
@@ -373,6 +401,7 @@ pipeline {
 
                 if(params.stan_pr.contains("PR-")){
                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                    println pr_number
                     post_comment(job_log, "stan", pr_number, "Stan")
                 }
 
