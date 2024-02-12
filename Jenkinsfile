@@ -291,7 +291,14 @@ pipeline {
                     reuseNode true
                 }
             }
-            when { not { branch 'master' } }
+            when { 
+                anyOf {
+                    not { branch 'master' } 
+                    expression {
+                        params.perf_branch != "master"
+                    }
+                }
+            }
             steps {
                 script{
                         cmdstan_pr = branchOrPR(params.cmdstan_pr)
