@@ -250,7 +250,14 @@ pipeline {
                     reuseNode true
                 }
             }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+             }
             steps {
                 script {
                     withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
@@ -301,7 +308,14 @@ pipeline {
         }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
             agent { label 'osx && intel' }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+            }
             steps {
                unstash "PerfSetup"
                writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
@@ -318,7 +332,14 @@ pipeline {
                     reuseNode true
                 }
             }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+            }
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native \n${stanc3_bin_url()}")
@@ -334,7 +355,14 @@ pipeline {
                     reuseNode true
                 }
             }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+            }
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
