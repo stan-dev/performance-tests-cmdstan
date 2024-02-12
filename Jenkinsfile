@@ -359,8 +359,11 @@ pipeline {
     post {
         success {
             script {
-                //def job_log = get_results()
-                def job_log = new File("${JENKINS_HOME}/jobs/${JOB_NAME}/builds/${BUILD_NUMBER}/log").collect {it}
+
+                def job_log = sh (
+                    script: 'curl -s -S "https://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"',
+                    returnStdout: true
+                ).trim()
 
 
                 if(params.cmdstan_pr.contains("PR-")){
