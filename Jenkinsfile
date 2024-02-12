@@ -395,9 +395,9 @@ pipeline {
         success {
             node("v100 && triqs") {
                 script {
-
+                    def job_url = "https://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"
                     def job_log = sh (
-                        script: 'curl -s -S "https://jenkins.flatironinstitute.org/job/Stan/job/CmdStan Performance Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"',
+                        script: 'curl -s -S ${job_url}',
                         returnStdout: true
                     ).trim()
 
