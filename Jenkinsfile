@@ -394,32 +394,30 @@ pipeline {
     post {
         success {
             node("v100 && triqs") {
-                step(
-                    script {
+                script {
 
-                        def job_log = sh (
-                            script: 'curl -s -S "http://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"',
-                            returnStdout: true
-                        ).trim()
+                    def job_log = sh (
+                        script: 'curl -s -S "https://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"',
+                        returnStdout: true
+                    ).trim()
 
 
-                        if(params.cmdstan_pr.contains("PR-")){
-                            def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                            post_comment(job_log, "cmdstan", pr_number, "CmdStan")
-                        }
-
-                        if(params.stan_pr.contains("PR-")){
-                            def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                            post_comment(job_log, "stan", pr_number, "Stan")
-                        }
-
-                        if(params.math_pr.contains("PR-")){
-                            def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                            post_comment(job_log, "math", pr_number, "Math")
-                        }
-                        println("Done!")
+                    if(params.cmdstan_pr.contains("PR-")){
+                        def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                        post_comment(job_log, "cmdstan", pr_number, "CmdStan")
                     }
-                )
+
+                    if(params.stan_pr.contains("PR-")){
+                        def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                        post_comment(job_log, "stan", pr_number, "Stan")
+                    }
+
+                    if(params.math_pr.contains("PR-")){
+                        def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                        post_comment(job_log, "math", pr_number, "Math")
+                    }
+                    println("Done!")
+                }
             }
         }
         // unstable {
