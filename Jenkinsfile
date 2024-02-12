@@ -160,6 +160,7 @@ pipeline {
         string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
         string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
         string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
+        string(defaultValue: 'master', name: 'perf_branch', description: "Performance Tests Cmdstan Branch")
         string(defaultValue: 'nightly', name: 'stanc3_bin_url', description: 'Custom stanc3 binary url')
     }
     stages {
@@ -174,7 +175,7 @@ pipeline {
             steps {
                 deleteDir()
                 checkout([$class: 'GitSCM',
-                          branches: [[name: '*/master']],
+                          branches: [[name: "*/${params.perf_branch}"]],
                           doGenerateSubmoduleConfigurations: false,
                           extensions: [[$class: 'SubmoduleOption',
                                         disableSubmodules: false,
