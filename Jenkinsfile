@@ -36,6 +36,13 @@ def escapeStringForJson(inputString){
 @NonCPS
 def mapBuildResult(body){
 
+    println "---------------------------------------------------------------------------------------------------"
+    println body
+    println "---------------------------------------------------------------------------------------------------"
+
+    // curl -s -S "http://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/ci-fix-posting-results/6/logText/progressiveText?start=0"
+
+
     def returnMap = [:]
 
     returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
@@ -401,7 +408,6 @@ pipeline {
 
                 if(params.stan_pr.contains("PR-")){
                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                    println pr_number
                     post_comment(job_log, "stan", pr_number, "Stan")
                 }
 
