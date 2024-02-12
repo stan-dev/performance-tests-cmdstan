@@ -139,7 +139,8 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     sh """#!/bin/bash
         echo "${_comment}" >> /tmp/github.test
-        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
+        cat /tmp/github.test
+        #curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
     """
 }
 
@@ -357,30 +358,30 @@ pipeline {
     post {
         success {
             script {
-//                 def job_log = get_results()
-//
-//                 if(params.cmdstan_pr.contains("PR-")){
-//                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-//                     post_comment(job_log, "cmdstan", pr_number, "CmdStan")
-//                 }
-//
-//                 if(params.stan_pr.contains("PR-")){
-//                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-//                     post_comment(job_log, "stan", pr_number, "Stan")
-//                 }
-//
-//                 if(params.math_pr.contains("PR-")){
-//                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-//                     post_comment(job_log, "math", pr_number, "Math")
-//                 }
+                def job_log = get_results()
+
+                if(params.cmdstan_pr.contains("PR-")){
+                    def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                    post_comment(job_log, "cmdstan", pr_number, "CmdStan")
+                }
+
+                if(params.stan_pr.contains("PR-")){
+                    def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                    post_comment(job_log, "stan", pr_number, "Stan")
+                }
+
+                if(params.math_pr.contains("PR-")){
+                    def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                    post_comment(job_log, "math", pr_number, "Math")
+                }
                 println("Done!")
             }
         }
-        unstable {
-            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        }
-        failure {
-            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        }
+        // unstable {
+        //     script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        // }
+        // failure {
+        //     script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        // }
     }
 }
