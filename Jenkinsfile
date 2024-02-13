@@ -36,19 +36,21 @@ def escapeStringForJson(inputString){
 @NonCPS
 def mapBuildResult(body){
 
-    println "---------------------------------------------------------------------------------------------------"
-    println body
-    println "---------------------------------------------------------------------------------------------------"
-
     def returnMap = [:]
 
     returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
     returnMap["table"] = escapeStringForJson(returnMap["table"]).replace("stat_comp_benchmarks/benchmarks/","")
 
-    returnMap["hash"] = (body =~ /Merge (.*?) into/)[0][1]
+    println returnMap["table"]
+
+    returnMap["hash"] = (body =~ /Revision (.*?) \(/)[0][1]
     returnMap["hash"] = escapeStringForJson(returnMap["hash"])
 
+    println returnMap["hash"]
+
     def current_os = (body =~ /Current OS: (.*?) !/)[0][1]
+
+    println current_os
 
     def cpu = ""
     def gpp = ""
@@ -141,7 +143,9 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment += "</details>"
     _comment = _comment.replace("\\\\","\\")
 
+    println "-----"
     println "${_comment}"
+    println "-----"
 
     sh """#!/bin/bash
         echo "${_comment}" >> /tmp/github.test
@@ -290,36 +294,36 @@ pipeline {
                 }
             }
         }
-        // stage("Test cmdstan develop against cmdstan pointer in this branch") {
-        //     agent {
-        //         docker {
-        //             image 'stanorg/ci:gpu'
-        //             label 'docker'
-        //             reuseNode true
-        //         }
-        //     }
-        //     when { 
-        //         anyOf {
-        //             not { branch 'master' } 
-        //             expression {
-        //                 params.perf_branch != "master"
-        //             }
-        //         }
-        //     }
-        //     steps {
-        //         script{
-        //                 cmdstan_pr = branchOrPR(params.cmdstan_pr)
+        stage("Test cmdstan develop against cmdstan pointer in this branch") {
+            agent {
+                docker {
+                    image 'stanorg/ci:gpu'
+                    label 'docker'
+                    reuseNode true
+                }
+            }
+            when { 
+                anyOf {
+                    not { branch 'master' } 
+                    expression {
+                        params.perf_branch != "master"
+                    }
+                }
+            }
+            steps {
+                script{
+                        cmdstan_pr = branchOrPR(params.cmdstan_pr)
 
-        //                 sh """
-        //                     old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-        //                     cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-        //                     bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} "${stanc3_bin_url()}"
-        //                     mv performance.xml \$cmdstan_hash.xml
-        //                     make revert clean
-        //                 """
-        //         }
-        //     }
-        // }
+                        sh """
+                            old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
+                            cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
+                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} "${stanc3_bin_url()}"
+                            mv performance.xml \$cmdstan_hash.xml
+                            make revert clean
+                        """
+                }
+            }
+        }
         stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
             agent { label 'osx && intel' }
             when { 
@@ -399,11 +403,6 @@ pipeline {
                         script: 'curl -s -S "${BUILD_URL}/logText/progressiveText?start=0"',
                         returnStdout: true
                     ).trim()
-
-                    println "-----------------------------------------------------------------------------------------------------------------"
-                    println "${job_log}"
-                    sh "echo ${job_log}"
-                    println "-----------------------------------------------------------------------------------------------------------------"
 
                     if(params.cmdstan_pr.contains("PR-")){
                         def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
