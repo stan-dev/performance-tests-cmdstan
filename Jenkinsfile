@@ -41,16 +41,10 @@ def mapBuildResult(body){
     returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
     returnMap["table"] = escapeStringForJson(returnMap["table"]).replace("stat_comp_benchmarks/benchmarks/","")
 
-    println returnMap["table"]
-
     returnMap["hash"] = (body =~ /Revision (.*?) \(/)[0][1]
     returnMap["hash"] = escapeStringForJson(returnMap["hash"])
 
-    println returnMap["hash"]
-
     def current_os = (body =~ /Current OS: (.*?) !/)[0][1]
-
-    println current_os
 
     def cpu = ""
     def gpp = ""
@@ -88,31 +82,18 @@ def mapBuildResult(body){
 }
 
 @NonCPS
-def get_results(){
-    def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
-    return performance_log
-}
-
-@NonCPS
 def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     def new_results = mapBuildResult(text)
 
-    def j = Jenkins.getInstance();
+    def get_upstream_build_no = sh (
+        script: "curl -s -S \"https://jenkins.flatironinstitute.org/job/Stan/job/${blue_ocean_repository}/view/change-requests/job/PR-${pr_number}/lastBuild/api/json\"",
+        returnStdout: true
+    ).trim()
 
-    def stanDir = j.getItem("Stan");
-    def proj = stanDir.getItem("$blue_ocean_repository");
-    def jobs = proj.getItems()
-
-    def upstream_build_no = null
-    def masterJob = null
-
-    (jobs).each { job ->
-    	if (job.displayName == "PR-$pr_number") {
-    		upstream_build_no = job.getLastBuild().getNumber().toString()
-    		println "Upstream Build No. $upstream_build_no"
-    	}
-    }
+    def slurper = new JsonSlurper()
+    def result = slurper.parseText(get_upstream_build_no)
+    def upstream_build_no = result.number
 
     def _comment = ""
 
@@ -143,14 +124,9 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment += "</details>"
     _comment = _comment.replace("\\\\","\\")
 
-    println "-----"
-    println "${_comment}"
-    println "-----"
-
     sh """#!/bin/bash
         echo "${_comment}" >> /tmp/github.test
-        cat /tmp/github.test
-        #curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
+        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
     """
 }
 
