@@ -40,9 +40,6 @@ def mapBuildResult(body){
     println body
     println "---------------------------------------------------------------------------------------------------"
 
-    // curl -s -S "http://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/ci-fix-posting-results/6/logText/progressiveText?start=0"
-
-
     def returnMap = [:]
 
     returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
@@ -143,6 +140,8 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     _comment += "</details>"
     _comment = _comment.replace("\\\\","\\")
+
+    println "${_comment}"
 
     sh """#!/bin/bash
         echo "${_comment}" >> /tmp/github.test
@@ -395,16 +394,16 @@ pipeline {
         success {
             node("v100 && triqs") {
                 script {
-                    def job_url = "https://jenkins.flatironinstitute.org/job/Stan/job/CmdStan%20Performance%20Tests/job/${JOB_NAME}/${BUILD_NUMBER}/logText/progressiveText?start=0"
+
                     def job_log = sh (
-                        script: "curl -s -S ${job_url}",
+                        script: 'curl -s -S "${BUILD_URL}/logText/progressiveText?start=0"',
                         returnStdout: true
                     ).trim()
 
                     println "-----------------------------------------------------------------------------------------------------------------"
-                    println job_log
+                    println "${job_log}"
+                    sh "echo ${job_log}"
                     println "-----------------------------------------------------------------------------------------------------------------"
-
 
                     if(params.cmdstan_pr.contains("PR-")){
                         def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
