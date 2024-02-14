@@ -84,12 +84,13 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     def new_results = mapBuildResult(text)
 
     def get_upstream_build_no = sh (
-        script: "curl -s -S \"https://jenkins.flatironinstitute.org/job/Stan/job/${blue_ocean_repository}/view/change-requests/job/PR-${pr_number}/lastBuild/api/json\"",
+        script: "curl -s -S \"https://jenkins.flatironinstitute.org/job/Stan/job/${blue_ocean_repository}/view/change-requests/job/PR-${pr_number}/lastBuild/api/json?tree=number\"",
         returnStdout: true
     ).trim()
 
-    def result = new groovy.json.JsonSlurperClassic().parseText(get_upstream_build_no)
-    def upstream_build_no = result.number
+    //def upstream_build_no = new groovy.json.JsonSlurperClassic().parseText(get_upstream_build_no).number
+    def jsonObj = readJSON text: get_upstream_build_no
+    def upstream_build_no = jsonObj['number']
 
     def _comment = ""
 
@@ -394,11 +395,11 @@ pipeline {
                 }
             }
         }
-        // unstable {
-        //     script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        // }
-        // failure {
-        //     script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        // }
+        unstable {
+            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        }
+        failure {
+            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
+        }
     }
 }
