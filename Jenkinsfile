@@ -1,5 +1,6 @@
 #!/usr/bin/env groovy
 @Library('StanUtils')
+
 import org.stan.Utils
 import groovy.json.JsonSlurper
 import groovy.json.*
@@ -28,12 +29,10 @@ def checkOs(){
     }
 }
 
-@NonCPS
 def escapeStringForJson(inputString){
     return inputString.trim().replace("\r","\\r").replace("\n","\\n").replace("\t"," ").replace("\"","\\\"").replace("\\", "\\\\")
 }
 
-@NonCPS
 def mapBuildResult(body){
 
     def returnMap = [:]
@@ -81,7 +80,6 @@ def mapBuildResult(body){
     return returnMap
 }
 
-@NonCPS
 def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     def new_results = mapBuildResult(text)
@@ -125,7 +123,6 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment = _comment.replace("\\\\","\\")
 
     sh """#!/bin/bash
-        echo "${_comment}" >> /tmp/github.test
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
     """
 }
@@ -394,7 +391,8 @@ pipeline {
                         def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
                         post_comment(job_log, "math", pr_number, "Math")
                     }
-                    println("Done!")
+
+                    println "Done!"
                 }
             }
         }
