@@ -1,8 +1,8 @@
 #!/usr/bin/env groovy
 @Library('StanUtils')
+
 import org.stan.Utils
-import groovy.json.JsonSlurper
-import groovy.json.*
+import groovy.json.JsonSlurperClassic
 
 def utils = new org.stan.Utils()
 
@@ -28,12 +28,10 @@ def checkOs(){
     }
 }
 
-@NonCPS
 def escapeStringForJson(inputString){
     return inputString.trim().replace("\r","\\r").replace("\n","\\n").replace("\t"," ").replace("\"","\\\"").replace("\\", "\\\\")
 }
 
-@NonCPS
 def mapBuildResult(body){
 
     def returnMap = [:]
@@ -41,7 +39,7 @@ def mapBuildResult(body){
     returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
     returnMap["table"] = escapeStringForJson(returnMap["table"]).replace("stat_comp_benchmarks/benchmarks/","")
 
-    returnMap["hash"] = (body =~ /Merge (.*?) into/)[0][1]
+    returnMap["hash"] = (body =~ /Revision (.*?) \(/)[0][1]
     returnMap["hash"] = escapeStringForJson(returnMap["hash"])
 
     def current_os = (body =~ /Current OS: (.*?) !/)[0][1]
@@ -81,32 +79,18 @@ def mapBuildResult(body){
     return returnMap
 }
 
-@NonCPS
-def get_results(){
-    def performance_log = currentBuild.rawBuild.getLog(Integer.MAX_VALUE).join('\n')
-    return performance_log
-}
-
-@NonCPS
 def post_comment(text, repository, pr_number, blue_ocean_repository) {
 
     def new_results = mapBuildResult(text)
 
-    def j = Jenkins.getInstance();
+    def get_upstream_build_no = sh (
+        script: "curl -s -S \"https://jenkins.flatironinstitute.org/job/Stan/job/${blue_ocean_repository}/view/change-requests/job/PR-${pr_number}/lastBuild/api/json?tree=number\"",
+        returnStdout: true
+    ).trim()
 
-    def stanDir = j.getItem("Stan");
-    def proj = stanDir.getItem("$blue_ocean_repository");
-    def jobs = proj.getItems()
-
-    def upstream_build_no = null
-    def masterJob = null
-
-    (jobs).each { job ->
-    	if (job.displayName == "PR-$pr_number") {
-    		upstream_build_no = job.getLastBuild().getNumber().toString()
-    		println "Upstream Build No. $upstream_build_no"
-    	}
-    }
+    //def upstream_build_no = new groovy.json.JsonSlurperClassic().parseText(get_upstream_build_no).number
+    def jsonObj = readJSON text: get_upstream_build_no
+    def upstream_build_no = jsonObj['number']
 
     def _comment = ""
 
@@ -138,7 +122,6 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
     _comment = _comment.replace("\\\\","\\")
 
     sh """#!/bin/bash
-        echo "${_comment}" >> /tmp/github.test
         curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
     """
 }
@@ -322,7 +305,7 @@ pipeline {
                         params.perf_branch == "master"
                     }
                 }
-            }
+             }
             steps {
                unstash "PerfSetup"
                writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
@@ -369,7 +352,7 @@ pipeline {
                         params.perf_branch == "master"
                     }
                 }
-            }
+             }
             steps {
                 junit '*.xml'
                 archiveArtifacts '*.xml'
@@ -392,24 +375,31 @@ pipeline {
 
     post {
         success {
-            script {
-//                 def job_log = get_results()
-//
-//                 if(params.cmdstan_pr.contains("PR-")){
-//                     def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-//                     post_comment(job_log, "cmdstan", pr_number, "CmdStan")
-//                 }
-//
-//                 if(params.stan_pr.contains("PR-")){
-//                     def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-//                     post_comment(job_log, "stan", pr_number, "Stan")
-//                 }
-//
-//                 if(params.math_pr.contains("PR-")){
-//                     def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-//                     post_comment(job_log, "math", pr_number, "Math")
-//                 }
-                println("Done!")
+            node("v100 && triqs") {
+                script {
+
+                    def job_log = sh (
+                        script: 'curl -s -S "${BUILD_URL}/logText/progressiveText?start=0"',
+                        returnStdout: true
+                    ).trim()
+
+                    if(params.cmdstan_pr.contains("PR-")){
+                        def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                        post_comment(job_log, "cmdstan", pr_number, "CmdStan")
+                    }
+
+                    if(params.stan_pr.contains("PR-")){
+                        def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                        post_comment(job_log, "stan", pr_number, "Stan")
+                    }
+
+                    if(params.math_pr.contains("PR-")){
+                        def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
+                        post_comment(job_log, "math", pr_number, "Math")
+                    }
+
+                    println "Done!"
+                }
             }
         }
         unstable {
