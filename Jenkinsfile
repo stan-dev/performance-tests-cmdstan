@@ -322,7 +322,14 @@ pipeline {
                     reuseNode true
                 }
             }
-            when { branch 'master' }
+            when { 
+                allOf {
+                    branch 'master'
+                    expression {
+                        params.perf_branch == "master"
+                    }
+                }
+            }
             steps {
                 sh "make clean"
                 writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native \n${stanc3_bin_url()}")

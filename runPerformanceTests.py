@@ -43,7 +43,7 @@ def read_tests(filename, default_num_samples):
 
 def find_data_for_model(model):
     d = os.path.dirname(model)
-    data_files = find_files("*.data.R", [d])
+    data_files = find_files("*.data.json", [d])
     if len(data_files) == 1:
         return data_files[0]
     else:
