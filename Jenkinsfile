@@ -2,8 +2,7 @@
 @Library('StanUtils')
 
 import org.stan.Utils
-import groovy.json.JsonSlurper
-import groovy.json.*
+import groovy.json.JsonSlurperClassic
 
 def utils = new org.stan.Utils()
 
@@ -89,8 +88,7 @@ def post_comment(text, repository, pr_number, blue_ocean_repository) {
         returnStdout: true
     ).trim()
 
-    def slurper = new JsonSlurper()
-    def result = slurper.parseText(get_upstream_build_no)
+    def result = new groovy.json.JsonSlurperClassic().parseText(get_upstream_build_no)
     def upstream_build_no = result.number
 
     def _comment = ""
