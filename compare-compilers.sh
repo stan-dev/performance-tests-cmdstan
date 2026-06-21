@@ -14,7 +14,7 @@ fi
 set -e -x
 
 # run develop version of cmdstan with the nightly stanc3 binary
-cd cmdstan; make clean-all; make -j4 build; make -j4 examples/bernoulli/bernoulli; ./bin/stanc --version; cd ..
+cd cmdstan; make clean-all; make -j${PARALLEL:-4} build; make -j${PARALLEL:-4} examples/bernoulli/bernoulli; ./bin/stanc --version; cd ..
 ./runPerformanceTests.py --overwrite-golds $1
 
 for i in performance.*; do
@@ -22,7 +22,7 @@ for i in performance.*; do
 done
 
 # run develop version of cmdstan with the stanc3 binary at the provided path
-cd cmdstan; make clean-all; make -j4 build; cd ..
+cd cmdstan; make clean-all; make -j${PARALLEL:-4} build; cd ..
 rm cmdstan/bin/stanc
 cp "$2" cmdstan/bin/stanc
 cmdstan/bin/stanc --version
