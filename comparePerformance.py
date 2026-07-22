@@ -19,9 +19,6 @@ def get_times(csv):
 
 def print_output_markdown(ratios):
 
-    # Keep this print so Jenkins can extract what's in between for GitHub
-    print("---RESULTS---")
-
     print("| Name | Old Result | New Result | Ratio | Performance change( 1 - new / old ) |")
     print("| ------------- |------------- | ------------- | ------------- | ------------- |")
 
@@ -36,8 +33,11 @@ def print_output_markdown(ratios):
         total = total + ratios[r]['ratio']
 
     print("Mean result: " + str(total / len(ratios)))
-    
+
+def print_output_markdown_jenkins(ratios):
     # Keep this print so Jenkins can extract what's in between for GitHub
+    print("---RESULTS---")
+    print_output_markdown(ratios)
     print("---RESULTS---")
 
 def print_output_csv(ratios):
@@ -78,6 +78,8 @@ if __name__ == "__main__":
         }
 
     if output_type == "markdown":
+        print_output_markdown_jenkins(ratios)
+    elif output_type == "md":
         print_output_markdown(ratios)
     elif output_type == "csv":
         print_output_csv(ratios)
