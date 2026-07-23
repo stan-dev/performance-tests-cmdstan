@@ -1,412 +1,136 @@
-#!/usr/bin/env groovy
-@Library('StanUtils')
+properties([
+  // disableConcurrentBuilds(),
+  buildDiscarder(logRotator(numToKeepStr: '20', daysToKeepStr: '30')),
+  parameters([
+    string(defaultValue: 'develop', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against"),
+    string(defaultValue: 'develop', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo."),
+    string(defaultValue: 'develop', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo."),
+    // string(defaultValue: 'master', name: 'perf_branch', description: "Performance Tests Cmdstan Branch"), # env.BRANCH_NAME
+    string(defaultValue: 'nightly', name: 'stanc3_bin_url', description: 'Custom stanc3 binary url'),
+    booleanParam(name:"update_golds", defaultValue: false, description:"Update golds")
+  ])
+])
 
-import org.stan.Utils
-import groovy.json.JsonSlurperClassic
-
-def utils = new org.stan.Utils()
+def isPrimary = ((env.BRANCH_NAME == "master" || env.BRANCH_NAME == "jenkins-new") && params.cmdstan_pr == "develop")
+def stanc3_bin_url = ""
+if (params.stanc3_bin_url != "nightly")
+  stanc3_bin_url = "STANC3_TEST_BIN_URL=${params.stanc3_bin_url}"
 
 def branchOrPR(pr) {
-  if (pr == "downstream_tests") return "develop"
-  if (pr == "downstream_hotfix") return "master"
-  if (pr == "") return "develop"
-  return pr
+  [downstream_tests: "develop", downstream_hotfix: "master"].get(pr, pr)
 }
 
-def checkOs(){
-    if (isUnix()) {
-        def uname = sh script: 'uname', returnStdout: true
-        if (uname.startsWith("Darwin")) {
-            return "macos"
-        }
-        else {
-            return "linux"
-        }
+def buildInfo = [:]
+
+def postComment(String repo, String pr, Map info) {
+  if (pr.startsWith("PR-")) {
+    def prn = pr.drop(3)
+    def comment = """
+${info["table"]}
+[Jenkins Console Log]($env.JENKINS_URL/job/CCM/job/$repo/view/change-requests/job/$pr/lastBuild/console)
+[Jenkins Build Stages]($env.JENKINS_URL/job/CCM/job/$repo/view/change-requests/job/$pr/lastBuild/stages/)
+Commit hash: ${info["hash"]}
+<details><summary>Machine information</summary>
+<pre>${info["system"]["sys_ver"]}</pre>
+
+CPU:
+<pre>${info["system"]["cpu"]}</pre>
+
+G++: 
+<pre>${info["system"]["gpp"]}</pre>
+
+Clang: 
+<pre>${info["system"]["clang"]}</pre>
+
+</details>
+"""
+    withCredentials([usernamePassword(usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN', credentialsId: 'stan-github')]) {
+      httpRequest url:"https://api.github.com/repos/stan-dev/$repo/issues/$prn/comments",
+        httpMode: 'POST',
+        contentType: 'APPLICATION_JSON',
+        customHeaders: [[maskValue: true, name: 'Authorization', value: 'token ' + GITHUB_TOKEN]],
+        requestBody: writeJSON(returnText: true, json: [body: comment])
     }
-    else {
-        return "windows"
-    }
+  }
 }
 
-def escapeStringForJson(inputString){
-    return inputString.trim().replace("\r","\\r").replace("\n","\\n").replace("\t"," ").replace("\"","\\\"").replace("\\", "\\\\")
-}
-
-def mapBuildResult(body){
-
-    def returnMap = [:]
-
-    returnMap["table"] = (body =~ /(?s)---RESULTS---(.*?)---RESULTS---/)[0][1]
-    returnMap["table"] = escapeStringForJson(returnMap["table"]).replace("stat_comp_benchmarks/benchmarks/","")
-
-    returnMap["hash"] = (body =~ /Revision (.*?) \(/)[0][1]
-    returnMap["hash"] = escapeStringForJson(returnMap["hash"])
-
-    def current_os = (body =~ /Current OS: (.*?) !/)[0][1]
-
-    def cpu = ""
-    def gpp = ""
-    def clang = ""
-    def sys_ver = ""
-
-    if(current_os == "windows"){
-        cpu = (body =~ /(?s)wmic CPU get NAME(.*?)(C:|J:|Z:)/)[0][1]
-        sys_ver = (body =~ /(?s)>ver(.*?)(C:|J:|Z:)/)[0][1]
-        gpp = (body =~ /(?s)g\+\+ --version(.*?)(C:|J:|Z:)/)[0][1]
-        clang = (body =~ /(?s)clang --version(.*?)(C:|J:|Z:)/)[0][1]
-    }
-    else if(current_os == "macos"){
-        cpu = (body =~ /(?s)sysctl -n machdep\.cpu\.brand_string(.*?)\+ sw_vers/)[0][1]
-        sys_ver = (body =~ /(?s)sw_vers(.*?)\+ g\+\+/)[0][1]
-        gpp = (body =~ /(?s)g\+\+ --version(.*?)\+ clang/)[0][1]
-        clang = (body =~ /(?s)clang --version(.*?)\+ echo/)[0][1]
-    }
-    else{
-        cpu = (body =~ /(?s)lscpu(.*?)\+ lsb_release/)[0][1]
-        sys_ver = (body =~ /(?s)lsb_release -a(.*?)\+ g\+\+/)[0][1]
-        gpp = (body =~ /(?s)g\+\+ --version(.*?)\+ clang/)[0][1]
-        clang = (body =~ /(?s)clang --version(.*?)\+ echo/)[0][1]
-    }
-
-
-    returnMap["system"] = [
-        "cpu": escapeStringForJson(cpu),
-        "sys_ver": escapeStringForJson(sys_ver),
-        "gpp": escapeStringForJson(gpp),
-        "clang": escapeStringForJson(clang)
+catchError {
+  runPod(image: "stanorg/ci:gpu", memory: "64Gi") {
+    stage('Gather machine information') {
+      buildInfo["hash"] = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
+      buildInfo["system"] = [
+        "cpu":     sh(returnStdout: true, script: "lscpu"),
+        "sys_ver": sh(returnStdout: true, script: "lsb_release -a"),
+        "gpp":     sh(returnStdout: true, script: "g++ --version"),
+        "clang":   sh(returnStdout: true, script: "clang --version")
       ]
+    }
 
-    return returnMap
+    if (isPrimary) {
+      stage('Shotgun Performance Regression Tests') {
+        sh "make clean"
+        writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native \n$stanc3_bin_url\n")
+        sh "cat shotgun_perf_all.tests"
+        sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2 -j4"
+      }
+      stage('Collect test results') {
+        junit '*.xml'
+        archiveArtifacts '*.xml'
+      }
+
+    } else {
+      stage("Test cmdstan develop against cmdstan pointer in this branch") {
+        def cmdstan_pr = branchOrPR(params.cmdstan_pr)
+
+        sh "./compare-git-hashes.sh stat_comp_benchmarks develop $cmdstan_pr ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} '$stanc3_bin_url'"
+        buildInfo["table"] = sh(returnStdout: true, script: "./comparePerformance.py develop_performance.csv performance.csv md")
+      }
+    }
+  }
+
+  if (isPrimary) {
+    node('macos && intel') {
+      stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
+        checkout scm
+        writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n$stanc3_bin_url\n")
+        def cmd = 'python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests -j$PARALLEL'
+        if (params.update_golds)
+          cmd += ' --runj 8 --overwrite'
+        sh cmd
+        junit '*.xml'
+        archiveArtifacts '*.xml'
+
+        if (params.update_golds) {
+          def currdate = new Date(currentBuild.startTimeInMillis).format("dd-MM-yyyy-HH-mm-ss")
+          def branch = "update-golds-test/$currdate"
+          def nocommit = sh(returnStatus: true, script: """
+            git add golds
+            GIT_COMMITTER_NAME="Stan Jenkins" GIT_COMMITTER_EMAIL="mc.stanislow@gmail.com" git commit --author="Stan Jenkins <mc.stanislaw@gmail.com>" -m "Update-golds test results for $currdate"
+          """)
+          withCredentials([gitUsernamePassword(credentialsId: 'stan-github', gitToolName: 'git-tool')]) {
+            sh "git push origin HEAD:refs/heads/$branch"
+          }
+          withCredentials([usernamePassword(usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN', credentialsId: 'stan-github')]) {
+            httpRequest url:"https://api.github.com/repos/stan-dev/performance-tests-cmdstan/pulls",
+              httpMode: 'POST',
+              contentType: 'APPLICATION_JSON',
+              customHeaders: [[maskValue: true, name: 'Authorization', value: 'token ' + GITHUB_TOKEN]],
+              requestBody: writeJSON(returnText: true, json: [
+                "title": "Update golds test results generated by Jenkins for '$currdate'",
+                "head": branch,
+                "base": env.BRANCH_NAME,
+                "body": "Results generated through a [Jenkins Job]($env.RUN_DISPLAY_URL)"
+              ])
+          }
+        }
+      }
+    }
+  }
+  else {
+    postComment("cmdstan", params.cmdstan_pr, buildInfo)
+    postComment("stan",    params.stan_pr,    buildInfo)
+    postComment("math",    params.math_pr,    buildInfo)
+  }
 }
 
-def post_comment(text, repository, pr_number, blue_ocean_repository) {
-
-    def new_results = mapBuildResult(text)
-
-    def get_upstream_build_no = sh (
-        script: "curl -s -S \"https://jenkins.flatironinstitute.org/job/Stan/job/${blue_ocean_repository}/view/change-requests/job/PR-${pr_number}/lastBuild/api/json?tree=number\"",
-        returnStdout: true
-    ).trim()
-
-    //def upstream_build_no = new groovy.json.JsonSlurperClassic().parseText(get_upstream_build_no).number
-    def jsonObj = readJSON text: get_upstream_build_no
-    def upstream_build_no = jsonObj['number']
-
-    def _comment = ""
-
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
-    _comment += new_results["table"] + "\\r\\n"
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
-
-    _comment += "[Jenkins Console Log](https://jenkins.flatironinstitute.org/job/Stan/job/$blue_ocean_repository/view/change-requests/job/PR-$pr_number/$upstream_build_no/consoleFull)" + "\\r\\n"
-    _comment += "[Blue Ocean](https://jenkins.flatironinstitute.org/blue/organizations/jenkins/Stan%2F$blue_ocean_repository/detail/PR-$pr_number/$upstream_build_no/pipeline)" + "\\r\\n"
-
-    _comment += "Commit hash: " + new_results["hash"] + "\\r\\n"
-
-    _comment += "- - - - - - - - - - - - - - - - - - - - -" + "\\r\\n"
-
-    _comment += "<details><summary>Machine information</summary>"
-
-    _comment += "\\r\\n" + new_results["system"]["sys_ver"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "CPU: " + "\\r\\n"
-    _comment += new_results["system"]["cpu"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "G++: " + "\\r\\n"
-    _comment += new_results["system"]["gpp"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "Clang: " + "\\r\\n"
-    _comment += new_results["system"]["clang"] + "\\r\\n" + "\\r\\n"
-
-    _comment += "</details>"
-    _comment = _comment.replace("\\\\","\\")
-
-    sh """#!/bin/bash
-        curl -s -H "Authorization: token ${GITHUB_TOKEN}" -X POST -d '{"body": "${_comment}"}' "https://api.github.com/repos/stan-dev/${repository}/issues/${pr_number}/comments"
-    """
-}
-
-String stanc3_bin_url() { params.stanc3_bin_url != "nightly" ? "\nSTANC3_TEST_BIN_URL=${params.stanc3_bin_url}\n" : "" }
-
-pipeline {
-    agent { label 'docker' }
-    environment {
-        cmdstan_pr = ""
-        GITHUB_TOKEN = credentials('6e7c1e8f-ca2c-4b11-a70e-d934d3f6b681')
-    }
-    options {
-        skipDefaultCheckout()
-        preserveStashes(buildCount: 7)
-    }
-    parameters {
-        string(defaultValue: '', name: 'cmdstan_pr', description: "CmdStan hash/branch to compare against")
-        string(defaultValue: '', name: 'stan_pr', description: "Stan PR to test against. Will check out this PR in the downstream Stan repo.")
-        string(defaultValue: '', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo.")
-        string(defaultValue: 'master', name: 'perf_branch', description: "Performance Tests Cmdstan Branch")
-        string(defaultValue: 'nightly', name: 'stanc3_bin_url', description: 'Custom stanc3 binary url')
-    }
-    stages {
-        stage('Clean checkout') {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'docker'
-                    reuseNode true
-                }
-            }
-            steps {
-                deleteDir()
-                checkout([$class: 'GitSCM',
-                          branches: [[name: "*/${params.perf_branch}"]],
-                          doGenerateSubmoduleConfigurations: false,
-                          extensions: [[$class: 'SubmoduleOption',
-                                        disableSubmodules: false,
-                                        parentCredentials: false,
-                                        recursiveSubmodules: true,
-                                        reference: '',
-                                        trackingSubmodules: false]],
-                          submoduleCfg: [],
-                          userRemoteConfigs: [[url: "https://github.com/stan-dev/performance-tests-cmdstan.git",
-                                               credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b'
-                    ]]])
-
-                stash 'PerfSetup'
-            }
-        }
-        stage('Gather machine information') {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'docker'
-                    reuseNode true
-                }
-            }
-            steps {
-                script {
-
-                    def current_os = checkOs()
-
-                    def command = """
-                            echo "--- Machine Information ---"
-                            echo "Current OS: ${current_os} !"
-                    """
-
-                    if(current_os == "windows"){
-                        command += """
-                                wmic CPU get NAME
-                                ver
-                        """
-                    }
-                    else if(current_os == "macos"){
-                        command += """
-                                sysctl -n machdep.cpu.brand_string
-                                sw_vers
-                        """
-                    }
-                    else{
-                        command += """
-                                lscpu
-                                lsb_release -a || true
-                        """
-                    }
-
-                    command += """
-                            g++ --version || true
-                            clang --version || true
-                            echo "--- Machine Information ---"
-                    """
-
-                    if(current_os == "windows"){
-                        bat command
-                    }
-                    else{
-                        sh command
-                    }
-                }
-            }
-        }
-        stage('Update CmdStan pointer to latest develop') {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'docker'
-                    reuseNode true
-                }
-            }
-            when { 
-                allOf {
-                    branch 'master'
-                    expression {
-                        params.perf_branch == "master"
-                    }
-                }
-             }
-            steps {
-                script {
-                    withCredentials([usernamePassword(credentialsId: 'a630aebc-6861-4e69-b497-fd7f496ec46b', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                        sh """#!/bin/bash
-                            set -e
-
-                            git config user.email "mc.stanislaw@gmail.com"
-                            git config user.name "Stan Jenkins"
-
-                            cd cmdstan
-                            git pull origin develop
-                            git submodule update --init --recursive
-                            cd ..
-
-                            if [ -n "\$(git status --porcelain cmdstan)" ]; then
-                                git checkout master
-                                git pull
-                                git commit cmdstan --author="Stan BuildBot <mc.stanislaw@gmail.com>" -m "Update submodules"
-                                git push https://${GIT_USERNAME}:${GIT_PASSWORD}@github.com/stan-dev/performance-tests-cmdstan.git master
-                            fi
-                        """
-                    }
-                }
-            }
-        }
-        stage("Test cmdstan develop against cmdstan pointer in this branch") {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'docker'
-                    reuseNode true
-                }
-            }
-            when { 
-                anyOf {
-                    not { branch 'master' } 
-                    expression {
-                        params.perf_branch != "master"
-                    }
-                }
-            }
-            steps {
-                script{
-                        cmdstan_pr = branchOrPR(params.cmdstan_pr)
-
-                        sh """
-                            old_hash=\$(git submodule status | grep cmdstan | awk '{print \$1}')
-                            cmdstan_hash=\$(if [ -n "${cmdstan_pr}" ]; then echo "${cmdstan_pr}"; else echo "\$old_hash" ; fi)
-                            bash compare-git-hashes.sh stat_comp_benchmarks develop \$cmdstan_hash ${branchOrPR(params.stan_pr)} ${branchOrPR(params.math_pr)} "${stanc3_bin_url()}"
-                            mv performance.xml \$cmdstan_hash.xml
-                            make revert clean
-                        """
-                }
-            }
-        }
-        stage("Numerical Accuracy and Performance Tests on Known-Good Models") {
-            agent { label 'osx && intel' }
-            when { 
-                allOf {
-                    branch 'master'
-                    expression {
-                        params.perf_branch == "master"
-                    }
-                }
-             }
-            steps {
-               unstash "PerfSetup"
-               writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n${stanc3_bin_url()}")
-               sh "python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests -j4"
-               junit '*.xml'
-               archiveArtifacts '*.xml'
-            }
-        }
-        stage('Shotgun Performance Regression Tests') {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'docker'
-                    reuseNode true
-                }
-            }
-            when { 
-                allOf {
-                    branch 'master'
-                    expression {
-                        params.perf_branch == "master"
-                    }
-                }
-            }
-            steps {
-                sh "make clean"
-                writeFile(file: "cmdstan/make/local", text: "CXXFLAGS += -march=native \n${stanc3_bin_url()}")
-                sh "cat shotgun_perf_all.tests"
-                sh "./runPerformanceTests.py --name=shotgun_perf --tests-file=shotgun_perf_all.tests --runs=2 -j4"
-            }
-        }
-        stage('Collect test results') {
-            agent {
-                docker {
-                    image 'stanorg/ci:gpu'
-                    label 'docker'
-                    reuseNode true
-                }
-            }
-            when { 
-                allOf {
-                    branch 'master'
-                    expression {
-                        params.perf_branch == "master"
-                    }
-                }
-             }
-            steps {
-                junit '*.xml'
-                archiveArtifacts '*.xml'
-//                 perfReport compareBuildPrevious: true,
-//
-//                     relativeFailedThresholdPositive: 10,
-//                     relativeUnstableThresholdPositive: 5,
-//
-//                     errorFailedThreshold: 1,
-//                     failBuildIfNoResultFile: false,
-//                     modePerformancePerTestCase: true,
-//                     modeOfThreshold: true,
-//                     sourceDataFiles: '*.xml',
-//                     modeThroughput: false,
-//                     configType: 'PRT'
-            }
-            post { always { deleteDir() }}
-        }
-    }
-
-    post {
-        success {
-            node("v100 && triqs") {
-                script {
-
-                    def job_log = sh (
-                        script: 'curl -s -S "${BUILD_URL}/logText/progressiveText?start=0"',
-                        returnStdout: true
-                    ).trim()
-
-                    if(params.cmdstan_pr.contains("PR-")){
-                        def pr_number = (params.cmdstan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                        post_comment(job_log, "cmdstan", pr_number, "CmdStan")
-                    }
-
-                    if(params.stan_pr.contains("PR-")){
-                        def pr_number = (params.stan_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                        post_comment(job_log, "stan", pr_number, "Stan")
-                    }
-
-                    if(params.math_pr.contains("PR-")){
-                        def pr_number = (params.math_pr =~ /(?m)PR-(.*?)$/)[0][1]
-                        post_comment(job_log, "math", pr_number, "Math")
-                    }
-
-                    println "Done!"
-                }
-            }
-        }
-        unstable {
-            script { utils.mailBuildResults("UNSTABLE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        }
-        failure {
-            script { utils.mailBuildResults("FAILURE", "stan-buildbot@googlegroups.com, serban.nicusor@toptal.com") }
-        }
-    }
-}
+emailFailure()
