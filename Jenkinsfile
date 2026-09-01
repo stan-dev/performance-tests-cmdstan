@@ -21,8 +21,8 @@ def postComment(String repo, String pr, Map info) {
     def prn = pr.drop(3)
     def comment = """
 ${info["table"]}
-[Jenkins Console Log]($env.JENKINS_URL/job/CCM/job/$repo/view/change-requests/job/$pr/lastBuild/console)
-[Jenkins Build Stages]($env.JENKINS_URL/job/CCM/job/$repo/view/change-requests/job/$pr/lastBuild/stages/)
+[Jenkins Console Log](${env.JENKINS_URL}job/CCM/job/Stan/job/$repo/view/change-requests/job/$pr/lastBuild/console)
+[Jenkins Build Stages](${env.JENKINS_URL}job/CCM/job/Stan/job/$repo/view/change-requests/job/$pr/lastBuild/stages/)
 Commit hash: ${info["hash"]}
 <details><summary>Machine information</summary>
 <pre>${info["system"]["sys_ver"]}</pre>
