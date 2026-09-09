@@ -7,7 +7,7 @@ properties([
     string(defaultValue: 'develop', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo."),
     string(defaultValue: 'nightly', name: 'stanc3_bin_url', description: 'Custom stanc3 binary url'),
     booleanParam(name:"update_golds", defaultValue: false, description:"Update golds"),
-    booleanParam(defaultValue: false, name: 'downsteam', description: 'Run downstream tests from cmdstan (was previously downstream_tests [master])'),
+    booleanParam(defaultValue: false, name: 'downstream', description: 'Run downstream tests from cmdstan (was previously downstream_tests [master])'),
   ])
 ])
 
@@ -80,8 +80,9 @@ catchError {
         checkout scm
         writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n$stanc3_bin_url\n")
         def cmd = 'python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests -j$PARALLEL'
-        if (params.update_golds)
+        if (params.update_golds) {
           cmd += ' --runj 8 --overwrite'
+        }
         sh cmd
         junit '*.xml'
         archiveArtifacts '*.xml'
