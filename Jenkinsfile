@@ -14,52 +14,8 @@ properties([
 def isPrimary = !params.downstream && (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "jenkins-new") && params.cmdstan_pr == "develop"
 def stanc3_bin_url = params.stanc3_bin_url != "nightly" ? "STANC3_TEST_BIN_URL=${params.stanc3_bin_url}" : ''
 
-def buildInfo = [:]
-
-def postComment(String repo, String pr, Map info) {
-  if (pr.startsWith("PR-")) {
-    def prn = pr.drop(3)
-    def comment = """
-${info["table"]}
-[Jenkins Console Log](${env.JENKINS_URL}job/CCM/job/Stan/job/$repo/view/change-requests/job/$pr/lastBuild/console)
-[Jenkins Build Stages](${env.JENKINS_URL}job/CCM/job/Stan/job/$repo/view/change-requests/job/$pr/lastBuild/stages/)
-Commit hash: ${info["hash"]}
-<details><summary>Machine information</summary>
-<pre>${info["system"]["sys_ver"]}</pre>
-
-CPU:
-<pre>${info["system"]["cpu"]}</pre>
-
-G++: 
-<pre>${info["system"]["gpp"]}</pre>
-
-Clang: 
-<pre>${info["system"]["clang"]}</pre>
-
-</details>
-"""
-    withCredentials([usernamePassword(usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN', credentialsId: 'stan-github')]) {
-      httpRequest url:"https://api.github.com/repos/stan-dev/$repo/issues/$prn/comments",
-        httpMode: 'POST',
-        contentType: 'APPLICATION_JSON',
-        customHeaders: [[maskValue: true, name: 'Authorization', value: 'token ' + GITHUB_TOKEN]],
-        requestBody: writeJSON(returnText: true, json: [body: comment])
-    }
-  }
-}
-
 catchError {
   runPod(image: "stanorg/ci:gpu", memory: "64Gi") {
-    stage('Gather machine information') {
-      buildInfo["hash"] = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
-      buildInfo["system"] = [
-        "cpu":     sh(returnStdout: true, script: "lscpu"),
-        "sys_ver": sh(returnStdout: true, script: "lsb_release -a"),
-        "gpp":     sh(returnStdout: true, script: "g++ --version"),
-        "clang":   sh(returnStdout: true, script: "clang --version")
-      ]
-    }
-
     if (isPrimary) {
       stage('Shotgun Performance Regression Tests') {
         sh "make clean"
