@@ -71,12 +71,6 @@ catchError {
         junit '*.xml'
         archiveArtifacts '*.xml'
       }
-
-    } else {
-      stage("Test cmdstan develop against cmdstan pointer in this branch") {
-        sh "./compare-git-hashes.sh stat_comp_benchmarks develop ${params.cmdstan_pr} ${params.stan_pr} ${params.math_pr} '$stanc3_bin_url'"
-        buildInfo["table"] = sh(returnStdout: true, script: "./comparePerformance.py develop_performance.csv performance.csv md")
-      }
     }
   }
 
@@ -117,11 +111,6 @@ catchError {
         }
       }
     }
-  }
-  else {
-    postComment("cmdstan", params.cmdstan_pr, buildInfo)
-    postComment("stan",    params.stan_pr,    buildInfo)
-    postComment("math",    params.math_pr,    buildInfo)
   }
 }
 
