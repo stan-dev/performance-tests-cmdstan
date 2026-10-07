@@ -122,7 +122,7 @@ def csv_summary(csv_file):
 
 def format_summary_lines(summary):
     return ["{} {:.15f} {:.15f}\n".format(k, avg, stdev)
-            for k, (avg, stdev) in sorted(summary.items())]
+            for k, (avg, stdev) in summary.items()]
 
 def parse_summary(f):
     d = {}
@@ -177,8 +177,12 @@ def run_golds(gold, tmp, summary, check_golds_exact):
         errors.append(msg)
         return fails, errors
     for k, (mean, stdev) in sorted(gold_summary.items()):
-        if stdev < 0.00001: #XXX Uh...
+        if stdev == 0:
+            if summary[k][0] != mean:
+                print(f"FAIL: {gold} param {k} | {summary[k][0]} != {mean} and stdev=0")
+                fails.append((k, mean, stdev, summary[k][0]))
             continue
+
         err = abs(summary[k][0] - mean)
 
         if check_golds_exact and err > check_golds_exact:
@@ -339,7 +343,12 @@ if __name__ == "__main__":
     failed = False
     for model, _, fails, errors in results:
         if fails or errors:
-            print("'{}' had fails '{}' and errors '{}'".format(model, fails, errors))
+            print(f"'{model}' had fails:")
+            for (param, mean, std, actual) in fails:
+                print(f"\tparameter '{param}' should be in ({mean}+/-{std}), but was {actual}")
+            print("and errors:")
+            for error in errors:
+                print(f"\t{error}")
             failed = True
     if failed:
         sys.exit(-1)
