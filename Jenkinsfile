@@ -7,59 +7,15 @@ properties([
     string(defaultValue: 'develop', name: 'math_pr', description: "Math PR to test against. Will check out this PR in the downstream Math repo."),
     string(defaultValue: 'nightly', name: 'stanc3_bin_url', description: 'Custom stanc3 binary url'),
     booleanParam(name:"update_golds", defaultValue: false, description:"Update golds"),
-    booleanParam(defaultValue: false, name: 'downsteam', description: 'Run downstream tests from cmdstan (was previously downstream_tests [master])'),
+    booleanParam(defaultValue: false, name: 'downstream', description: 'Run downstream tests from cmdstan (was previously downstream_tests [master])'),
   ])
 ])
 
 def isPrimary = !params.downstream && (env.BRANCH_NAME == "master" || env.BRANCH_NAME == "jenkins-new") && params.cmdstan_pr == "develop"
 def stanc3_bin_url = params.stanc3_bin_url != "nightly" ? "STANC3_TEST_BIN_URL=${params.stanc3_bin_url}" : ''
 
-def buildInfo = [:]
-
-def postComment(String repo, String pr, Map info) {
-  if (pr.startsWith("PR-")) {
-    def prn = pr.drop(3)
-    def comment = """
-${info["table"]}
-[Jenkins Console Log](${env.JENKINS_URL}job/CCM/job/Stan/job/$repo/view/change-requests/job/$pr/lastBuild/console)
-[Jenkins Build Stages](${env.JENKINS_URL}job/CCM/job/Stan/job/$repo/view/change-requests/job/$pr/lastBuild/stages/)
-Commit hash: ${info["hash"]}
-<details><summary>Machine information</summary>
-<pre>${info["system"]["sys_ver"]}</pre>
-
-CPU:
-<pre>${info["system"]["cpu"]}</pre>
-
-G++: 
-<pre>${info["system"]["gpp"]}</pre>
-
-Clang: 
-<pre>${info["system"]["clang"]}</pre>
-
-</details>
-"""
-    withCredentials([usernamePassword(usernameVariable: 'GITHUB_USER', passwordVariable: 'GITHUB_TOKEN', credentialsId: 'stan-github')]) {
-      httpRequest url:"https://api.github.com/repos/stan-dev/$repo/issues/$prn/comments",
-        httpMode: 'POST',
-        contentType: 'APPLICATION_JSON',
-        customHeaders: [[maskValue: true, name: 'Authorization', value: 'token ' + GITHUB_TOKEN]],
-        requestBody: writeJSON(returnText: true, json: [body: comment])
-    }
-  }
-}
-
 catchError {
   runPod(image: "stanorg/ci:gpu", memory: "64Gi") {
-    stage('Gather machine information') {
-      buildInfo["hash"] = sh(returnStdout: true, script: "git rev-parse HEAD").trim()
-      buildInfo["system"] = [
-        "cpu":     sh(returnStdout: true, script: "lscpu"),
-        "sys_ver": sh(returnStdout: true, script: "lsb_release -a"),
-        "gpp":     sh(returnStdout: true, script: "g++ --version"),
-        "clang":   sh(returnStdout: true, script: "clang --version")
-      ]
-    }
-
     if (isPrimary) {
       stage('Shotgun Performance Regression Tests') {
         sh "make clean"
@@ -71,12 +27,6 @@ catchError {
         junit '*.xml'
         archiveArtifacts '*.xml'
       }
-
-    } else {
-      stage("Test cmdstan develop against cmdstan pointer in this branch") {
-        sh "./compare-git-hashes.sh stat_comp_benchmarks develop ${params.cmdstan_pr} ${params.stan_pr} ${params.math_pr} '$stanc3_bin_url'"
-        buildInfo["table"] = sh(returnStdout: true, script: "./comparePerformance.py develop_performance.csv performance.csv md")
-      }
     }
   }
 
@@ -86,8 +36,9 @@ catchError {
         checkout scm
         writeFile(file: "cmdstan/make/local", text: "PRECOMPILED_HEADERS=False CXXFLAGS += -march=core2 \n$stanc3_bin_url\n")
         def cmd = 'python3 runPerformanceTests.py --runs 3 --check-golds --name=known_good_perf --tests-file=known_good_perf_all.tests -j$PARALLEL'
-        if (params.update_golds)
+        if (params.update_golds) {
           cmd += ' --runj 8 --overwrite'
+        }
         sh cmd
         junit '*.xml'
         archiveArtifacts '*.xml'
@@ -117,11 +68,6 @@ catchError {
         }
       }
     }
-  }
-  else {
-    postComment("cmdstan", params.cmdstan_pr, buildInfo)
-    postComment("stan",    params.stan_pr,    buildInfo)
-    postComment("math",    params.math_pr,    buildInfo)
   }
 }
 
