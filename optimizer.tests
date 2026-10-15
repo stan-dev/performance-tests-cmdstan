@@ -1,4 +1,6 @@
 optimizer-stress-models/inline-tdata.stan
 optimizer-stress-models/soa-index.stan, 1000
-optimizer-stress-models/unenforce-initialize-omni.stan 
+optimizer-stress-models/unenforce-initialize-omni.stan
 optimizer-stress-models/constraints.stan
+optimizer-stress-models/inline-rng.stan
+optimizer-stress-models/inline-eigen.stan
