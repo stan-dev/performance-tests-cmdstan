@@ -50,7 +50,7 @@ def find_data_for_model(model):
         return closest_string(model, data_files)
 
 
-model_name_re = re.compile(".*"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
+model_name_re = re.compile(".*(?<!expected_pretty)"+SEP_RE+"[A-z_][^"+SEP_RE+"]+\.stan$")
 
 bad_models = frozenset(
     [os.path.join("example-models","ARM","Ch.21","finite_populations.stan")
