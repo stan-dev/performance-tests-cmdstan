@@ -16,7 +16,7 @@ set -e -x
 # run with the default optimization level
 cd cmdstan; make clean-all; make -j${PARALLEL:-4} build;
 if [ -n "$3" ] ; then
-    rm bin/stanc
+    rm -f bin/stanc
     cp "$3" bin/stanc
 fi
 make -j${PARALLEL:-4} examples/bernoulli/bernoulli; ./bin/stanc --version; cd ..
