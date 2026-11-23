@@ -4,3 +4,4 @@ optimizer-stress-models/unenforce-initialize-omni.stan
 optimizer-stress-models/constraints.stan
 optimizer-stress-models/inline-rng.stan
 optimizer-stress-models/inline-eigen.stan
+optimizer-stress-models/sean-regressions.stan
